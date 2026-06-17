@@ -1912,8 +1912,6 @@ button:focus-visible, a:focus-visible {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     background: #020c15;
     overflow: hidden;
   }
@@ -1923,8 +1921,6 @@ button:focus-visible, a:focus-visible {
     min-height: 0 !important;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
   }
   .page-watch .liveStage {
@@ -1933,8 +1929,6 @@ button:focus-visible, a:focus-visible {
     margin: 0 !important;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -1946,8 +1940,7 @@ button:focus-visible, a:focus-visible {
     border: none !important;
     box-shadow: none !important;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
     flex: 1;
     min-height: 0;
     background: #000;
