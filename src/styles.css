@@ -1340,14 +1340,13 @@ button:focus-visible, a:focus-visible {
 
 /* Mobile responsive drawer styling */
 .mobileDrawer {
-  position: fixed;
+  position: absolute;
   top: 80px;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(3, 27, 46, 0.96);
-  backdrop-filter: blur(10px);
-  z-index: 90;
+  width: 100%;
+  height: calc(100vh - 80px);
+  background: var(--deep-navy);
+  z-index: 150;
   padding: 40px 24px;
   border-top: 1px solid rgba(34, 211, 238, 0.15);
   animation: slideDownMenu 0.25s ease-out;
