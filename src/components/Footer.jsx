@@ -8,7 +8,7 @@ export default function Footer({ setPage }) {
       <div className="footerLogo">
         <button onClick={() => setPage('home')} aria-label="Go home">
           <img 
-            src="logo-circle.png" 
+            src="logo-text.png" 
             alt={`${siteContent.brand} Logo`} 
             className="footerLogoImg" 
           />
