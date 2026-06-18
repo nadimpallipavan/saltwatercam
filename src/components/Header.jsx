@@ -15,7 +15,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
       {/* Brand logo image from mockup */}
       <button className="brand" onClick={() => handleNavClick('home')} aria-label="Go home">
         <img 
-          src="logo-text.png" 
+          src="logo-header-cropped.png?v=4" 
           alt={`${siteContent.brand} Logo`} 
           className="brandLogoImg" 
         />
