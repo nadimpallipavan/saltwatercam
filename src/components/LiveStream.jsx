@@ -23,7 +23,7 @@ export default function LiveStream() {
 
           {/* Mockup live stream background */}
           <img 
-            src="/watch-live-bg-clean.png" 
+            src="watch-live-bg-clean.png" 
             alt="Live Underwater Stream" 
             className="streamBgImage" 
           />

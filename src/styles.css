@@ -117,7 +117,7 @@ button:focus-visible, a:focus-visible {
   display: flex;
   align-items: center;
   padding: 0 6vw;
-  background: url('/hero-bg.png') no-repeat center center;
+  background: url('../public/hero-bg.png') no-repeat center center;
   background-size: cover;
   overflow: hidden;
 }
@@ -1427,7 +1427,7 @@ button:focus-visible, a:focus-visible {
     justify-content: flex-start !important;
     align-items: center !important;
     padding: 30dvh 24px 24px 24px !important;
-    background: url('/hero-bg.png') no-repeat 25% center !important;
+    background: url('../public/hero-bg.png') no-repeat 25% center !important;
     background-size: cover !important;
     overflow: hidden;
   }
