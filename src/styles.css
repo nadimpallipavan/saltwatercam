@@ -1418,15 +1418,16 @@ button:focus-visible, a:focus-visible {
     margin-left: auto;
   }
   .hero {
-    height: 66.5vw !important;
-    min-height: 250px !important;
+    height: calc(100vh - 80px) !important;
+    height: calc(100dvh - 80px) !important;
+    min-height: 480px !important;
     position: relative;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-    padding: 12px 16px !important;
-    background: url('/hero-bg.png') no-repeat center center !important;
+    padding: 8dvh 20px 24px 20px !important;
+    background: url('/hero-bg.png') no-repeat 22% center !important;
     background-size: cover !important;
     overflow: hidden;
   }
@@ -1435,7 +1436,7 @@ button:focus-visible, a:focus-visible {
   }
   .heroOverlay {
     display: block !important;
-    background: rgba(3, 27, 46, 0.4) !important;
+    background: linear-gradient(180deg, rgba(3, 27, 46, 0.55) 0%, rgba(3, 27, 46, 0.7) 100%) !important;
   }
   .heroContent {
     width: 100% !important;
@@ -1446,41 +1447,49 @@ button:focus-visible, a:focus-visible {
     flex-direction: column !important;
     align-items: center !important;
     box-sizing: border-box;
+    z-index: 2;
   }
   .hero h1 {
-    font-size: clamp(1.15rem, 5.2vw, 1.8rem) !important;
-    text-align: center !important;
-    margin-bottom: 6px !important;
-    line-height: 1.25 !important;
-  }
-  .heroText {
-    font-size: clamp(0.72rem, 3vw, 0.92rem) !important;
+    font-size: clamp(1.8rem, 7.5vw, 2.6rem) !important;
     text-align: center !important;
     margin-bottom: 12px !important;
+    line-height: 1.15 !important;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .heroText {
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem) !important;
+    text-align: center !important;
+    margin-bottom: 24px !important;
     color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    max-width: 450px;
   }
   .heroActions {
     display: flex !important;
     flex-direction: row !important;
-    gap: 8px !important;
-    width: auto !important;
+    gap: 12px !important;
+    width: 100% !important;
     justify-content: center !important;
+    flex-wrap: wrap !important;
   }
   .heroActions button {
-    width: auto !important;
-    padding: 8px 14px !important;
-    font-size: 0.72rem !important;
+    flex: 1 !important;
+    min-width: 150px !important;
+    max-width: 180px !important;
+    padding: 12px 20px !important;
+    font-size: 0.82rem !important;
     border-radius: 999px !important;
-    height: 36px !important;
+    height: 44px !important;
+    justify-content: center !important;
   }
   .heroActions .watchLiveBtn svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
   .liveBadgeContainer {
     justify-content: center !important;
-    margin-bottom: 6px !important;
-    font-size: 0.72rem !important;
+    margin-bottom: 12px !important;
+    font-size: 0.85rem !important;
   }
   .section {
     padding: 60px 24px;
