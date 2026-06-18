@@ -277,7 +277,7 @@ button:focus-visible, a:focus-visible {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  background: linear-gradient(180deg, var(--deep-navy) 0%, #020c15 100%);
+  background: transparent;
   padding-bottom: 100px;
 }
 .card {
@@ -323,7 +323,7 @@ button:focus-visible, a:focus-visible {
 .ctaSection {
   text-align: center;
   padding: 100px 6vw;
-  background: radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.18), transparent 50%), #020c15;
+  background: radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.18), transparent 50%);
   border-top: 1px solid rgba(34, 211, 238, 0.06);
 }
 .ctaSection h2 {
@@ -353,7 +353,7 @@ button:focus-visible, a:focus-visible {
 .watchPage {
   min-height: calc(100vh - 80px);
   padding: 60px 6vw;
-  background: linear-gradient(180deg, #041c2c 0%, var(--deep-navy) 100%);
+  background: transparent;
 }
 .watchIntro {
   max-width: 800px;
@@ -1295,7 +1295,7 @@ button:focus-visible, a:focus-visible {
 
 /* Footer Component (Dark footer for white logo) */
 .footer {
-  background: var(--deep-navy);
+  background: transparent;
   color: var(--white);
   border-top: 1px solid rgba(34, 211, 238, 0.15);
   padding: 36px 6vw;
