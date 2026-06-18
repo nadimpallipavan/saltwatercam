@@ -2052,4 +2052,106 @@ button:focus-visible, a:focus-visible {
   }
 }
 
+/* Mobile Landscape Adjustments (Screens with height up to 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Global Header Floating Overlay */
+  .header {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px !important;
+    background: linear-gradient(180deg, rgba(3, 27, 46, 0.8) 0%, transparent 100%) !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    z-index: 100;
+  }
+  .brandLogoImg {
+    height: 30px !important;
+  }
+  
+  /* Mobile Menu Drawer in Landscape */
+  .mobileDrawer {
+    top: 50px !important;
+    height: calc(100vh - 50px) !important;
+    height: calc(100dvh - 50px) !important;
+    padding: 20px 24px !important;
+    overflow-y: auto !important;
+  }
+  .mobileNav {
+    gap: 12px !important;
+  }
+  .mobileWatchBtn {
+    margin-top: 10px !important;
+    padding: 10px !important;
+  }
+  
+  /* Home Page Hero Section (Full viewport height) */
+  .page-home .hero {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    padding: 65px 24px 20px 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  .page-home .heroContent {
+    max-width: 600px !important;
+  }
+  .page-home .hero h1 {
+    font-size: clamp(1.4rem, 5vw, 2.2rem) !important;
+    margin-bottom: 8px !important;
+    line-height: 1.1 !important;
+  }
+  .page-home .heroText {
+    font-size: clamp(0.85rem, 2.5vw, 0.95rem) !important;
+    margin-bottom: 12px !important;
+    max-width: 500px !important;
+  }
+  .page-home .heroActions {
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+  .page-home .heroActions button {
+    min-width: 140px !important;
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+  }
 
+  /* Watch Live Page Viewport Locking & Expansion */
+  .page-watch {
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  .page-watch .footer {
+    display: none !important;
+  }
+  .page-watch .mainContent {
+    height: 100% !important;
+    margin-top: 0 !important;
+    background: #000;
+  }
+  .page-watch .watchPageFull {
+    height: 100% !important;
+  }
+  .page-watch .liveStage {
+    height: 100% !important;
+  }
+  .page-watch .liveFrame {
+    height: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .page-watch .underwaterScene {
+    height: 100% !important;
+  }
+  .page-watch .streamBgImage {
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+}
