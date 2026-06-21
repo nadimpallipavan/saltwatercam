@@ -109,7 +109,22 @@ export default function Header({
               }}
               title="Click to logout"
             >
-              <span style={{ fontSize: '1.1rem' }}>{currentUser.avatar}</span>
+              {currentUser.faceImage ? (
+                <img 
+                  src={currentUser.faceImage} 
+                  alt={currentUser.username} 
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid #22d3ee',
+                    boxShadow: '0 0 6px rgba(34, 211, 238, 0.4)'
+                  }}
+                />
+              ) : (
+                <span style={{ fontSize: '1.1rem' }}>{currentUser.avatar}</span>
+              )}
               <span className="headerUsername" style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {currentUser.username}
               </span>
@@ -181,7 +196,22 @@ export default function Header({
               {currentUser ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', width: '100%' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#fff' }}>
-                    <span style={{ fontSize: '1.4rem' }}>{currentUser.avatar}</span>
+                    {currentUser.faceImage ? (
+                      <img 
+                        src={currentUser.faceImage} 
+                        alt={currentUser.username} 
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '1.5px solid #22d3ee',
+                          boxShadow: '0 0 8px rgba(34, 211, 238, 0.4)'
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.4rem' }}>{currentUser.avatar}</span>
+                    )}
                     <strong>{currentUser.username}</strong>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: '#22d3ee', fontWeight: '800' }}>
