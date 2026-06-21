@@ -15,29 +15,9 @@ if (isSupabaseConfigured) {
 // ----------------------------------------------------
 async function hashPassword(password, salt) {
   const encoder = new TextEncoder();
-  const pwKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits", "deriveKey"]
-  );
-  
-  const derivedKey = await crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode(salt),
-      iterations: 100000,
-      hash: "SHA-256"
-    },
-    pwKey,
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["exportKey"]
-  );
-  
-  const exported = await crypto.subtle.exportKey("raw", derivedKey);
-  const hashArray = new Uint8Array(exported);
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = new Uint8Array(hashBuffer);
   
   // Convert binary to Base64 safely
   let binary = '';
@@ -239,6 +219,9 @@ export const authService = {
         }
       });
       if (error) return { data: null, error };
+      if (!data || !data.user) {
+        return { data: null, error: { message: 'Registration succeeded. Please verify your email address to log in.' } };
+      }
       
       const formattedUser = {
         username: data.user.user_metadata.username || username,
