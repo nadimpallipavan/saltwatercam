@@ -54,13 +54,20 @@ async function hashPassword(password, salt) {
 const listeners = new Set();
 
 const localAuth = {
-  async signUp(username, password, avatar) {
+  async signUp(username, email, phone, password, avatar) {
     try {
       const users = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
       const userKey = username.toLowerCase().trim();
+      const emailKey = email.toLowerCase().trim();
       
       if (users[userKey]) {
         return { data: null, error: { message: 'Username is already taken.' } };
+      }
+
+      // Check if email already registered locally
+      const emailExists = Object.values(users).some(u => u.email && u.email.toLowerCase().trim() === emailKey);
+      if (emailExists) {
+        return { data: null, error: { message: 'Email is already registered.' } };
       }
 
       // Generate a cryptographically secure random salt
@@ -77,6 +84,8 @@ const localAuth = {
       // Save user profile metadata
       users[userKey] = {
         username: username.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         avatar,
         salt,
         passwordHash
@@ -85,6 +94,8 @@ const localAuth = {
 
       const sessionUser = {
         username: username.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         avatar,
         id: `local-${userKey}`
       };
@@ -98,27 +109,34 @@ const localAuth = {
     }
   },
 
-  async signIn(username, password) {
+  async signIn(usernameOrEmail, password) {
     try {
       const users = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
-      const userKey = username.toLowerCase().trim();
-      const user = users[userKey];
+      const inputKey = usernameOrEmail.toLowerCase().trim();
+      
+      // Find user by username or email
+      let user = users[inputKey];
+      if (!user) {
+        user = Object.values(users).find(u => u.email && u.email.toLowerCase().trim() === inputKey);
+      }
 
       if (!user) {
-        return { data: null, error: { message: 'Invalid username or password.' } };
+        return { data: null, error: { message: 'Invalid username/email or password.' } };
       }
 
       // Hash input password using the stored salt to verify
       const testHash = await hashPassword(password, user.salt);
 
       if (testHash !== user.passwordHash) {
-        return { data: null, error: { message: 'Invalid username or password.' } };
+        return { data: null, error: { message: 'Invalid username/email or password.' } };
       }
 
       const sessionUser = {
         username: user.username,
+        email: user.email,
+        phone: user.phone,
         avatar: user.avatar,
-        id: `local-${userKey}`
+        id: `local-${user.username.toLowerCase()}`
       };
 
       localStorage.setItem('swc_local_session', JSON.stringify(sessionUser));
@@ -165,17 +183,17 @@ function notifyListeners(user) {
 export const authService = {
   isSupabaseConfigured,
   
-  async signUp(username, password, avatar = '🐢') {
+  async signUp(username, email, phone, password, avatar = '🐢') {
     if (isSupabaseConfigured) {
-      // Format a placeholder email using the username to keep signup forms clean (no extra email fields required)
-      const email = `${username.toLowerCase().replace(/\s+/g, '')}@saltwatercam.local`;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        phone,
         options: {
           data: {
             username,
-            avatar
+            avatar,
+            phone
           }
         }
       });
@@ -184,17 +202,23 @@ export const authService = {
       const formattedUser = {
         username: data.user.user_metadata.username || username,
         avatar: data.user.user_metadata.avatar || avatar,
+        email: data.user.email,
+        phone: data.user.user_metadata.phone || phone,
         id: data.user.id
       };
       return { data: { user: formattedUser }, error: null };
     } else {
-      return await localAuth.signUp(username, password, avatar);
+      return await localAuth.signUp(username, email, phone, password, avatar);
     }
   },
 
-  async signIn(username, password) {
+  async signIn(usernameOrEmail, password) {
     if (isSupabaseConfigured) {
-      const email = `${username.toLowerCase().replace(/\s+/g, '')}@saltwatercam.local`;
+      let email = usernameOrEmail;
+      if (!usernameOrEmail.includes('@')) {
+        // Fallback for usernames
+        email = `${usernameOrEmail.toLowerCase().replace(/\s+/g, '')}@saltwatercam.local`;
+      }
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -202,13 +226,15 @@ export const authService = {
       if (error) return { data: null, error };
 
       const formattedUser = {
-        username: data.user.user_metadata.username || username,
+        username: data.user.user_metadata.username || usernameOrEmail,
         avatar: data.user.user_metadata.avatar || '🐢',
+        email: data.user.email,
+        phone: data.user.user_metadata.phone || '',
         id: data.user.id
       };
       return { data: { user: formattedUser }, error: null };
     } else {
-      return await localAuth.signIn(username, password);
+      return await localAuth.signIn(usernameOrEmail, password);
     }
   },
 
@@ -229,6 +255,8 @@ export const authService = {
       return {
         username: user.user_metadata.username || user.email.split('@')[0],
         avatar: user.user_metadata.avatar || '🐢',
+        email: user.email,
+        phone: user.user_metadata.phone || '',
         id: user.id
       };
     } else {
@@ -244,6 +272,8 @@ export const authService = {
           callback({
             username: user.user_metadata.username || user.email.split('@')[0],
             avatar: user.user_metadata.avatar || '🐢',
+            email: user.email,
+            phone: user.user_metadata.phone || '',
             id: user.id
           });
         } else {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User, Shield, Compass, Sparkles } from 'lucide-react';
+import { X, User, Shield, Compass, Sparkles, Mail, Phone } from 'lucide-react';
 import { authService } from '../supabaseClient.js';
 
 const AVATARS = [
@@ -14,6 +14,8 @@ const AVATARS = [
 export default function AuthModal({ isOpen, onClose, onLogin }) {
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('turtle');
   const [error, setError] = useState('');
@@ -31,6 +33,33 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       setLoading(false);
       return;
     }
+
+    if (!isLoginTab) {
+      if (!email.trim()) {
+        setError('Email address is required.');
+        setLoading(false);
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setError('Please enter a valid email address.');
+        setLoading(false);
+        return;
+      }
+
+      if (!phone.trim()) {
+        setError('Phone number is required for notifications.');
+        setLoading(false);
+        return;
+      }
+      const phoneRegex = /^\+?[0-9\s\-()]{7,18}$/;
+      if (!phoneRegex.test(phone.trim())) {
+        setError('Please enter a valid phone number.');
+        setLoading(false);
+        return;
+      }
+    }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters for security.');
       setLoading(false);
@@ -44,7 +73,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       if (isLoginTab) {
         res = await authService.signIn(username, password);
       } else {
-        res = await authService.signUp(username, password, avatarObj.emoji);
+        res = await authService.signUp(username, email, phone, password, avatarObj.emoji);
       }
 
       if (res.error) {
@@ -54,6 +83,8 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
         onClose();
         // Clear fields
         setUsername('');
+        setEmail('');
+        setPhone('');
         setPassword('');
       }
     } catch (err) {
@@ -263,6 +294,82 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
               />
             </div>
           </div>
+
+          {!isLoginTab && (
+            <>
+              {/* Email Input */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
+                <label style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Email Address (Gmail / Email)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#b7cad6' }} />
+                  <input
+                    type="email"
+                    placeholder="e.g. explorer@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px 12px 42px',
+                      background: 'rgba(0, 0, 0, 0.2)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      color: '#fff',
+                      fontSize: '0.9rem',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#22d3ee';
+                      e.target.style.boxShadow = '0 0 10px rgba(34, 211, 238, 0.15)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Phone Input */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
+                <label style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Phone Number (For Alerts)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#b7cad6' }} />
+                  <input
+                    type="tel"
+                    placeholder="e.g. +1 (555) 019-2834"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px 12px 42px',
+                      background: 'rgba(0, 0, 0, 0.2)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      color: '#fff',
+                      fontSize: '0.9rem',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#22d3ee';
+                      e.target.style.boxShadow = '0 0 10px rgba(34, 211, 238, 0.15)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Password Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
