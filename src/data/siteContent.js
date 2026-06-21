@@ -9,15 +9,17 @@ export const siteContent = {
   aboutHeadline: "One simple window into Florida's underwater world.",
   aboutText: "SaltWaterCam is a live underwater camera experience created to share Florida's coastal marine life with families, students, and ocean lovers. Located at the end of a dock near Lantana, Florida, close to the Boynton Beach Inlet, the camera utilizes a green underwater light to attract fish and provide clear visibility day and night.",
   
-  // Tabs supported in V1
+  // Tabs supported in V2
   tabs: [
     { id: 'home', label: 'Home' },
-    { id: 'explore', label: 'Explore' },
-    { id: 'marine-life', label: 'Marine Life' },
-    { id: 'kids-club', label: 'Kids Club' },
-    { id: 'education', label: 'Education' },
-    { id: 'conservation', label: 'Conservation' },
-    { id: 'about', label: 'About' }
+    { id: 'watch', label: 'Watch Live' },
+    { id: 'kids-club', label: 'Kids Ocean Adventure' },
+    { id: 'marine-guide', label: 'Marine Guide' },
+    { id: 'community', label: 'Community' },
+    { id: 'ai-features', label: 'AI Features' },
+    { id: 'rewards', label: 'Rewards' },
+    { id: 'about', label: 'About' },
+    { id: 'contact', label: 'Contact' }
   ],
 
   // Environmental conditions
@@ -150,6 +152,85 @@ export const siteContent = {
     {
       q: "Is this stream actually live?",
       a: "Yes! The camera feeds directly into our ethernet line and streams 24/7. What you see is happening in Florida right now."
+    }
+  ],
+
+  // V2 Kids Missions
+  missions: [
+    { id: 'trivia', label: 'Complete Reef Trivia', xp: 150, description: 'Answer all 3 trivia questions correctly to test your knowledge.' },
+    { id: 'report', label: 'Submit Sighting Report', xp: 150, description: 'Report a simulated fish sighting on the Community board.' },
+    { id: 'physics', label: 'Read Light Physics Guide', xp: 100, description: 'Learn how the green dock light aids night visibility.' },
+    { id: 'watch-time', label: 'Watch the Live Feed', xp: 100, description: 'Keep the livestream player open for at least 3 minutes.' }
+  ],
+
+  // V2 Community Sightings
+  sightingReports: [
+    {
+      id: 1,
+      user: 'Capt. Steve',
+      species: 'Atlantic Tarpon',
+      time: '12:45 PM',
+      count: 3,
+      notes: 'Active feeding school near the channel edge. High visibility today.',
+      likes: 12
+    },
+    {
+      id: 2,
+      user: 'Sarah_DiveFL',
+      species: 'Green Sea Turtle',
+      time: '11:20 AM',
+      count: 1,
+      notes: 'Spotted grazing slowly on algae around dock piling #4. Beautiful markings!',
+      likes: 8
+    },
+    {
+      id: 3,
+      user: 'SnookHunter99',
+      species: 'Common Snook',
+      time: '10:05 AM',
+      count: 15,
+      notes: 'Congregating in the shadow of the dock. Waiting for the incoming tide.',
+      likes: 14
+    }
+  ],
+
+  // V2 AI Model Stats
+  aiModelStats: {
+    accuracy: '94.2%',
+    inferenceTime: '12ms',
+    activeTargets: 8,
+    detectionsToday: 1420,
+    distribution: [
+      { name: 'Common Snook', value: 45 },
+      { name: 'Atlantic Tarpon', value: 25 },
+      { name: 'Goliath Grouper', value: 15 },
+      { name: 'Green Sea Turtle', value: 10 },
+      { name: 'Stingrays/Others', value: 5 }
+    ]
+  },
+
+  // V2 Rewards Catalog
+  rewards: [
+    {
+      id: 'wallpaper-reef',
+      title: 'Lantana Reef Desktop Wallpaper',
+      cost: 200,
+      image: 'watch-live-bg-clean.png',
+      desc: 'High-resolution digital wallpaper of the Lantana Reef feed in 4K.'
+    },
+    {
+      id: 'badge-marine-scholar',
+      title: 'Digital Marine Scholar Badge',
+      cost: 300,
+      image: 'logo-circle.png',
+      desc: 'A premium digital badge to show off on your profile or share on social media.'
+    },
+    {
+      id: 'coupon-gear',
+      title: '15% Off Ocean Gear Vouchers',
+      cost: 500,
+      image: 'logo-text.png',
+      desc: 'Redeemable at local Boynton Beach / Lantana surf and dive shops.'
     }
   ]
 };

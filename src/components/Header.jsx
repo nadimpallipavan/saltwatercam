@@ -24,7 +24,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
       {/* Desktop Navigation */}
       <nav className="nav">
         {siteContent.tabs.map((tab) => {
-          const isActive = page === tab.id || (tab.id === 'explore' && page === 'marine-life') || (tab.id === 'education' && page === 'conservation');
+          const isActive = page === tab.id;
           return (
             <button 
               key={tab.id} 
@@ -36,14 +36,6 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
           );
         })}
       </nav>
-
-
-
-      {/* WATCH LIVE CTA button */}
-      <button className="watchBtn" onClick={() => handleNavClick('watch')}>
-        <span>WATCH LIVE</span>
-        <Play size={14} fill="currentColor" />
-      </button>
 
       {/* Mobile menu toggle */}
       <button 
@@ -70,10 +62,6 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
                 </button>
               );
             })}
-            <button className="mobileWatchBtn" onClick={() => handleNavClick('watch')}>
-              <Play size={16} fill="currentColor" /> WATCH LIVE
-            </button>
-
           </nav>
         </div>
       )}

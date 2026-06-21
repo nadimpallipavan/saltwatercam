@@ -3,10 +3,13 @@ import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
 import WatchLive from './pages/WatchLive.jsx';
-import ExplorePage from './pages/ExplorePage.jsx';
 import KidsClubPage from './pages/KidsClubPage.jsx';
-import EducationPage from './pages/EducationPage.jsx';
+import MarineGuide from './pages/MarineGuide.jsx';
+import CommunityPage from './pages/CommunityPage.jsx';
+import AIFeaturesPage from './pages/AIFeaturesPage.jsx';
+import RewardsPage from './pages/RewardsPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
+import ContactPage from './pages/ContactPage.jsx';
 import WaterParticlesCanvas from './components/WaterParticlesCanvas.jsx';
 import useAmbientAudio from './hooks/useAmbientAudio.js';
 
@@ -25,16 +28,20 @@ export default function App() {
         return <Home setPage={setPage} />;
       case 'watch':
         return <WatchLive />;
-      case 'explore':
-      case 'marine-life':
-        return <ExplorePage />;
       case 'kids-club':
         return <KidsClubPage />;
-      case 'education':
-      case 'conservation':
-        return <EducationPage setPage={setPage} />;
+      case 'marine-guide':
+        return <MarineGuide />;
+      case 'community':
+        return <CommunityPage />;
+      case 'ai-features':
+        return <AIFeaturesPage />;
+      case 'rewards':
+        return <RewardsPage />;
       case 'about':
         return <AboutPage />;
+      case 'contact':
+        return <ContactPage />;
       default:
         return <Home setPage={setPage} />;
     }
