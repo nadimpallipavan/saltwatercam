@@ -36,16 +36,33 @@ const listeners = new Set();
 const localAuth = {
   async signUp(username, email, phone, password, avatar, faceImage = null) {
     try {
-      const users = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
-      const userKey = username.toLowerCase().trim();
-      const emailKey = email.toLowerCase().trim();
+      let users = {};
+      try {
+        const saved = localStorage.getItem('swc_local_users');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            users = parsed;
+          }
+        }
+      } catch (e) {
+        users = {};
+      }
+
+      const userKey = (username || '').toLowerCase().trim();
+      const emailKey = (email || '').toLowerCase().trim();
       
       if (users[userKey]) {
         return { data: null, error: { message: 'Username is already taken.' } };
       }
 
       // Check if email already registered locally
-      const emailExists = Object.values(users).some(u => u.email && u.email.toLowerCase().trim() === emailKey);
+      const emailExists = Object.values(users).some(u => 
+        u && 
+        typeof u === 'object' && 
+        typeof u.email === 'string' && 
+        u.email.toLowerCase().trim() === emailKey
+      );
       if (emailExists) {
         return { data: null, error: { message: 'Email is already registered.' } };
       }
@@ -58,27 +75,27 @@ const localAuth = {
       }
       const salt = btoa(saltBinary);
 
-      // Securely hash the password with PBKDF2
+      // Securely hash the password
       const passwordHash = await hashPassword(password, salt);
 
       // Save user profile metadata
       users[userKey] = {
-        username: username.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        avatar,
-        faceImage,
+        username: (username || '').trim(),
+        email: (email || '').trim(),
+        phone: (phone || '').trim(),
+        avatar: avatar || '🐢',
+        faceImage: faceImage || null,
         salt,
         passwordHash
       };
       localStorage.setItem('swc_local_users', JSON.stringify(users));
 
       const sessionUser = {
-        username: username.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        avatar,
-        faceImage,
+        username: (username || '').trim(),
+        email: (email || '').trim(),
+        phone: (phone || '').trim(),
+        avatar: avatar || '🐢',
+        faceImage: faceImage || null,
         id: `local-${userKey}`
       };
       
@@ -93,33 +110,50 @@ const localAuth = {
 
   async signIn(usernameOrEmail, password) {
     try {
-      const users = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
-      const inputKey = usernameOrEmail.toLowerCase().trim();
+      let users = {};
+      try {
+        const saved = localStorage.getItem('swc_local_users');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            users = parsed;
+          }
+        }
+      } catch (e) {
+        users = {};
+      }
+
+      const inputKey = (usernameOrEmail || '').toLowerCase().trim();
       
       // Find user by username or email
       let user = users[inputKey];
       if (!user) {
-        user = Object.values(users).find(u => u.email && u.email.toLowerCase().trim() === inputKey);
+        user = Object.values(users).find(u => 
+          u && 
+          typeof u === 'object' && 
+          typeof u.email === 'string' && 
+          u.email.toLowerCase().trim() === inputKey
+        );
       }
 
-      if (!user) {
+      if (!user || typeof user !== 'object') {
         return { data: null, error: { message: 'Invalid username/email or password.' } };
       }
 
       // Hash input password using the stored salt to verify
-      const testHash = await hashPassword(password, user.salt);
+      const testHash = await hashPassword(password, user.salt || '');
 
       if (testHash !== user.passwordHash) {
         return { data: null, error: { message: 'Invalid username/email or password.' } };
       }
 
       const sessionUser = {
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar,
+        username: user.username || inputKey,
+        email: user.email || '',
+        phone: user.phone || '',
+        avatar: user.avatar || '🐢',
         faceImage: user.faceImage || null,
-        id: `local-${user.username.toLowerCase()}`
+        id: `local-${(user.username || inputKey).toLowerCase()}`
       };
 
       localStorage.setItem('swc_local_session', JSON.stringify(sessionUser));
@@ -133,16 +167,33 @@ const localAuth = {
 
   async signInWithFace(usernameOrEmail) {
     try {
-      const users = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
-      const inputKey = usernameOrEmail.toLowerCase().trim();
+      let users = {};
+      try {
+        const saved = localStorage.getItem('swc_local_users');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            users = parsed;
+          }
+        }
+      } catch (e) {
+        users = {};
+      }
+
+      const inputKey = (usernameOrEmail || '').toLowerCase().trim();
       
       // Find user by username or email
       let user = users[inputKey];
       if (!user) {
-        user = Object.values(users).find(u => u.email && u.email.toLowerCase().trim() === inputKey);
+        user = Object.values(users).find(u => 
+          u && 
+          typeof u === 'object' && 
+          typeof u.email === 'string' && 
+          u.email.toLowerCase().trim() === inputKey
+        );
       }
 
-      if (!user) {
+      if (!user || typeof user !== 'object') {
         return { data: null, error: { message: 'Account not found.' } };
       }
 
@@ -151,12 +202,12 @@ const localAuth = {
       }
 
       const sessionUser = {
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar,
+        username: user.username || inputKey,
+        email: user.email || '',
+        phone: user.phone || '',
+        avatar: user.avatar || '🐢',
         faceImage: user.faceImage,
-        id: `local-${user.username.toLowerCase()}`
+        id: `local-${(user.username || inputKey).toLowerCase()}`
       };
 
       localStorage.setItem('swc_local_session', JSON.stringify(sessionUser));
@@ -175,15 +226,22 @@ const localAuth = {
   },
 
   async getSessionUser() {
-    const saved = localStorage.getItem('swc_local_session');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('swc_local_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
   },
 
   onAuthStateChange(callback) {
     listeners.add(callback);
-    // Trigger callback with initial session if it exists
-    const current = localStorage.getItem('swc_local_session');
-    callback(current ? JSON.parse(current) : null);
+    try {
+      const current = localStorage.getItem('swc_local_session');
+      callback(current ? JSON.parse(current) : null);
+    } catch (e) {
+      callback(null);
+    }
     
     return () => {
       listeners.delete(callback);
