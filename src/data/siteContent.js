@@ -160,7 +160,8 @@ export const siteContent = {
     { id: 'trivia', label: 'Complete Reef Trivia', xp: 150, description: 'Answer all 3 trivia questions correctly to test your knowledge.' },
     { id: 'report', label: 'Submit Sighting Report', xp: 150, description: 'Report a simulated fish sighting on the Community board.' },
     { id: 'physics', label: 'Read Light Physics Guide', xp: 100, description: 'Learn how the green dock light aids night visibility.' },
-    { id: 'watch-time', label: 'Watch the Live Feed', xp: 100, description: 'Keep the livestream player open for at least 3 minutes.' }
+    { id: 'watch-time', label: 'Watch the Live Feed', xp: 100, description: 'Keep the livestream player open for at least 3 minutes.' },
+    { id: 'cleanup', label: 'Clean the Ocean Feed', xp: 100, description: 'Scan 3 pieces of drifting debris or toxic barrels in the livestream.' }
   ],
 
   // V2 Community Sightings

@@ -5,10 +5,25 @@ import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
 
 export default function KidsClubPage() {
-  const [xp, setXp] = useState(0);
-  const [completedMissions, setCompletedMissions] = useState([]);
+  const [xp, setXp] = useState(() => {
+    const saved = localStorage.getItem('swc_kids_xp');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [completedMissions, setCompletedMissions] = useState(() => {
+    const saved = localStorage.getItem('swc_completed_missions');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [unlockedBadges, setUnlockedBadges] = useState([]);
   
+  // Sync back to localStorage
+  useEffect(() => {
+    localStorage.setItem('swc_kids_xp', xp.toString());
+  }, [xp]);
+
+  useEffect(() => {
+    localStorage.setItem('swc_completed_missions', JSON.stringify(completedMissions));
+  }, [completedMissions]);
+
   // Quiz states
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -72,7 +87,7 @@ export default function KidsClubPage() {
     if (completedMissions.includes(missionId)) return;
     
     setCompletedMissions(prev => [...prev, missionId]);
-    setXp(prev => Math.min(500, prev + xpAward));
+    setXp(prev => Math.min(600, prev + xpAward));
   };
 
   return (

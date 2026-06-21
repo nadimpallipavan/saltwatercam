@@ -2,12 +2,12 @@ import { useState } from 'react';
 import LiveStream from '../components/LiveStream.jsx';
 import { siteContent } from '../data/siteContent.js';
 
-export default function WatchLive() {
+export default function WatchLive({ addShells, currentUser }) {
   const [aiEnabled, setAiEnabled] = useState(false);
 
   return (
     <div className="watchPageFull" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '64px', paddingTop: '20px' }}>
-      <LiveStream aiEnabled={aiEnabled} />
+      <LiveStream aiEnabled={aiEnabled} addShells={addShells} currentUser={currentUser} />
       
       {/* AI Species Recognition Toggle Bar */}
       <div className="aiControlCard" style={{
