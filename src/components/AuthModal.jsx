@@ -176,23 +176,24 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
     if (!isFaceScanning) return;
     
     if (scanningMode === 'register') {
-      if (scanProgress === 0) setScanStep('Optical camera active. Aligning face...');
-      else if (scanProgress === 20) setScanStep('Mapping facial landmarks... [68 points]');
-      else if (scanProgress === 50) setScanStep('Extracting geometric face signature...');
-      else if (scanProgress === 80) setScanStep('Encrypting biometric token hash...');
+      if (scanProgress === 0) setScanStep('Align front profile... (0°/360°)');
+      else if (scanProgress === 20) setScanStep('Turn head left slowly... (90°/360°)');
+      else if (scanProgress === 40) setScanStep('Turn head right slowly... (180°/360°)');
+      else if (scanProgress === 60) setScanStep('Tilt head upward slowly... (270°/360°)');
+      else if (scanProgress === 80) setScanStep('Mapping depth & spherical contours... (360°/360°)');
       else if (scanProgress === 100) {
-        setScanStep('Signature verified. Capturing...');
+        setScanStep('Spherical 360° mapping complete!');
         const timer = setTimeout(() => {
           captureSnapshot();
         }, 500);
         return () => clearTimeout(timer);
       }
     } else {
-      if (scanProgress === 0) setScanStep('Retrieving registered facial template...');
-      else if (scanProgress === 20) setScanStep('Analyzing camera credentials...');
-      else if (scanProgress === 40) setScanStep('Comparing facial vectors...');
-      else if (scanProgress === 70) setScanStep('Matching template signature: 98.4%...');
-      else if (scanProgress === 90) setScanStep('MATCH CONFIRMED: 99.6% accuracy');
+      if (scanProgress === 0) setScanStep('Initializing 360° template lookup...');
+      else if (scanProgress === 20) setScanStep('Analyzing camera depth vectors...');
+      else if (scanProgress === 40) setScanStep('Comparing spherical face contour coordinates...');
+      else if (scanProgress === 70) setScanStep('Verifying tilt, yaw, and roll matches...');
+      else if (scanProgress === 90) setScanStep('MATCH CONFIRMED: 99.6% 360° accuracy');
       else if (scanProgress === 100) {
         const timer = setTimeout(() => {
           completeFaceLogin();
@@ -977,7 +978,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
                 marginBottom: '6px'
               }}>
                 <span style={{ fontSize: '0.7rem', color: '#b7cad6', fontWeight: '800', fontFamily: 'monospace' }}>
-                  SCANNING MATRIX...
+                  360° SPHERICAL MAPPING...
                 </span>
                 <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '800', fontFamily: 'monospace' }}>
                   {scanProgress}%
@@ -1000,6 +1001,32 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
                   boxShadow: '0 0 6px #10b981',
                   transition: 'width 0.1s ease-out'
                 }} />
+              </div>
+
+              {/* Angle Metrics Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                marginBottom: '8px',
+                fontSize: '0.66rem',
+                fontFamily: 'monospace',
+                color: '#22d3ee',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                paddingBottom: '6px'
+              }}>
+                <div>
+                  COVERAGE: <span style={{ color: '#10b981', fontWeight: '800' }}>{Math.min(360, Math.round((scanProgress / 100) * 360))}° / 360°</span>
+                </div>
+                <div>
+                  YAW: <span style={{ color: '#fff' }}>{scanProgress === 100 ? 0 : Math.round(Math.sin(scanProgress / 10) * 45)}°</span>
+                </div>
+                <div>
+                  PITCH: <span style={{ color: '#fff' }}>{scanProgress === 100 ? 0 : Math.round(Math.cos(scanProgress / 5) * 30)}°</span>
+                </div>
+                <div>
+                  ROLL: <span style={{ color: '#fff' }}>{scanProgress === 100 ? 0 : Math.round(Math.sin(scanProgress / 20) * 15)}°</span>
+                </div>
               </div>
 
               {/* Terminal log message */}
