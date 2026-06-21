@@ -48,11 +48,11 @@ export default function LiveStream() {
           <div className="streamTopOverlay">
             <div className="streamInfoLeft">
               <div className="liveFeedTitle">
-                <span className="liveFeedDot" />
-                <span>LIVE FEED <span className="timezoneLabel">(EST, Lantana, FL)</span></span>
+                <span className="liveFeedDot" style={{ backgroundColor: '#f59e0b', boxShadow: '0 0 10px #f59e0b' }} />
+                <span>DEMO FEED <span className="timezoneLabel">(Connection Pending)</span></span>
               </div>
               <div className="streamCamName">
-                Cam 1 - Reef View (Active)
+                Cam 1 - Reef View (Demo Mode)
               </div>
             </div>
             
@@ -100,8 +100,8 @@ export default function LiveStream() {
             </button>
 
             <div className="playerBarLiveStatus">
-              <span className="liveStatusDot" />
-              <span>LIVE</span>
+              <span className="liveStatusDot" style={{ backgroundColor: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }} />
+              <span>DEMO</span>
             </div>
 
             {/* Center Seek/Progress Line (Green bar from mockup) */}

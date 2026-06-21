@@ -37,20 +37,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
         })}
       </nav>
 
-      {/* Sound Visualizer & Toggle Button */}
-      <button 
-        className="soundBtn" 
-        onClick={onToggleAudio}
-        aria-label={isAudioPlaying ? "Mute ambient ocean rumble" : "Play ambient ocean rumble"}
-      >
-        <div className={`soundVisualizer ${isAudioPlaying ? 'active' : ''}`}>
-          <div className="soundBar" />
-          <div className="soundBar" />
-          <div className="soundBar" />
-          <div className="soundBar" />
-        </div>
-        <span>{isAudioPlaying ? 'SOUND ON' : 'SOUND OFF'}</span>
-      </button>
+
 
       {/* WATCH LIVE CTA button */}
       <button className="watchBtn" onClick={() => handleNavClick('watch')}>
@@ -86,19 +73,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
             <button className="mobileWatchBtn" onClick={() => handleNavClick('watch')}>
               <Play size={16} fill="currentColor" /> WATCH LIVE
             </button>
-            <button 
-              className="soundBtn mobileSoundBtn" 
-              onClick={onToggleAudio}
-              style={{ marginTop: '15px', alignSelf: 'center', background: 'rgba(255, 255, 255, 0.1)', color: '#fff' }}
-            >
-              <div className={`soundVisualizer ${isAudioPlaying ? 'active' : ''}`}>
-                <div className="soundBar" style={{ backgroundColor: '#fff' }} />
-                <div className="soundBar" style={{ backgroundColor: '#fff' }} />
-                <div className="soundBar" style={{ backgroundColor: '#fff' }} />
-                <div className="soundBar" style={{ backgroundColor: '#fff' }} />
-              </div>
-              <span style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>{isAudioPlaying ? 'SOUND ON' : 'SOUND OFF'}</span>
-            </button>
+
           </nav>
         </div>
       )}

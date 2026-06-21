@@ -1958,13 +1958,6 @@ button:focus-visible, a:focus-visible {
 
 /* Mobile Viewport Locking for Watch Page to keep live feed fully visible */
 @media (max-width: 860px) {
-  .page-watch {
-    height: 100vh;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden !important;
-  }
   .page-watch .header {
     height: 60px !important;
     padding: 0 16px !important;
@@ -1974,74 +1967,13 @@ button:focus-visible, a:focus-visible {
     height: 36px !important;
   }
   .page-watch .mainContent {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
     background: #020c15;
-    overflow: hidden;
-  }
-  .page-watch .watchPageFull {
-    width: 100%;
-    height: 100%;
-    min-height: 0 !important;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .page-watch .liveStage {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 !important;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
   }
   .page-watch .liveFrame {
-    width: 100%;
-    max-width: 100%;
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
     background: #000;
-  }
-  .page-watch .underwaterScene {
-    position: relative;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    max-height: none !important;
-    aspect-ratio: auto !important;
-    margin: 0 !important;
-    overflow: hidden;
-  }
-  .page-watch .streamBgImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover !important;
-  }
-  .page-watch .footer {
-    padding: 8px 16px !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 8px !important;
-    height: 44px !important;
-    flex-shrink: 0;
-  }
-  .page-watch .footerLogo,
-  .page-watch .footerSocials {
-    display: none !important;
-  }
-  .page-watch .footerCopyright p {
-    font-size: 0.75rem !important;
-    margin: 0 !important;
   }
 }
 
@@ -2121,37 +2053,5 @@ button:focus-visible, a:focus-visible {
     font-size: 0.85rem !important;
   }
 
-  /* Watch Live Page Viewport Locking & Expansion */
-  .page-watch {
-    height: 100vh !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-  }
-  .page-watch .footer {
-    display: none !important;
-  }
-  .page-watch .mainContent {
-    height: 100% !important;
-    margin-top: 0 !important;
-    background: #000;
-  }
-  .page-watch .watchPageFull {
-    height: 100% !important;
-  }
-  .page-watch .liveStage {
-    height: 100% !important;
-  }
-  .page-watch .liveFrame {
-    height: 100% !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-  .page-watch .underwaterScene {
-    height: 100% !important;
-  }
-  .page-watch .streamBgImage {
-    height: 100% !important;
-    object-fit: cover !important;
-  }
+
 }
