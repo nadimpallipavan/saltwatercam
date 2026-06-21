@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, User, Shield, Compass, Sparkles } from 'lucide-react';
+import { authService } from '../supabaseClient.js';
 
 const AVATARS = [
   { id: 'fish', emoji: '🐠', name: 'Neon Tang', color: '#06b6d4' },
@@ -16,32 +17,50 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
   const [password, setPassword] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('turtle');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!username.trim()) {
       setError('Username is required.');
+      setLoading(false);
       return;
     }
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters.');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters for security.');
+      setLoading(false);
       return;
     }
 
-    // Success!
-    const avatarObj = AVATARS.find(a => a.id === selectedAvatar) || AVATARS[0];
-    onLogin({
-      username: username.trim(),
-      avatar: avatarObj.emoji,
-      avatarColor: avatarObj.color,
-      avatarId: avatarObj.id,
-      shells: 150, // Initial shells for new profile
-    });
-    onClose();
+    try {
+      const avatarObj = AVATARS.find(a => a.id === selectedAvatar) || AVATARS[0];
+      
+      let res;
+      if (isLoginTab) {
+        res = await authService.signIn(username, password);
+      } else {
+        res = await authService.signUp(username, password, avatarObj.emoji);
+      }
+
+      if (res.error) {
+        setError(res.error.message);
+      } else {
+        onLogin(res.data.user);
+        onClose();
+        // Clear fields
+        setUsername('');
+        setPassword('');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred during authentication.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -333,6 +352,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
           {/* Submit Button */}
           <button
             type="submit"
+            disabled={loading}
             style={{
               marginTop: '10px',
               background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
@@ -343,21 +363,26 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
               fontFamily: 'Outfit, sans-serif',
               fontWeight: '900',
               fontSize: '0.9rem',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.65 : 1,
               boxShadow: '0 4px 15px rgba(34, 211, 238, 0.2)',
               transition: 'all 0.3s ease',
               letterSpacing: '0.04em'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(34, 211, 238, 0.35)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              if (!loading) {
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(34, 211, 238, 0.35)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(34, 211, 238, 0.2)';
-              e.currentTarget.style.transform = 'translateY(0)';
+              if (!loading) {
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(34, 211, 238, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }
             }}
           >
-            {isLoginTab ? 'LOG IN EXPLORER' : 'REGISTER PROFILE'}
+            {loading ? 'AUTHENTICATING...' : (isLoginTab ? 'LOG IN EXPLORER' : 'REGISTER PROFILE')}
           </button>
         </form>
 

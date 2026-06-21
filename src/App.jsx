@@ -13,6 +13,7 @@ import ContactPage from './pages/ContactPage.jsx';
 import WaterParticlesCanvas from './components/WaterParticlesCanvas.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import useAmbientAudio from './hooks/useAmbientAudio.js';
+import { authService } from './supabaseClient.js';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -20,11 +21,7 @@ export default function App() {
 
   // Authentication and gamification states
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('swc_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [shells, setShells] = useState(() => {
     const saved = localStorage.getItem('swc_shells');
@@ -42,26 +39,51 @@ export default function App() {
     return saved ? JSON.parse(saved) : { Kingston: 0, Saltwater: 0 };
   });
 
-  // Keep localStorage in sync
+  // 1. Subscribe to Authentication state updates on mount
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('swc_user', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('swc_user');
-    }
-  }, [currentUser]);
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      if (user) {
+        setCurrentUser(user);
+        
+        // Personalize shell count for logged-in user
+        const userShellsKey = `swc_shells_${user.id}`;
+        const savedShells = localStorage.getItem(userShellsKey);
+        if (savedShells) {
+          setShells(parseInt(savedShells, 10));
+        } else {
+          // Merge guest shells or award standard welcome baseline
+          const guestShells = parseInt(localStorage.getItem('swc_shells') || '120', 10);
+          setShells(guestShells);
+          localStorage.setItem(userShellsKey, guestShells.toString());
+        }
 
-  useEffect(() => {
-    localStorage.setItem('swc_shells', shells.toString());
-  }, [shells]);
+        // Personalize user donations
+        const userDonsKey = `swc_user_donations_${user.id}`;
+        const savedDons = localStorage.getItem(userDonsKey);
+        if (savedDons) {
+          setUserDonations(JSON.parse(savedDons));
+        } else {
+          const guestDons = JSON.parse(localStorage.getItem('swc_user_donations') || '{"Kingston":0,"Saltwater":0}');
+          setUserDonations(guestDons);
+          localStorage.setItem(userDonsKey, JSON.stringify(guestDons));
+        }
+      } else {
+        setCurrentUser(null);
+        // Reset to guest shells baseline
+        const guestShells = parseInt(localStorage.getItem('swc_shells') || '120', 10);
+        setShells(guestShells);
+        const guestDons = JSON.parse(localStorage.getItem('swc_user_donations') || '{"Kingston":0,"Saltwater":0}');
+        setUserDonations(guestDons);
+      }
+    });
 
+    return () => unsubscribe();
+  }, []);
+
+  // Keep community donations in sync in localStorage
   useEffect(() => {
     localStorage.setItem('swc_community_donations', JSON.stringify(donations));
   }, [donations]);
-
-  useEffect(() => {
-    localStorage.setItem('swc_user_donations', JSON.stringify(userDonations));
-  }, [userDonations]);
 
   // Scroll to top on page change
   useEffect(() => {
@@ -69,31 +91,66 @@ export default function App() {
   }, [page]);
 
   const addShells = (amount) => {
-    setShells(prev => prev + amount);
+    setShells(prev => {
+      const next = prev + amount;
+      if (currentUser) {
+        localStorage.setItem(`swc_shells_${currentUser.id}`, next.toString());
+      }
+      localStorage.setItem('swc_shells', next.toString());
+      return next;
+    });
   };
 
   const handleDonate = (charity, amount) => {
     if (shells < amount) return false;
-    setShells(prev => prev - amount);
-    setDonations(prev => ({
-      ...prev,
-      [charity]: prev[charity] + amount
-    }));
-    setUserDonations(prev => ({
-      ...prev,
-      [charity]: prev[charity] + amount
-    }));
+    
+    setShells(prev => {
+      const next = prev - amount;
+      if (currentUser) {
+        localStorage.setItem(`swc_shells_${currentUser.id}`, next.toString());
+      }
+      localStorage.setItem('swc_shells', next.toString());
+      return next;
+    });
+
+    setDonations(prev => {
+      const next = {
+        ...prev,
+        [charity]: prev[charity] + amount
+      };
+      return next;
+    });
+
+    setUserDonations(prev => {
+      const next = {
+        ...prev,
+        [charity]: prev[charity] + amount
+      };
+      if (currentUser) {
+        localStorage.setItem(`swc_user_donations_${currentUser.id}`, JSON.stringify(next));
+      }
+      localStorage.setItem('swc_user_donations', JSON.stringify(next));
+      return next;
+    });
+
     return true;
   };
 
   const handleLogin = (user) => {
     setCurrentUser(user);
     // Give welcome shells when profile is registered/logged in
-    setShells(prev => prev + 50);
+    setShells(prev => {
+      const next = prev + 50;
+      if (user) {
+        localStorage.setItem(`swc_shells_${user.id}`, next.toString());
+      }
+      localStorage.setItem('swc_shells', next.toString());
+      return next;
+    });
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await authService.signOut();
   };
 
   const renderPage = () => {
