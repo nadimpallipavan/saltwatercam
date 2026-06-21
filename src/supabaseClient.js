@@ -266,7 +266,6 @@ export const authService = {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        phone,
         options: {
           data: {
             username,
@@ -282,13 +281,32 @@ export const authService = {
       }
       
       const formattedUser = {
-        username: data.user.user_metadata.username || username,
-        avatar: data.user.user_metadata.avatar || avatar,
+        username: data.user.user_metadata?.username || username,
+        avatar: data.user.user_metadata?.avatar || avatar,
         email: data.user.email,
-        phone: data.user.user_metadata.phone || phone,
-        faceImage: data.user.user_metadata.faceImage || null,
+        phone: data.user.user_metadata?.phone || phone,
+        faceImage: data.user.user_metadata?.faceImage || null,
         id: data.user.id
       };
+
+      // Cache profile locally so FaceID and SMS alerts work in Supabase mode
+      try {
+        const localUsers = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
+        const userKey = username.toLowerCase().trim();
+        localUsers[userKey] = {
+          username: username.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          avatar: formattedUser.avatar,
+          faceImage: formattedUser.faceImage,
+          salt: '',
+          passwordHash: ''
+        };
+        localStorage.setItem('swc_local_users', JSON.stringify(localUsers));
+      } catch (e) {
+        console.error('Local cache write failed', e);
+      }
+
       return { data: { user: formattedUser }, error: null };
     } else {
       return await localAuth.signUp(username, email, phone, password, avatar, faceImage);
@@ -307,15 +325,37 @@ export const authService = {
         password
       });
       if (error) return { data: null, error };
+      if (!data || !data.user) {
+        return { data: null, error: { message: 'Failed to retrieve login session.' } };
+      }
 
       const formattedUser = {
-        username: data.user.user_metadata.username || usernameOrEmail,
-        avatar: data.user.user_metadata.avatar || '🐢',
+        username: data.user.user_metadata?.username || usernameOrEmail,
+        avatar: data.user.user_metadata?.avatar || '🐢',
         email: data.user.email,
-        phone: data.user.user_metadata.phone || '',
-        faceImage: data.user.user_metadata.faceImage || null,
+        phone: data.user.user_metadata?.phone || '',
+        faceImage: data.user.user_metadata?.faceImage || null,
         id: data.user.id
       };
+
+      // Cache profile locally on successful login
+      try {
+        const localUsers = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
+        const userKey = formattedUser.username.toLowerCase().trim();
+        localUsers[userKey] = {
+          username: formattedUser.username,
+          email: formattedUser.email,
+          phone: formattedUser.phone,
+          avatar: formattedUser.avatar,
+          faceImage: formattedUser.faceImage,
+          salt: '',
+          passwordHash: ''
+        };
+        localStorage.setItem('swc_local_users', JSON.stringify(localUsers));
+      } catch (e) {
+        console.error('Local cache write failed', e);
+      }
+
       return { data: { user: formattedUser }, error: null };
     } else {
       return await localAuth.signIn(usernameOrEmail, password);
