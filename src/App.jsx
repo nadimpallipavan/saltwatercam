@@ -14,7 +14,6 @@ import WaterParticlesCanvas from './components/WaterParticlesCanvas.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import useAmbientAudio from './hooks/useAmbientAudio.js';
 import { authService } from './supabaseClient.js';
-import { ShieldAlert, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -23,17 +22,6 @@ export default function App() {
   // Authentication and gamification states
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  
-  // SMS notification simulator
-  const [smsAlert, setSmsAlert] = useState(null);
-
-  const triggerSmsAlert = (title, message, phone, type = 'success') => {
-    setSmsAlert({ title, message, phone, type });
-    // Reset timer
-    setTimeout(() => {
-      setSmsAlert(null);
-    }, 6000);
-  };
 
   const [shells, setShells] = useState(() => {
     const saved = localStorage.getItem('swc_shells');
@@ -223,85 +211,7 @@ export default function App() {
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
         onLogin={handleLogin}
-        triggerSmsAlert={triggerSmsAlert}
       />
-
-      {/* Slide-In SMS Notification Simulator */}
-      {smsAlert && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '90%',
-          maxWidth: '380px',
-          background: 'rgba(10, 25, 41, 0.95)',
-          border: smsAlert.type === 'error' ? '1.5px solid #ef4444' : '1.5px solid #22d3ee',
-          borderRadius: '16px',
-          padding: '16px',
-          boxShadow: smsAlert.type === 'error' ? '0 10px 30px rgba(239, 68, 68, 0.3), 0 0 20px rgba(0, 0, 0, 0.8)' : '0 10px 30px rgba(34, 211, 238, 0.3), 0 0 20px rgba(0, 0, 0, 0.8)',
-          zIndex: 9999,
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'flex-start',
-          animation: 'slideDownAlert 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-        }}>
-          {/* Banner Icon */}
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: smsAlert.type === 'error' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 211, 238, 0.15)',
-            border: smsAlert.type === 'error' ? '1px solid #ef4444' : '1px solid #22d3ee',
-            color: smsAlert.type === 'error' ? '#f87171' : '#22d3ee',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            {smsAlert.type === 'error' ? <ShieldAlert size={20} /> : <Sparkles size={20} />}
-          </div>
-          
-          {/* Banner Content */}
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.72rem', color: '#b7cad6', fontWeight: '800', fontFamily: 'monospace' }}>
-                💬 SMS GATEWAY ({smsAlert.phone})
-              </span>
-              <span style={{ fontSize: '0.65rem', color: '#b7cad6' }}>now</span>
-            </div>
-            <div style={{ fontSize: '0.82rem', fontWeight: '800', color: '#fff', marginTop: '4px' }}>
-              {smsAlert.title}
-            </div>
-            <div style={{ fontSize: '0.76rem', color: '#b7cad6', marginTop: '2px', lineHeight: '1.3' }}>
-              {smsAlert.message}
-            </div>
-          </div>
-
-          {/* Close button */}
-          <button 
-            onClick={() => setSmsAlert(null)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#b7cad6',
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              padding: 0,
-              lineHeight: 1
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes slideDownAlert {
-          from { transform: translate(-50%, -100px); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

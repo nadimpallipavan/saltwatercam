@@ -11,24 +11,10 @@ const AVATARS = [
   { id: 'dolphin', emoji: '🐬', name: 'Dolphin', color: '#06b6d4' },
 ];
 
-const COUNTRIES = [
-  { code: '+1', flag: '🇺🇸', name: 'US/CA' },
-  { code: '+44', flag: '🇬🇧', name: 'UK' },
-  { code: '+91', flag: '🇮🇳', name: 'India' },
-  { code: '+61', flag: '🇦🇺', name: 'Australia' },
-  { code: '+33', flag: '🇫🇷', name: 'France' },
-  { code: '+49', flag: '🇩🇪', name: 'Germany' },
-  { code: '+81', flag: '🇯🇵', name: 'Japan' },
-  { code: '+55', flag: '🇧🇷', name: 'Brazil' },
-  { code: '+27', flag: '🇿🇦', name: 'S. Africa' },
-];
-
-export default function AuthModal({ isOpen, onClose, onLogin, triggerSmsAlert }) {
+export default function AuthModal({ isOpen, onClose, onLogin }) {
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
   const [password, setPassword] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('turtle');
   const [error, setError] = useState('');
@@ -65,19 +51,6 @@ export default function AuthModal({ isOpen, onClose, onLogin, triggerSmsAlert })
     }
   };
 
-  const getUserPhone = (usernameOrEmail) => {
-    try {
-      const localUsers = JSON.parse(localStorage.getItem('swc_local_users') || '{}');
-      const inputKey = usernameOrEmail.toLowerCase().trim();
-      let user = localUsers[inputKey];
-      if (!user) {
-        user = Object.values(localUsers).find(u => u.email && u.email.toLowerCase().trim() === inputKey);
-      }
-      return user ? user.phone : null;
-    } catch (e) {
-      return null;
-    }
-  };
 
   // Cleanup camera stream
   const stopCamera = () => {
@@ -268,18 +241,6 @@ export default function AuthModal({ isOpen, onClose, onLogin, triggerSmsAlert })
         setLoading(false);
         return;
       }
-
-      if (!phone.trim()) {
-        setError('Phone number is required for notifications.');
-        setLoading(false);
-        return;
-      }
-      const phoneRegex = /^\+?[0-9\s\-()]{7,18}$/;
-      if (!phoneRegex.test(phone.trim())) {
-        setError('Please enter a valid phone number.');
-        setLoading(false);
-        return;
-      }
     }
 
     if (password.length < 6) {
@@ -295,40 +256,17 @@ export default function AuthModal({ isOpen, onClose, onLogin, triggerSmsAlert })
       if (isLoginTab) {
         res = await authService.signIn(username, password);
       } else {
-        const phoneWithCode = `${countryCode} ${phone.trim()}`;
-        res = await authService.signUp(username, email, phoneWithCode, password, avatarObj.emoji, faceSnapshot);
+        res = await authService.signUp(username, email, '', password, avatarObj.emoji, faceSnapshot);
       }
 
       if (res.error) {
         setError(res.error.message);
-        // SMS Alert for wrong password / incorrect credentials
-        if (isLoginTab && (res.error.message.toLowerCase().includes('password') || res.error.message.toLowerCase().includes('invalid'))) {
-          const userPhone = getUserPhone(username);
-          if (userPhone && triggerSmsAlert) {
-            triggerSmsAlert(
-              'SECURITY ALERT: Failed Login Attempt',
-              `Warning: An incorrect access code was entered for your profile '${username.trim()}'. Secure login block active.`,
-              userPhone,
-              'error'
-            );
-          }
-        }
       } else {
-        if (!isLoginTab && triggerSmsAlert) {
-          const phoneWithCode = `${countryCode} ${phone.trim()}`;
-          triggerSmsAlert(
-            'Explorer Profile Registered',
-            `Welcome to SaltwaterCam V2, ${username.trim()}! Your profile has been created successfully with biometric 360° FaceID signature.`,
-            phoneWithCode,
-            'success'
-          );
-        }
         onLogin(res.data.user);
         onClose();
         // Clear fields
         setUsername('');
         setEmail('');
-        setPhone('');
         setPassword('');
         setFaceSnapshot(null);
       }
@@ -578,82 +516,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, triggerSmsAlert })
                 </div>
               </div>
 
-              {/* Phone Input */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'left' }}>
-                <label style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Phone Number (For Instant SMS Alerts)
-                </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {/* Country Code Dropdown */}
-                  <div style={{ position: 'relative', width: '100px', flexShrink: 0 }}>
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        padding: '12px 28px 12px 10px',
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        border: '1.5px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '10px',
-                        color: '#fff',
-                        fontSize: '0.85rem',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        appearance: 'none',
-                        backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b7cad6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 8px center',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#22d3ee';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                      }}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code} style={{ background: '#062031', color: '#fff' }}>
-                          {c.flag} {c.code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
 
-                  {/* Phone Input text field */}
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <Phone size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#b7cad6' }} />
-                    <input
-                      type="tel"
-                      placeholder="e.g. (555) 019-2834"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px 12px 42px',
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        border: '1.5px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '10px',
-                        color: '#fff',
-                        fontSize: '0.9rem',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#22d3ee';
-                        e.target.style.boxShadow = '0 0 10px rgba(34, 211, 238, 0.15)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
             </>
           )}
 
