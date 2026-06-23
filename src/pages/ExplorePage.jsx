@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { siteContent } from '../data/siteContent.js';
-import { MapPin, Info, ArrowRight, ShieldAlert } from 'lucide-react';
-import TiltCard from '../components/TiltCard.jsx';
+import { MapPin, Clock } from 'lucide-react';
 import useScrollReveal from '../hooks/useScrollReveal.js';
 
 export default function ExplorePage() {
-  const [activeSpecies, setActiveSpecies] = useState(null);
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [clickedPoint, setClickedPoint] = useState(null);
   const revealRef = useScrollReveal();
@@ -45,57 +43,9 @@ export default function ExplorePage() {
     <div className="pageContainer">
       <div className="sectionHeader">
         <p className="eyebrow"><MapPin size={18} /> Exploration Hub</p>
-        <h1>Explore Lantana & Marine Life</h1>
-        <p className="subtitle">Learn about our local ecosystem in Lantana, Florida, and discover the species seen on camera.</p>
+        <h1>Explore Boynton Inlet Ecosystem</h1>
+        <p className="subtitle">Discover our local geographical landscape in Lantana, Florida, and view real-time sightings.</p>
       </div>
-
-      {/* Species Catalog Grid */}
-      <section className="exploreSection">
-        <h2 className="subHeading">Marine Life Directory</h2>
-        <p className="sectionDesc">Click on any card to view deep-dive biological details, conservation status, and fun facts.</p>
-        
-        <div className="speciesGrid">
-          {siteContent.species.map((s, index) => {
-            const delayClass = `delay-${(index % 3) + 1}`;
-            return (
-              <TiltCard 
-                key={s.id} 
-                revealRef={revealRef}
-                className={`speciesCard ${delayClass} ${activeSpecies === s.id ? 'active' : ''}`}
-                onClick={() => setActiveSpecies(activeSpecies === s.id ? null : s.id)}
-              >
-                <div className="cardHeader">
-                  <span className="countBadge">{s.count} Sightings</span>
-                  <h3>{s.name}</h3>
-                  <span className="scientificName"><i>{s.scientific}</i></span>
-                </div>
-                <p className="cardFact">{s.fact}</p>
-                
-                {activeSpecies === s.id && (
-                  <div className="extendedInfo">
-                    <div className="statRow">
-                      <strong>Average Size:</strong> <span>{s.size}</span>
-                    </div>
-                    <div className="statRow">
-                      <strong>Primary Diet:</strong> <span>{s.diet}</span>
-                    </div>
-                    <div className="statRow">
-                      <strong>Fun Fact:</strong> <span>{s.funFact}</span>
-                    </div>
-                    <div className="statusAlert">
-                      <ShieldAlert size={16} />
-                      <span><strong>Status:</strong> {s.status}</span>
-                    </div>
-                  </div>
-                )}
-                <button className="expandBtn">
-                  {activeSpecies === s.id ? 'Show Less' : 'Deep Dive Facts'} <ArrowRight size={14} />
-                </button>
-              </TiltCard>
-            );
-          })}
-        </div>
-      </section>
 
       {/* Interactive Map Section */}
       <section className="exploreSection mapSection" ref={revealRef}>
@@ -149,6 +99,24 @@ export default function ExplorePage() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Sightings Timeline Section */}
+      <section className="exploreSection timelineSection" ref={revealRef} style={{ marginTop: '60px' }}>
+        <h2 className="subHeading"><Clock size={20} className="text-aqua" style={{ display: 'inline', marginRight: '8px' }} /> Recent Camera Sightings</h2>
+        <p className="sectionDesc">Real-time timeline of marine species spotted passing by the Lantana dock camera today.</p>
+        
+        <div className="dashboardTimeline" style={{ marginTop: '24px', paddingLeft: '30px' }}>
+          {siteContent.timeline.map((item, idx) => (
+            <div key={idx} className="timelineItem" style={{ marginBottom: '24px' }}>
+              <span className="timelineTime" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: '#22d3ee', marginBottom: '4px' }}>{item.time}</span>
+              <div className="timelineContent">
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '600', margin: 0 }}>{item.species}</h4>
+                <p style={{ color: '#b7cad6', margin: '4px 0 0 0', fontSize: '0.95rem' }}>{item.note}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>

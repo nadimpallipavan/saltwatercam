@@ -24,7 +24,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
       {/* Desktop Navigation */}
       <nav className="nav">
         {siteContent.tabs.map((tab) => {
-          const isActive = page === tab.id || (tab.id === 'explore' && page === 'marine-life') || (tab.id === 'education' && page === 'conservation');
+          const isActive = page === tab.id;
           return (
             <button 
               key={tab.id} 

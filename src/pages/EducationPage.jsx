@@ -1,5 +1,5 @@
 import { siteContent } from '../data/siteContent.js';
-import { BookOpen, ShieldCheck, Waves, HelpCircle } from 'lucide-react';
+import { BookOpen, Waves, HelpCircle } from 'lucide-react';
 import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
 
@@ -9,9 +9,9 @@ export default function EducationPage({ setPage }) {
   return (
     <div className="pageContainer">
       <div className="sectionHeader">
-        <p className="eyebrow"><BookOpen size={18} /> Education & Impact</p>
-        <h1>Protect & Learn About Our Ocean</h1>
-        <p className="subtitle">Discover how green lights work, how tides affect local channels, and how we can preserve marine environments.</p>
+        <p className="eyebrow"><BookOpen size={18} /> Education & Ecosystems</p>
+        <h1>Ecosystem Education Hub</h1>
+        <p className="subtitle">Discover the science behind our green underwater lights and how tides affect marine migration.</p>
       </div>
 
       <div className="eduGrid">
@@ -46,36 +46,19 @@ export default function EducationPage({ setPage }) {
         </TiltCard>
       </div>
 
-      {/* Conservation section */}
-      <section className="conservationSection" ref={revealRef}>
-        <div className="twoCol">
-          <div>
-            <p className="eyebrow"><ShieldCheck size={18} /> Conservation</p>
-            <h2>Preserving Florida's Coastal Reefs</h2>
-            <p>
-              The waters surrounding Boynton Beach Inlet are home to rich coral reefs and critical seagrass beds. 
-              These habitats serve as nurseries for more than 70% of Florida's marine species.
-            </p>
-            <p>
-              By observing marine life without disturbing them, SaltWaterCam aims to inspire a love for the ocean in 
-              the next generation, fostering environmental stewardship and supporting ocean conservation efforts.
-            </p>
-            <button className="primaryBtn" onClick={() => setPage('watch')}>Observe Live Stream</button>
-          </div>
-          <div className="conservationStats">
-            <TiltCard className="metricBox" revealRef={revealRef}>
-              <strong>92%</strong>
-              <span>Local reef health score</span>
-            </TiltCard>
-            <TiltCard className="metricBox delay-1" revealRef={revealRef}>
-              <strong>12,430 lbs</strong>
-              <span>Plastic waste removed locally</span>
-            </TiltCard>
-            <TiltCard className="metricBox delay-2" revealRef={revealRef}>
-              <strong>1,250</strong>
-              <span>Corals planted under V3 plans</span>
-            </TiltCard>
-          </div>
+      {/* FAQs section moved here for educational reference */}
+      <section className="faqSection" ref={revealRef} style={{ marginTop: '60px', width: '100%' }}>
+        <h2 className="subHeading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <HelpCircle size={24} className="text-aqua" /> Frequently Asked Questions
+        </h2>
+        <p className="sectionDesc" style={{ marginBottom: '28px' }}>Got questions about the camera setup or streaming? Here are direct answers.</p>
+        <div className="faqGrid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {siteContent.faqs.map((faq, idx) => (
+            <div key={idx} className="faqItem" style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(34, 211, 238, 0.05)' }}>
+              <h4 style={{ color: '#22d3ee', margin: '0 0 8px 0', fontSize: '1.1rem' }}>{faq.q}</h4>
+              <p style={{ color: '#b7cad6', margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>{faq.a}</p>
+            </div>
+          ))}
         </div>
       </section>
     </div>

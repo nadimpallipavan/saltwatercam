@@ -4,8 +4,10 @@ import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
 import WatchLive from './pages/WatchLive.jsx';
 import ExplorePage from './pages/ExplorePage.jsx';
+import MarineLifePage from './pages/MarineLifePage.jsx';
 import KidsClubPage from './pages/KidsClubPage.jsx';
 import EducationPage from './pages/EducationPage.jsx';
+import ConservationPage from './pages/ConservationPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import WaterParticlesCanvas from './components/WaterParticlesCanvas.jsx';
 import useAmbientAudio from './hooks/useAmbientAudio.js';
@@ -26,13 +28,15 @@ export default function App() {
       case 'watch':
         return <WatchLive />;
       case 'explore':
-      case 'marine-life':
         return <ExplorePage />;
+      case 'marine-life':
+        return <MarineLifePage />;
       case 'kids-club':
         return <KidsClubPage />;
       case 'education':
-      case 'conservation':
         return <EducationPage setPage={setPage} />;
+      case 'conservation':
+        return <ConservationPage setPage={setPage} />;
       case 'about':
         return <AboutPage />;
       default:
