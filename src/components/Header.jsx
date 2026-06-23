@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, X, Play } from 'lucide-react';
 import { siteContent } from '../data/siteContent.js';
+import logoText from '../assets/logo-text.png';
 
 export default function Header({ page, setPage, isAudioPlaying, onToggleAudio }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,7 +16,7 @@ export default function Header({ page, setPage, isAudioPlaying, onToggleAudio })
       {/* Brand logo image from mockup */}
       <button className="brand" onClick={() => handleNavClick('home')} aria-label="Go home">
         <img 
-          src="logo-text.png?v=5" 
+          src={logoText} 
           alt={`${siteContent.brand} Logo`} 
           className="brandLogoImg" 
         />

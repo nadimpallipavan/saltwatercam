@@ -1,5 +1,6 @@
 import { Mail } from 'lucide-react';
 import { siteContent } from '../data/siteContent.js';
+import logoText from '../assets/logo-text.png';
 
 export default function Footer({ setPage }) {
   return (
@@ -8,7 +9,7 @@ export default function Footer({ setPage }) {
       <div className="footerLogo">
         <button onClick={() => setPage('home')} aria-label="Go home">
           <img 
-            src="logo-text.png?v=5" 
+            src={logoText} 
             alt={`${siteContent.brand} Logo`} 
             className="footerLogoImg" 
           />

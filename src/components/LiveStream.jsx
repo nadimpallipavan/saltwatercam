@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
+import watchLiveBg from '../assets/watch-live-bg-clean.png';
 
 export default function LiveStream() {
   const [isPlaying, setIsPlaying] = useState(true);
@@ -23,7 +24,7 @@ export default function LiveStream() {
 
           {/* Mockup live stream background */}
           <img 
-            src="watch-live-bg-clean.png" 
+            src={watchLiveBg} 
             alt="Live Underwater Stream" 
             className="streamBgImage" 
           />

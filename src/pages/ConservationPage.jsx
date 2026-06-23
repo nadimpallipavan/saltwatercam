@@ -30,16 +30,16 @@ export default function ConservationPage({ setPage }) {
           </div>
           <div className="conservationStats">
             <TiltCard className="metricBox" revealRef={revealRef}>
-              <strong>92%</strong>
-              <span>Local reef health score</span>
+              <strong>55+</strong>
+              <span>Vessels Deployed as Reef Bases</span>
             </TiltCard>
             <TiltCard className="metricBox delay-1" revealRef={revealRef}>
-              <strong>12,430 lbs</strong>
-              <span>Plastic waste removed locally</span>
+              <strong>100,000+ Tons</strong>
+              <span>Concrete Materials Deployed</span>
             </TiltCard>
             <TiltCard className="metricBox delay-2" revealRef={revealRef}>
-              <strong>1,250</strong>
-              <span>Corals planted under V3 plans</span>
+              <strong>133,000+ Tons</strong>
+              <span>Limestone Boulders Deployed</span>
             </TiltCard>
           </div>
         </div>
