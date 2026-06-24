@@ -8,10 +8,10 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
 
   // Simulated AI targets tracking
   const [detections, setDetections] = useState([
-    { id: 1, label: 'COMMON SNOOK', confidence: 94, x: '35%', y: '40%', w: 130, h: 65, visible: true },
-    { id: 2, label: 'ATLANTIC TARPON', confidence: 89, x: '65%', y: '30%', w: 180, h: 75, visible: false },
-    { id: 3, label: 'GOLIATH GROUPER', confidence: 91, x: '45%', y: '60%', w: 150, h: 90, visible: true },
-    { id: 4, label: 'GREEN SEA TURTLE', confidence: 97, x: '72%', y: '50%', w: 110, h: 70, visible: false },
+    { id: 1, label: 'COMMON SNOOK', confidence: 98, x: '35%', y: '40%', w: 130, h: 65, visible: true },
+    { id: 2, label: 'ATLANTIC TARPON', confidence: 97, x: '65%', y: '30%', w: 180, h: 75, visible: false },
+    { id: 3, label: 'GOLIATH GROUPER', confidence: 96, x: '45%', y: '60%', w: 150, h: 90, visible: true },
+    { id: 4, label: 'GREEN SEA TURTLE', confidence: 99, x: '72%', y: '50%', w: 110, h: 70, visible: false },
   ]);
 
   // Gamification floating items states
@@ -41,7 +41,7 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
           const yVal = parseInt(d.y) + (Math.random() > 0.5 ? 2 : -2);
           nextX = `${Math.max(15, Math.min(80, xVal))}%`;
           nextY = `${Math.max(20, Math.min(70, yVal))}%`;
-          nextConf = Math.min(99, Math.max(82, d.confidence + (Math.random() > 0.5 ? 1 : -1)));
+          nextConf = Math.min(99, Math.max(94, d.confidence + (Math.random() > 0.5 ? 1 : -1)));
         }
 
         return { ...d, visible: nextVisible, x: nextX, y: nextY, confidence: nextConf };
