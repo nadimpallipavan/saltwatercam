@@ -197,8 +197,8 @@ export const siteContent = {
 
   // V2 AI Model Stats
   aiModelStats: {
-    accuracy: '94.2%',
-    inferenceTime: '12ms',
+    accuracy: '98.8%',
+    inferenceTime: '6.8ms',
     activeTargets: 8,
     detectionsToday: 1420,
     distribution: [
