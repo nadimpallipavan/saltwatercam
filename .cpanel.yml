@@ -1,6 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/adminsaltwater/public_html/staging/
+    - export DEPLOYPATH=/home/adminsaltwater/dev.saltwatercam.com/v2.0/
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R dist/* $DEPLOYPATH
