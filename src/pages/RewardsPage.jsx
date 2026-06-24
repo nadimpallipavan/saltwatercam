@@ -551,6 +551,7 @@ export default function RewardsPage({
                   <img 
                     src={item.image} 
                     alt={item.title} 
+                    loading="lazy"
                     style={{
                       maxHeight: '100%',
                       maxWidth: '100%',

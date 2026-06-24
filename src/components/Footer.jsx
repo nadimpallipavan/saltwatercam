@@ -11,6 +11,7 @@ export default function Footer({ setPage }) {
             src="logo-text.png?v=5" 
             alt={`${siteContent.brand} Logo`} 
             className="footerLogoImg" 
+            loading="lazy"
           />
         </button>
       </div>
