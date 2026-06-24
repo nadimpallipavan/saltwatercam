@@ -1412,7 +1412,7 @@ button:focus-visible, a:focus-visible {
     padding: 0 24px;
   }
   .nav, .watchBtn, .headerAuthWidget {
-    display: none;
+    display: none !important;
   }
   .menuBtn {
     display: block;
