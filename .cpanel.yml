@@ -1,5 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/adminsaltwater/public_html/
+    - export DEPLOYPATH=/home/adminsaltwater/dev.saltwatercam.com/v1.1/
+    - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R dist/* $DEPLOYPATH
