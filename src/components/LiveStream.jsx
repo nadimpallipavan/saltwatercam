@@ -51,6 +51,27 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
     return () => clearInterval(interval);
   }, [isPlaying, aiEnabled]);
 
+  // Handle YouTube iframe play/pause and mute/unmute via postMessage API
+  useEffect(() => {
+    const iframe = document.getElementById('yt-live-stream');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: isPlaying ? 'playVideo' : 'pauseVideo'
+      }), '*');
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const iframe = document.getElementById('yt-live-stream');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: isMuted ? 'mute' : 'unMute'
+      }), '*');
+    }
+  }, [isMuted]);
+
   // 1. Game loop: Spawn floating items (fish/trash)
   useEffect(() => {
     if (!isPlaying) return;
@@ -169,11 +190,23 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
             </div>
           )}
 
-          {/* Mockup live stream background */}
-          <img 
-            src="watch-live-bg-clean.png" 
-            alt="Live Underwater Stream" 
-            className="streamBgImage" 
+          {/* Real Live YouTube Stream */}
+          <iframe 
+            id="yt-live-stream"
+            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+            title="Live Underwater Stream" 
+            className="streamBgImage"
+            style={{ 
+              border: 'none', 
+              pointerEvents: 'none',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 1
+            }}
+            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing Green Beam */}
@@ -361,11 +394,11 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
           <div className="streamTopOverlay">
             <div className="streamInfoLeft">
               <div className="liveFeedTitle">
-                <span className="liveFeedDot" style={{ backgroundColor: '#f59e0b', boxShadow: '0 0 10px #f59e0b' }} />
-                <span>DEMO FEED <span className="timezoneLabel">(Connection Pending)</span></span>
+                <span className="liveFeedDot" style={{ backgroundColor: '#39ff88', boxShadow: '0 0 10px #39ff88' }} />
+                <span>LIVE FEED</span>
               </div>
               <div className="streamCamName">
-                Cam 1 - Reef View (Demo Mode)
+                Cam 1 - Lantana Reef View
               </div>
             </div>
             
@@ -432,8 +465,8 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
             </button>
 
             <div className="playerBarLiveStatus">
-              <span className="liveStatusDot" style={{ backgroundColor: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }} />
-              <span>DEMO</span>
+              <span className="liveStatusDot" style={{ backgroundColor: '#39ff88', boxShadow: '0 0 8px #39ff88' }} />
+              <span>LIVE</span>
             </div>
 
             {/* Center Seek/Progress Line (Green bar from mockup) */}
