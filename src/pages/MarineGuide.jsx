@@ -3,12 +3,14 @@ import { siteContent } from '../data/siteContent.js';
 import { MapPin, Info, ArrowRight, ShieldAlert, Filter } from 'lucide-react';
 import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
+import AIFeaturesPage from './AIFeaturesPage.jsx';
 
 export default function MarineGuide() {
   const [activeSpecies, setActiveSpecies] = useState(null);
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [clickedPoint, setClickedPoint] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [activeSubTab, setActiveSubTab] = useState('directory'); // 'directory' or 'ai'
   
   const revealRef = useScrollReveal();
 
@@ -72,6 +74,61 @@ export default function MarineGuide() {
           Browse our localized fish guide and view the interactive map showing the exact paths species take through the Lantana Intracoastal waterway.
         </p>
       </div>
+
+      {/* Sub-view Toggle */}
+      <div className="subViewToggleContainer" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        marginBottom: '40px',
+      }}>
+        <div style={{
+          display: 'inline-flex',
+          background: 'rgba(6, 32, 49, 0.65)',
+          border: '1.5px solid rgba(34, 211, 238, 0.25)',
+          padding: '4px',
+          borderRadius: '30px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <button
+            onClick={() => setActiveSubTab('directory')}
+            style={{
+              background: activeSubTab === 'directory' ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'transparent',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 24px',
+              borderRadius: '24px',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              fontFamily: 'Outfit, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            Ecosystem Directory
+          </button>
+          <button
+            onClick={() => setActiveSubTab('ai')}
+            style={{
+              background: activeSubTab === 'ai' ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'transparent',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 24px',
+              borderRadius: '24px',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              fontFamily: 'Outfit, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            AI Telemetry & Vision
+          </button>
+        </div>
+      </div>
+
+      {activeSubTab === 'directory' ? (
+        <>
 
       {/* Interactive Map Section */}
       <section className="exploreSection mapSection" style={{ marginBottom: '56px' }}>
@@ -295,6 +352,10 @@ export default function MarineGuide() {
           })}
         </div>
       </section>
+        </>
+      ) : (
+        <AIFeaturesPage isNested={true} />
+      )}
     </div>
   );
 }

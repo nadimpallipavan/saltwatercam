@@ -28,7 +28,7 @@ export default function Hero({ setPage }) {
             <Play size={18} fill="currentColor" /> WATCH LIVE NOW
           </button>
           
-          <button className="secondaryBtn exploreBtn" onClick={() => setPage('explore')}>
+          <button className="secondaryBtn exploreBtn" onClick={() => setPage('marine-guide')}>
             EXPLORE OCEAN
           </button>
         </div>

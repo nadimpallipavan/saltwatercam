@@ -30,14 +30,14 @@ export default function Home({ setPage }) {
 
       {/* Core V1 Feature Previews */}
       <section id="explore" className="section cards">
-        <TiltCard className="card" revealRef={revealRef} onClick={() => setPage('explore')}>
+        <TiltCard className="card" revealRef={revealRef} onClick={() => setPage('marine-guide')}>
           <div className="cardIcon"><ShieldCheck size={24} /></div>
           <h3>Green Fish Light</h3>
           <p>Learn how our 1000-watt green LED light cuts through coastal turbidity to attract local marine life and create a thriving nocturnal feeding ground.</p>
           <span className="cardAction">Learn science <ArrowRight size={14} /></span>
         </TiltCard>
 
-        <TiltCard className="card delay-1" revealRef={revealRef} onClick={() => setPage('explore')}>
+        <TiltCard className="card delay-1" revealRef={revealRef} onClick={() => setPage('marine-guide')}>
           <div className="cardIcon"><Heart size={24} /></div>
           <h3>Local Marine Life</h3>
           <p>From juvenile sea turtles and Southern stingrays to migrating tarpon, discover the species that swim through the Boynton Beach Inlet region daily.</p>

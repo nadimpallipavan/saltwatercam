@@ -11,7 +11,8 @@ export default function RewardsPage({
   communityDonations = { Kingston: 3420, Saltwater: 5840 },
   userDonations = { Kingston: 0, Saltwater: 0 },
   currentUser,
-  onOpenAuth 
+  onOpenAuth,
+  isNested = false
 }) {
   // Sync XP from KidsClubPage local storage key so they are connected
   const [xp, setXp] = useState(() => {
@@ -96,18 +97,20 @@ export default function RewardsPage({
   const saltwaterPercent = Math.min(100, (communityDonations.Saltwater / SaltwaterGoal) * 100);
 
   return (
-    <div className="pageContainer rewardsPage" style={{ maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
-      <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
-          <Gift size={14} /> Rewards & Conservation
-        </p>
-        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
-          Explorer Rewards & Pledges
-        </h1>
-        <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
-          Redeem wallpapers with your XP, or pledge your collected livestream shells to support real-world ocean conservation efforts!
-        </p>
-      </div>
+    <div className={isNested ? "rewardsPage" : "pageContainer rewardsPage"} style={isNested ? { color: '#fff' } : { maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
+      {!isNested && (
+        <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
+            <Gift size={14} /> Rewards & Conservation
+          </p>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
+            Explorer Rewards & Pledges
+          </h1>
+          <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
+            Redeem wallpapers with your XP, or pledge your collected livestream shells to support real-world ocean conservation efforts!
+          </p>
+        </div>
+      )}
 
       {/* Stateful XP & Shell Wallet Status Panels */}
       <div style={{

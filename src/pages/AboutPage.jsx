@@ -1,6 +1,7 @@
 import { siteContent } from '../data/siteContent.js';
 import { HelpCircle, Waves, Mail, ShieldAlert } from 'lucide-react';
 import useScrollReveal from '../hooks/useScrollReveal.js';
+import ContactPage from './ContactPage.jsx';
 
 export default function AboutPage() {
   const revealRef = useScrollReveal();
@@ -42,6 +43,11 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Embedded Contact Form */}
+      <div style={{ marginTop: '56px', borderTop: '1px solid rgba(34, 211, 238, 0.15)', paddingTop: '56px' }}>
+        <ContactPage isNested={true} />
       </div>
     </div>
   );

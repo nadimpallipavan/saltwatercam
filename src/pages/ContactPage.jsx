@@ -3,7 +3,7 @@ import { Mail, MapPin, Send, Check } from 'lucide-react';
 import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
 
-export default function ContactPage() {
+export default function ContactPage({ isNested = false }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('General Sighting Question');
@@ -26,18 +26,20 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="pageContainer contactPage" style={{ maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
-      <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
-          <Mail size={14} /> Contact Us
-        </p>
-        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
-          Connect with the Team
-        </h1>
-        <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
-          Have feedback on the AI detections, suggestions for local reef studies, or business partnership inquiries? Drop us a note!
-        </p>
-      </div>
+    <div className={isNested ? "contactPage" : "pageContainer contactPage"} style={isNested ? { color: '#fff' } : { maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
+      {!isNested && (
+        <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
+            <Mail size={14} /> Contact Us
+          </p>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
+            Connect with the Team
+          </h1>
+          <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
+            Have feedback on the AI detections, suggestions for local reef studies, or business partnership inquiries? Drop us a note!
+          </p>
+        </div>
+      )}
 
       {/* Grid: Left side Contact details, Right side Form */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', alignItems: 'start' }}>

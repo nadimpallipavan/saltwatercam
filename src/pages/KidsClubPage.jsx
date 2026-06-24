@@ -3,8 +3,18 @@ import { siteContent } from '../data/siteContent.js';
 import { Award, CheckCircle2, XCircle, RotateCcw, HelpCircle, Trophy, Compass, Star, Printer } from 'lucide-react';
 import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
+import RewardsPage from './RewardsPage.jsx';
 
-export default function KidsClubPage() {
+export default function KidsClubPage({
+  shells = 120,
+  setShells,
+  onDonate,
+  communityDonations = { Kingston: 3420, Saltwater: 5840 },
+  userDonations = { Kingston: 0, Saltwater: 0 },
+  currentUser,
+  onOpenAuth,
+  addShells
+}) {
   const [xp, setXp] = useState(() => {
     const saved = localStorage.getItem('swc_kids_xp');
     return saved ? parseInt(saved, 10) : 0;
@@ -14,6 +24,7 @@ export default function KidsClubPage() {
     return saved ? JSON.parse(saved) : [];
   });
   const [unlockedBadges, setUnlockedBadges] = useState([]);
+  const [activeSubTab, setActiveSubTab] = useState('missions'); // 'missions' or 'rewards'
   
   // Sync back to localStorage
   useEffect(() => {
@@ -104,8 +115,61 @@ export default function KidsClubPage() {
         </p>
       </div>
 
-      {/* Main Grid: Left Side stats/badges, Right Side missions/quiz */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', alignItems: 'start' }}>
+      {/* Sub-view Toggle */}
+      <div className="subViewToggleContainer" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        marginBottom: '40px',
+      }}>
+        <div style={{
+          display: 'inline-flex',
+          background: 'rgba(6, 32, 49, 0.65)',
+          border: '1.5px solid rgba(34, 211, 238, 0.25)',
+          padding: '4px',
+          borderRadius: '30px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <button
+            onClick={() => setActiveSubTab('missions')}
+            style={{
+              background: activeSubTab === 'missions' ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'transparent',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 24px',
+              borderRadius: '24px',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              fontFamily: 'Outfit, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            Missions & Quests
+          </button>
+          <button
+            onClick={() => setActiveSubTab('rewards')}
+            style={{
+              background: activeSubTab === 'rewards' ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'transparent',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 24px',
+              borderRadius: '24px',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              fontFamily: 'Outfit, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            Redeem Rewards
+          </button>
+        </div>
+      </div>
+
+      {activeSubTab === 'missions' ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', alignItems: 'start' }}>
         
         {/* Left Column: Progress & Badges */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
@@ -468,6 +532,19 @@ export default function KidsClubPage() {
             <Printer size={16} /> PRINT CERTIFICATE
           </button>
         </div>
+      )}
+        </>
+      ) : (
+        <RewardsPage
+          isNested={true}
+          shells={shells}
+          setShells={setShells}
+          onDonate={onDonate}
+          communityDonations={communityDonations}
+          userDonations={userDonations}
+          currentUser={currentUser}
+          onOpenAuth={onOpenAuth}
+        />
       )}
     </div>
   );

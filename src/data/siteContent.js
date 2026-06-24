@@ -13,13 +13,10 @@ export const siteContent = {
   tabs: [
     { id: 'home', label: 'Home' },
     { id: 'watch', label: 'Watch Live' },
-    { id: 'kids-club', label: 'Kids Ocean Adventure' },
     { id: 'marine-guide', label: 'Marine Guide' },
+    { id: 'kids-club', label: 'Kids Club' },
     { id: 'community', label: 'Community' },
-    { id: 'ai-features', label: 'AI Features' },
-    { id: 'rewards', label: 'Rewards' },
-    { id: 'about', label: 'About' },
-    { id: 'contact', label: 'Contact' }
+    { id: 'about', label: 'About' }
   ],
 
   // Environmental conditions

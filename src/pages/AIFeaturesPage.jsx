@@ -4,7 +4,7 @@ import { Cpu, Target, Clock, BarChart3, ShieldCheck, Zap, Sparkles, MessageSquar
 import TiltCard from '../components/TiltCard.jsx';
 import useScrollReveal from '../hooks/useScrollReveal.js';
 
-export default function AIFeaturesPage() {
+export default function AIFeaturesPage({ isNested = false }) {
   const revealRef = useScrollReveal();
   const stats = siteContent.aiModelStats;
 
@@ -87,7 +87,7 @@ Could you clarify if you'd like details on Snook hunting patterns, Tarpon migrat
   };
 
   return (
-    <div className="pageContainer aiFeaturesPage" style={{ maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
+    <div className={isNested ? "aiFeaturesPage" : "pageContainer aiFeaturesPage"} style={isNested ? { color: '#fff' } : { maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
       
       {/* Keyframe animations styles injection */}
       <style>{`
@@ -101,17 +101,19 @@ Could you clarify if you'd like details on Snook hunting patterns, Tarpon migrat
         }
       `}</style>
 
-      <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
-          <Cpu size={14} /> AI Features
-        </p>
-        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
-          AI Computer Vision Dashboard
-        </h1>
-        <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
-          Explore metrics from our simulated YOLOv8-based computer vision model deployed to recognize Florida marine life.
-        </p>
-      </div>
+      {!isNested && (
+        <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
+            <Cpu size={14} /> AI Features
+          </p>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: '900', margin: '12px 0 6px 0', letterSpacing: '0.01em' }}>
+            AI Computer Vision Dashboard
+          </h1>
+          <p className="subtitle" style={{ fontSize: '1rem', color: '#b7cad6', maxWidth: '650px', margin: '0 auto', lineHeight: '1.5' }}>
+            Explore metrics from our simulated YOLOv8-based computer vision model deployed to recognize Florida marine life.
+          </p>
+        </div>
+      )}
 
       {/* Grid: 4 Core Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '40px' }}>

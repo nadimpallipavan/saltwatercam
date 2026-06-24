@@ -20,7 +20,7 @@ export default function Header({
   };
 
   return (
-    <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <header className="header">
       {/* Brand logo image from mockup */}
       <button className="brand" onClick={() => handleNavClick('home')} aria-label="Go home" style={{ display: 'flex', alignItems: 'center' }}>
         <img 
@@ -31,7 +31,7 @@ export default function Header({
       </button>
 
       {/* Desktop Navigation */}
-      <nav className="nav" style={{ display: 'flex', gap: '24px', marginLeft: 'auto', marginRight: '20px' }}>
+      <nav className="nav">
         {siteContent.tabs.map((tab) => {
           const isActive = page === tab.id;
           return (

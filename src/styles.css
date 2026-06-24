@@ -68,6 +68,7 @@ button:focus-visible, a:focus-visible {
   display: flex;
   gap: 24px;
   margin-left: auto;
+  margin-right: 20px;
 }
 .nav button {
   background: transparent;
