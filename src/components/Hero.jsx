@@ -15,21 +15,23 @@ export default function Hero({ setPage }) {
 
         {/* Custom split heading */}
         <h1>
-          DIVE INTO WONDER.<br />
-          <span className="aquaText">LIVE</span> THE OCEAN.
+          WATCH LIVE.<br />
+          <span className="aquaText">PLAY & EXPLORE!</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="heroText">{siteContent.description}</p>
+        <p className="heroText">
+          Watch underwater animals in real-time, identify passing species, clean up plastic trash, and earn shells to redeem cool explorer rewards!
+        </p>
 
         {/* Action buttons from mockup */}
         <div className="heroActions">
           <button className="primaryBtn watchLiveBtn" onClick={() => setPage('watch')}>
-            <Play size={18} fill="currentColor" /> WATCH LIVE NOW
+            <Play size={18} fill="currentColor" /> 🎮 WATCH & PLAY LIVE
           </button>
           
-          <button className="secondaryBtn exploreBtn" onClick={() => setPage('marine-guide')}>
-            EXPLORE OCEAN
+          <button className="secondaryBtn exploreBtn" onClick={() => setPage('kids-club')}>
+            🏆 EXPLORE MISSIONS
           </button>
         </div>
       </div>

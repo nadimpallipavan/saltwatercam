@@ -1411,7 +1411,7 @@ button:focus-visible, a:focus-visible {
     height: 80px;
     padding: 0 24px;
   }
-  .nav, .watchBtn {
+  .nav, .watchBtn, .headerAuthWidget {
     display: none;
   }
   .menuBtn {

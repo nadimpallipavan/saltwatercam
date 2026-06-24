@@ -1,9 +1,87 @@
 import { useState } from 'react';
 import LiveStream from '../components/LiveStream.jsx';
 import { siteContent } from '../data/siteContent.js';
+import { HelpCircle, CheckCircle2, XCircle, RotateCcw, Trophy } from 'lucide-react';
+
+const gameQuestions = [
+  {
+    q: "Spot the animal with a shell! Is it a sea turtle or a land tortoise?",
+    options: ["Green Sea Turtle 🐢", "Land Tortoise 🐢"],
+    answer: 0,
+    explanation: "Green Sea Turtles live in the ocean and have flippers instead of claws! Land tortoises have heavy claws for digging and cannot swim.",
+    points: 20
+  },
+  {
+    q: "Which fish has a long black stripe running down the side of its body?",
+    options: ["Common Snook 🐟", "Atlantic Tarpon 🐟"],
+    answer: 0,
+    explanation: "The Snook has a distinct black lateral line running from its gills to its tail, which helps them detect vibrations and hunt baitfish!",
+    points: 20
+  },
+  {
+    q: "Which giant fish weighs up to 800 lbs and makes booming noises?",
+    options: ["Goliath Grouper 🐡", "Southern Stingray 🐚"],
+    answer: 0,
+    explanation: "The Goliath Grouper is a gentle giant that uses its swim bladder to make deep booming sounds to defend its territory!",
+    points: 20
+  },
+  {
+    q: "What color is the special underwater attraction light under our Lantana dock?",
+    options: ["Neon Green 🟢", "Fire Red 🔴", "Deep Blue 🔵"],
+    answer: 0,
+    explanation: "Green light penetrates coastal water best and attracts tiny plankton, which brings small baitfish, attracting Snook and Tarpon!",
+    points: 20
+  },
+  {
+    q: "Which flat fish glides on the sand and has a tail with a barb?",
+    options: ["Southern Stingray 🌊", "Atlantic Tarpon 🐟"],
+    answer: 0,
+    explanation: "Stingrays glide along the ocean floor and bury themselves in the sand to hide from predators!",
+    points: 20
+  }
+];
 
 export default function WatchLive({ addShells, currentUser }) {
   const [aiEnabled, setAiEnabled] = useState(false);
+
+  // Kids Reef Spotter Game states
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const currentQuestion = gameQuestions[currentQuestionIdx];
+
+  const handleAnswer = (optionIdx) => {
+    if (isAnswered) return;
+    setSelectedOption(optionIdx);
+    setIsAnswered(true);
+    if (optionIdx === currentQuestion.answer) {
+      setScore(prev => prev + 1);
+      if (addShells) {
+        addShells(currentQuestion.points);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    setSelectedOption(null);
+    setIsAnswered(false);
+    if (currentQuestionIdx + 1 < gameQuestions.length) {
+      setCurrentQuestionIdx(prev => prev + 1);
+    } else {
+      setIsFinished(true);
+    }
+  };
+
+  const resetGame = () => {
+    setCurrentQuestionIdx(0);
+    setSelectedOption(null);
+    setIsAnswered(false);
+    setScore(0);
+    setIsFinished(false);
+  };
 
   return (
     <div className="watchPageFull" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '64px', paddingTop: '20px' }}>
@@ -67,7 +145,7 @@ export default function WatchLive({ addShells, currentUser }) {
           {aiEnabled ? 'AI DETECTION ACTIVE' : 'ACTIVATE AI DETECTION'}
         </button>
       </div>
-
+ 
       {/* Live Ocean Telemetry Dashboard */}
       <div style={{
         maxWidth: '1220px',
@@ -97,7 +175,7 @@ export default function WatchLive({ addShells, currentUser }) {
             </div>
             <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Stable (Inlet current influence)</span>
           </div>
-
+ 
           {/* Visibility */}
           <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
             <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visibility</span>
@@ -109,7 +187,7 @@ export default function WatchLive({ addShells, currentUser }) {
             </div>
             <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Excellent - Clear ocean inflow</span>
           </div>
-
+ 
           {/* Salinity */}
           <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
             <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Salinity</span>
@@ -121,7 +199,7 @@ export default function WatchLive({ addShells, currentUser }) {
             </div>
             <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Normal - Coastal baseline</span>
           </div>
-
+ 
           {/* Current Speed */}
           <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
             <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Speed</span>
@@ -135,8 +213,8 @@ export default function WatchLive({ addShells, currentUser }) {
           </div>
         </div>
       </div>
-
-      {/* Sighting Timeline & Demo Info side-by-side */}
+ 
+      {/* Sighting Timeline & Spotter Game side-by-side */}
       <div style={{
         maxWidth: '1220px',
         margin: '0 auto',
@@ -173,8 +251,8 @@ export default function WatchLive({ addShells, currentUser }) {
             ))}
           </div>
         </div>
-
-        {/* Demo Connection Warning Card */}
+ 
+        {/* Kids Reef Spotter Game Card */}
         <div style={{
           padding: '24px',
           background: 'rgba(6, 32, 49, 0.45)',
@@ -185,42 +263,165 @@ export default function WatchLive({ addShells, currentUser }) {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minHeight: '380px'
         }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', flexWrap: 'wrap' }}>
-              <span style={{
-                background: 'rgba(245, 158, 11, 0.12)',
-                color: '#f59e0b',
-                padding: '4px 12px',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: '800',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                border: '1.5px solid rgba(245, 158, 11, 0.25)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontFamily: 'Outfit, sans-serif'
-              }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block' }} />
-                Pending Connection
-              </span>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.2rem', margin: 0, fontWeight: '800', color: '#fff', letterSpacing: '0.01em' }}>
-                Example Demo Stream
-              </h3>
+          {!isFinished ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.2rem', color: '#fff', fontWeight: '800', margin: 0, letterSpacing: '0.01em' }}>
+                  🎮 Reef Spotter Quiz
+                </h4>
+                <span style={{ fontSize: '0.72rem', color: '#22d3ee', fontWeight: '800', background: 'rgba(34, 211, 238, 0.1)', padding: '3px 8px', borderRadius: '12px', border: '1px solid rgba(34, 211, 238, 0.15)', fontFamily: 'Outfit, sans-serif' }}>
+                  Q {currentQuestionIdx + 1} of {gameQuestions.length}
+                </span>
+              </div>
+              
+              <p style={{ fontSize: '0.92rem', color: '#fff', fontWeight: '800', lineHeight: '1.45', margin: '4px 0 0 0', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <HelpCircle size={18} style={{ color: '#22d3ee', flexShrink: 0, marginTop: '2px' }} />
+                {currentQuestion.q}
+              </p>
+ 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                {currentQuestion.options.map((option, idx) => {
+                  let btnStyle = {
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1.5px solid rgba(255,255,255,0.1)',
+                    color: '#fff'
+                  };
+                  
+                  if (isAnswered) {
+                    if (idx === currentQuestion.answer) {
+                      btnStyle = {
+                        background: 'rgba(57, 255, 136, 0.12)',
+                        border: '1.5px solid #39ff88',
+                        color: '#39ff88'
+                      };
+                    } else if (selectedOption === idx) {
+                      btnStyle = {
+                        background: 'rgba(244, 63, 94, 0.12)',
+                        border: '1.5px solid #f43f5e',
+                        color: '#f43f5e'
+                      };
+                    } else {
+                      btnStyle = {
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        color: '#b7cad6',
+                        opacity: 0.5
+                      };
+                    }
+                  } else if (selectedOption === idx) {
+                    btnStyle = {
+                      background: 'rgba(34, 211, 238, 0.1)',
+                      border: '1.5px solid #22d3ee',
+                      color: '#22d3ee'
+                    };
+                  }
+ 
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleAnswer(idx)}
+                      disabled={isAnswered}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        textAlign: 'left',
+                        fontFamily: 'Outfit, sans-serif',
+                        fontSize: '0.85rem',
+                        fontWeight: '700',
+                        cursor: isAnswered ? 'default' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.2s ease',
+                        width: '100%',
+                        ...btnStyle
+                      }}
+                    >
+                      <span>{option}</span>
+                      {isAnswered && idx === currentQuestion.answer && <CheckCircle2 size={16} />}
+                      {isAnswered && selectedOption === idx && idx !== currentQuestion.answer && <XCircle size={16} />}
+                    </button>
+                  );
+                })}
+              </div>
+ 
+              {isAnswered && (
+                <div style={{ 
+                  marginTop: '10px', 
+                  padding: '12px 14px', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  borderRadius: '10px', 
+                  borderLeft: `3px solid ${selectedOption === currentQuestion.answer ? '#39ff88' : '#f43f5e'}`,
+                  animation: 'fadeIn 0.3s ease'
+                }}>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.4' }}>
+                    {selectedOption === currentQuestion.answer ? (
+                      <strong style={{ color: '#39ff88', display: 'block', marginBottom: '2px' }}>✓ CORRECT! (+{currentQuestion.points} shells)</strong>
+                    ) : (
+                      <strong style={{ color: '#f43f5e', display: 'block', marginBottom: '2px' }}>✗ OOPS!</strong>
+                    )}
+                    {currentQuestion.explanation}
+                  </p>
+                  <button 
+                    onClick={handleNext}
+                    style={{
+                      background: '#064c72',
+                      border: '1.5px solid #22d3ee',
+                      color: '#fff',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#085e8d'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#064c72'}
+                  >
+                    {currentQuestionIdx + 1 === gameQuestions.length ? 'See Results' : 'Next Sighting'}
+                  </button>
+                </div>
+              )}
             </div>
-            <p style={{ fontSize: '0.92rem', color: '#b7cad6', lineHeight: '1.6', margin: 0 }}>
-              This stream currently displays a pre-recorded demo of the Lantana Reef feed. 
-              The live underwater camera system is pending final installation and connection testing. 
-              Once the live feed is established, the real-time telemetry and 4K stream will automatically connect here.
-            </p>
-          </div>
-          <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '14px', fontSize: '0.8rem', color: '#b7cad6', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Hardware: Cam-1 4K Dome</span>
-            <span>Target: Boynton Beach, FL</span>
-          </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', height: '100%' }}>
+              <Trophy size={48} color="#f59e0b" style={{ filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.5))' }} />
+              <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: '800', color: '#fff', margin: 0 }}>
+                Ocean Protector Score Card!
+              </h4>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                You identified <strong style={{ color: '#fff' }}>{score} out of {gameQuestions.length}</strong> marine life species correctly today! 
+                Shells were added to your profile wallet.
+              </p>
+              <button 
+                onClick={resetGame}
+                style={{
+                  background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                  border: '1.5px solid rgba(34, 211, 238, 0.35)',
+                  color: '#fff',
+                  padding: '10px 24px',
+                  borderRadius: '24px',
+                  fontSize: '0.82rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontFamily: 'Outfit, sans-serif',
+                  boxShadow: '0 4px 15px rgba(34, 211, 238, 0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <RotateCcw size={14} /> Play Again
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
