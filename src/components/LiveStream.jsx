@@ -23,10 +23,14 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     { id: 2, label: 'ATLANTIC TARPON', confidence: 97, x: '65%', y: '30%', w: 180, h: 75, visible: false },
     { id: 3, label: 'GOLIATH GROUPER', confidence: 96, x: '45%', y: '60%', w: 150, h: 90, visible: true },
     { id: 4, label: 'GREEN SEA TURTLE', confidence: 99, x: '72%', y: '50%', w: 110, h: 70, visible: false },
+    { id: 5, label: 'REEF SHARK', confidence: 96, x: '25%', y: '55%', w: 160, h: 70, visible: true },
+    { id: 6, label: 'YELLOW TANG', confidence: 98, x: '55%', y: '35%', w: 90, h: 60, visible: false },
+    { id: 7, label: 'CLOWN FISH', confidence: 97, x: '40%', y: '45%', w: 80, h: 55, visible: false },
+    { id: 8, label: 'BLUE TANG', confidence: 98, x: '80%', y: '65%', w: 90, h: 60, visible: true },
+    { id: 9, label: 'OCTOPUS', confidence: 95, x: '50%', y: '75%', w: 110, h: 80, visible: false }
   ]);
 
   // Gamification floating items states
-  const [gameItems, setGameItems] = useState([]);
   const [floatyTexts, setFloatyTexts] = useState([]);
   const [showMissionAlert, setShowMissionAlert] = useState(false);
 
@@ -54,6 +58,13 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           nextVisible = !d.visible;
         }
 
+        // If it's the active quest target, give it a higher chance to become visible
+        if (activeQuest && d.label.toUpperCase() === activeQuest.name.toUpperCase() && !nextVisible) {
+          if (Math.random() < 0.5) {
+            nextVisible = true;
+          }
+        }
+
         if (nextVisible) {
           // Slide position slightly
           const xVal = parseInt(d.x) + (Math.random() > 0.5 ? 4 : -4);
@@ -68,7 +79,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 2800);
 
     return () => clearInterval(interval);
-  }, [isPlaying, aiEnabled]);
+  }, [isPlaying, aiEnabled, activeQuest]);
 
   // Handle YouTube iframe play/pause and mute/unmute via postMessage API
   useEffect(() => {
@@ -91,107 +102,38 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [isMuted]);
 
-  // 1. Game loop: Spawn floating items (fish/trash)
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const spawnInterval = setInterval(() => {
-      setGameItems(prev => {
-        if (prev.length >= 4) return prev; // cap at 4 items
-
-        const templates = [
-          { type: 'turtle', emoji: '🐢', label: 'Green Sea Turtle', points: 50, size: 56 },
-          { type: 'shark', emoji: '🦈', label: 'Reef Shark', points: 50, size: 62 },
-          { type: 'yellow_tang', emoji: '🐠', label: 'Yellow Tang', points: 50, size: 48 },
-          { type: 'clown_fish', emoji: '🐠', label: 'Clown Fish', points: 50, size: 46 },
-          { type: 'blue_tang', emoji: '🐟', label: 'Blue Tang', points: 50, size: 48 },
-          { type: 'octopus', emoji: '🐙', label: 'Octopus', points: 50, size: 50 },
-          { type: 'trash', emoji: '🧴', label: 'Plastic Bottle', points: 25, size: 45 },
-          { type: 'trash', emoji: '🥤', label: 'Soda Can', points: 25, size: 42 },
-          { type: 'hazard', emoji: '🛢️', label: 'Toxic Barrel', points: 25, size: 52 },
-          { type: 'trash', emoji: '🕸️', label: 'Ghost Net', points: 25, size: 48 }
-        ];
-
-        // 35% chance to spawn the active quest target, otherwise pick random template
-        let selected;
-        const roll = Math.random();
-        if (roll < 0.35 && activeQuest) {
-          selected = templates.find(t => t.label === activeQuest.name);
-        }
-        
-        if (!selected) {
-          selected = templates[Math.floor(Math.random() * templates.length)];
-        }
-
-        // Avoid duplicate items currently on screen to keep variety
-        if (prev.some(item => item.label === selected.label)) {
-          return prev;
-        }
-
-        const newItem = {
-          id: Math.random().toString(36).substring(2, 9),
-          ...selected,
-          x: 105, // start off-screen to the right
-          y: 15 + Math.random() * 60, // random height
-          speed: 0.16 + Math.random() * 0.18, // swim speed
-          hovered: false,
-        };
-
-        return [...prev, newItem];
-      });
-    }, 3200);
-
-    return () => clearInterval(spawnInterval);
-  }, [isPlaying, activeQuest]);
-
-  // 2. Game loop: Animate movement
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const moveLoop = setInterval(() => {
-      setGameItems(prev => 
-        prev
-          .map(item => ({ ...item, x: item.x - item.speed }))
-          .filter(item => item.x > -15) // remove if moves off-screen left
-      );
-    }, 50);
-
-    return () => clearInterval(moveLoop);
-  }, [isPlaying]);
-
-  // 3. Handle item click
-  const handleItemClick = (item, e) => {
+  // 3. Handle species detection click
+  const handleDetectionClick = (detection, e) => {
     e.stopPropagation();
 
-    // Check if it's the active quest target
-    const isQuestTarget = activeQuest && item.label === activeQuest.name;
+    // Map AI labels (e.g. 'GREEN SEA TURTLE') to quest name (e.g. 'Green Sea Turtle')
+    const clickedLabelUpper = detection.label.toUpperCase();
+    const isQuestTarget = activeQuest && clickedLabelUpper === activeQuest.name.toUpperCase();
 
-    // Spawn popup floating text
+    // Spawn popup floating text at the click location
     const rect = e.currentTarget.parentNode.getBoundingClientRect();
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
 
-    let pointsAwarded = item.points;
+    let pointsAwarded = 10; // Standard click gives 10 shells
     if (isQuestTarget) {
-      pointsAwarded = 50; // Quests give 50 shells
-    } else if (item.type !== 'trash' && item.type !== 'hazard') {
-      pointsAwarded = 10; // Standard fish clicks give 10 shells
+      pointsAwarded = 50; // Quest matching gives 50 shells
     }
 
     const newFloaty = {
       id: Math.random().toString(36).substring(2, 9),
       text: isQuestTarget 
-        ? `🎯 MISSION COMPLETED! +50 🐚` 
-        : (item.type === 'trash' || item.type === 'hazard') 
-          ? `+${pointsAwarded} Cleaned! 🌊` 
-          : `+10 🐚 (Found ${item.label})`,
+        ? `🎯 QUEST TARGET IDENTIFIED! +50 🐚` 
+        : `🐚 +10 (Identified: ${detection.label})`,
       x: clickX,
       y: clickY,
-      color: isQuestTarget ? '#39ff88' : (item.type === 'trash' || item.type === 'hazard') ? '#22d3ee' : '#22d3ee'
+      color: isQuestTarget ? '#39ff88' : '#22d3ee'
     };
 
     setFloatyTexts(prev => [...prev, newFloaty]);
-    setGameItems(prev => prev.filter(x => x.id !== item.id));
+
+    // Temporarily hide the clicked detection to simulate it swimming away
+    setDetections(prev => prev.map(d => d.id === detection.id ? { ...d, visible: false } : d));
 
     // Award global shells
     if (addShells) {
@@ -207,13 +149,13 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
       setActiveQuest(null);
     }
 
-    // Complete Kids Club mission if clean up
-    if (item.type === 'trash' || item.type === 'hazard') {
-      let trashCount = parseInt(localStorage.getItem('swc_cleaned_trash') || '0', 10);
-      trashCount += 1;
-      localStorage.setItem('swc_cleaned_trash', trashCount.toString());
+    // Complete Kids Club Scan Sighting Mission: Scan 3 unique species
+    let scannedSpecies = JSON.parse(localStorage.getItem('swc_scanned_species') || '[]');
+    if (!scannedSpecies.includes(detection.label)) {
+      scannedSpecies.push(detection.label);
+      localStorage.setItem('swc_scanned_species', JSON.stringify(scannedSpecies));
 
-      if (trashCount >= 3) {
+      if (scannedSpecies.length >= 3) {
         const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
         if (!completed.includes('cleanup')) {
           completed.push('cleanup');
@@ -283,81 +225,14 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </>
           )}
 
-          {/* Interactive Game Layer Overlay */}
+          {/* Floaty Click Indicator Text popups */}
           {isPlaying && (
-            <div className="interactiveGameLayer" style={{
+            <div className="floatyLayer" style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 9,
+              inset: 0,
+              zIndex: 90,
               pointerEvents: 'none'
             }}>
-              {gameItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={(e) => handleItemClick(item, e)}
-                  style={{
-                    position: 'absolute',
-                    left: `${item.x}%`,
-                    top: `${item.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    pointerEvents: 'auto',
-                    background: 'rgba(6, 32, 49, 0.55)',
-                    border: item.type === 'fish' ? '1.5px solid rgba(34, 211, 238, 0.45)' : '1.5px solid rgba(239, 68, 68, 0.45)',
-                    borderRadius: '50%',
-                    width: `${item.size}px`,
-                    height: `${item.size}px`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: `${item.size * 0.5}px`,
-                    cursor: 'pointer',
-                    boxShadow: item.type === 'fish' 
-                      ? '0 0 12px rgba(34, 211, 238, 0.3)' 
-                      : '0 0 12px rgba(239, 68, 68, 0.3)',
-                    transition: 'transform 0.15s ease',
-                    animation: 'swimOscillate 2.5s ease-in-out infinite alternate',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.15)';
-                    e.currentTarget.style.background = 'rgba(6, 32, 49, 0.85)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
-                    e.currentTarget.style.background = 'rgba(6, 32, 49, 0.55)';
-                  }}
-                  title={`Click to capture: ${item.label} (+${item.points} shells)`}
-                >
-                  <span style={{ display: 'inline-block', transform: item.type === 'fish' ? 'scaleX(-1)' : 'none' }}>
-                    {item.emoji}
-                  </span>
-                  
-                  {/* Floating tooltip labels */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-28px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'rgba(3, 17, 28, 0.85)',
-                    border: item.type === 'fish' ? '1px solid #22d3ee' : '1px solid #ef4444',
-                    color: '#fff',
-                    padding: '2px 8px',
-                    fontSize: '0.62rem',
-                    borderRadius: '6px',
-                    whiteSpace: 'nowrap',
-                    fontFamily: 'Outfit, sans-serif',
-                    fontWeight: '800',
-                    pointerEvents: 'none',
-                    opacity: 0.85
-                  }}>
-                    {item.label} (+{item.points})
-                  </div>
-                </button>
-              ))}
-
-              {/* Floaty Click Indicator Text popups */}
               {floatyTexts.map(f => (
                 <div
                   key={f.id}
@@ -381,7 +256,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Kids Mission Clean-up Completed Alert Notification overlay */}
+          {/* Kids Mission Completed Alert Notification overlay */}
           {showMissionAlert && (
             <div style={{
               position: 'absolute',
@@ -404,7 +279,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               <span style={{ fontSize: '1.5rem' }}>🏆</span>
               <div style={{ textAlign: 'left' }}>
                 <strong style={{ display: 'block', color: '#39ff88', fontSize: '0.88rem' }}>MISSION COMPLETED!</strong>
-                <span style={{ fontSize: '0.78rem', color: '#b7cad6' }}>Clean the Ocean Feed (+100 XP awarded to Kids Club)</span>
+                <span style={{ fontSize: '0.78rem', color: '#b7cad6' }}>Identify Marine Species (+100 XP awarded)</span>
               </div>
             </div>
           )}
@@ -414,6 +289,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             <div 
               key={d.id} 
               className="aiBoundingBox" 
+              onClick={(e) => handleDetectionClick(d, e)}
               style={{
                 position: 'absolute',
                 left: d.x,
@@ -424,11 +300,13 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 boxShadow: '0 0 8px rgba(34, 211, 238, 0.6)',
                 borderRadius: '4px',
                 transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                zIndex: 8,
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+                zIndex: 9,
                 transition: 'left 2.5s ease-in-out, top 2.5s ease-in-out, opacity 0.5s ease-in-out',
                 fontFamily: 'Outfit, sans-serif'
               }}
+              title={`Click to Identify: ${d.label}`}
             >
               <div style={{
                 position: 'absolute',
@@ -478,7 +356,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              🎮 CLICK TO EARN: FISH (+10🐚) | DEBRIS (+25🐚)
+              🎮 WATCH REAL LIVE & IDENTIFY FISH: CLICK AI TARGETS (+10🐚) | QUESTS (+50🐚)
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}

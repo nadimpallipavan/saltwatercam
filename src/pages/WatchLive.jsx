@@ -42,7 +42,7 @@ const gameQuestions = [
 ];
 
 export default function WatchLive({ addShells, shells, currentUser }) {
-  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
   const [emailInput, setEmailInput] = useState('');
 
