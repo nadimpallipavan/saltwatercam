@@ -105,16 +105,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [isMuted]);
 
-  // Auto-clear seawater alert after a delay to allow clicking again
-  useEffect(() => {
-    if (showSeawaterAlert) {
-      const timer = setTimeout(() => {
-        setShowSeawaterAlert(false);
-        setClickCoords(null);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [showSeawaterAlert]);
+
 
   // Simulated floating trash loop (Reef Trash Cleanup Mode)
   useEffect(() => {
