@@ -1,31 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
+// Fish coordinate keyframes synced to the WebM reef video loop
+// Each keyframe: { t: seconds, x: % from left, y: % from top, visible: bool }
 const keyframes = {
-  f1: [ // Bannerfish (swims left to right)
-    { t: 0, x: 15, y: 35, visible: true },
-    { t: 4, x: 45, y: 48, visible: true },
-    { t: 8, x: 75, y: 38, visible: true },
-    { t: 11, x: 92, y: 25, visible: true },
+  f1: [ // Bannerfish — swims left to right
+    { t: 0,  x: 15, y: 35, visible: true  },
+    { t: 4,  x: 45, y: 48, visible: true  },
+    { t: 8,  x: 75, y: 38, visible: true  },
+    { t: 11, x: 92, y: 25, visible: true  },
     { t: 13, x: 95, y: 20, visible: false }
   ],
-  f2: [ // Yellow Tang (swims right to left)
-    { t: 0, x: 90, y: 70, visible: false },
-    { t: 2, x: 85, y: 65, visible: true },
-    { t: 6, x: 50, y: 55, visible: true },
-    { t: 10, x: 20, y: 45, visible: true },
-    { t: 13, x: 5, y: 40, visible: false }
+  f2: [ // Yellow Tang — swims right to left
+    { t: 0,  x: 90, y: 70, visible: false },
+    { t: 2,  x: 85, y: 65, visible: true  },
+    { t: 6,  x: 50, y: 55, visible: true  },
+    { t: 10, x: 20, y: 45, visible: true  },
+    { t: 13, x: 5,  y: 40, visible: false }
   ]
 };
 
+// Linear interpolation between keyframe positions
 const getInterpolatedPosition = (targetId, time) => {
   const frames = keyframes[targetId];
   if (!frames) return { x: 0, y: 0, visible: false };
 
   let i = 0;
-  while (i < frames.length - 1 && frames[i + 1].t < time) {
-    i++;
-  }
+  while (i < frames.length - 1 && frames[i + 1].t < time) i++;
 
   const f0 = frames[i];
   const f1 = frames[i + 1] || f0;
@@ -33,15 +34,16 @@ const getInterpolatedPosition = (targetId, time) => {
   if (f0.t === f1.t) return { x: f0.x, y: f0.y, visible: f0.visible };
 
   const ratio = (time - f0.t) / (f1.t - f0.t);
-  const x = f0.x + (f1.x - f0.x) * ratio;
-  const y = f0.y + (f1.y - f0.y) * ratio;
-  const visible = ratio < 0.5 ? f0.visible : f1.visible;
-
-  return { x, y, visible };
+  return {
+    x: f0.x + (f1.x - f0.x) * ratio,
+    y: f0.y + (f1.y - f0.y) * ratio,
+    visible: ratio < 0.5 ? f0.visible : f1.visible
+  };
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const [feedType, setFeedType] = useState('youtube'); // 'youtube' or 'recorded'
+  // 'recorded' = game loop with accurate fish detection | 'youtube' = view-only live stream
+  const [feedType, setFeedType] = useState('recorded');
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -49,63 +51,24 @@ export default function LiveStream({ addShells, shells, currentUser }) {
   const videoRef = useRef(null);
   const [fishCounter, setFishCounter] = useState(0);
 
-  // AI Scan/Overlay states
-  const [clickCoords, setClickCoords] = useState(null); // { x, y }
-  const [challengeScanning, setChallengeScanning] = useState(false);
-  const [selectedLogSpecies, setSelectedLogSpecies] = useState(null); // Object
-  const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
+  // Floating tap-result text popups
+  const [floatyTexts, setFloatyTexts] = useState([]);
 
-  // Local species database for quiz challenges
-  const speciesList = [
-    {
-      name: "Common Snook",
-      emoji: "🐟",
-      shells: 15,
-      fact: "Snooks have a distinct black line along their body that helps them sense movements in the water to hunt in the dark!"
-    },
-    {
-      name: "Yellow Tang",
-      emoji: "🐠",
-      shells: 15,
-      fact: "Yellow Tangs graze on algae growing on turtle shells and coral reefs, helping keep the entire habitat clean!"
-    },
-    {
-      name: "Green Sea Turtle",
-      emoji: "🐢",
-      shells: 15,
-      fact: "Green Sea Turtles can hold their breath for up to 5 hours! They graze on seagrasses on the shallow reef floor."
-    },
-    {
-      name: "Goliath Grouper",
-      emoji: "🐡",
-      shells: 15,
-      fact: "Goliath Groupers can grow larger than a refrigerator and weigh up to 800 lbs! They make deep booming sounds to defend their caves."
-    },
-    {
-      name: "Atlantic Tarpon",
-      emoji: "🐟",
-      shells: 15,
-      fact: "Often called the Silver King, Tarpons have large reflective scales and can gulp air at the surface to survive in low-oxygen waters."
-    }
-  ];
+  // Mission alert
+  const [showMissionAlert, setShowMissionAlert] = useState(false);
 
-  // Level progression helper and states
+  // Level progression
   const getLevelInfo = (shellCount) => {
-    if (shellCount < 20) return { level: 1, target: 20, prevTarget: 0, title: "Tadpole Scout" };
-    if (shellCount < 50) return { level: 2, target: 50, prevTarget: 20, title: "Reef Explorer" };
-    if (shellCount < 100) return { level: 3, target: 100, prevTarget: 50, title: "Marine Protector" };
-    if (shellCount < 200) return { level: 4, target: 200, prevTarget: 100, title: "Ocean Guardian" };
-    return { level: 5, target: null, prevTarget: 200, title: "Grand Master Protector" };
+    if (shellCount < 20)  return { level: 1, target: 20,   prevTarget: 0,   title: 'Tadpole Scout' };
+    if (shellCount < 50)  return { level: 2, target: 50,   prevTarget: 20,  title: 'Reef Explorer' };
+    if (shellCount < 100) return { level: 3, target: 100,  prevTarget: 50,  title: 'Marine Protector' };
+    if (shellCount < 200) return { level: 4, target: 200,  prevTarget: 100, title: 'Ocean Guardian' };
+    return                       { level: 5, target: null,  prevTarget: 200, title: 'Grand Master Protector' };
   };
 
   const [currentLevel, setCurrentLevel] = useState(() => getLevelInfo(shells).level);
   const [showLevelUpAlert, setShowLevelUpAlert] = useState(null);
 
-  // Gamification floating items states
-  const [floatyTexts, setFloatyTexts] = useState([]);
-  const [showMissionAlert, setShowMissionAlert] = useState(false);
-
-  // Monitor level progression
   useEffect(() => {
     const info = getLevelInfo(shells);
     if (info.level > currentLevel) {
@@ -116,169 +79,84 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     }
   }, [shells, currentLevel]);
 
-  // Sync play/pause and mute states to native video element APIs
+  // Sync play / pause to the <video> element
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPlaying) {
-      video.play().catch(err => console.log("Autoplay blocked:", err));
-    } else {
-      video.pause();
-    }
+    if (isPlaying) video.play().catch(() => {});
+    else video.pause();
   }, [isPlaying, feedType]);
 
+  // Sync mute to the <video> element
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     video.muted = isMuted;
   }, [isMuted, feedType]);
 
-  // Click on stream (captures coordinates to verify fish sightings using LERP keyframes)
-  const handleSeawaterTap = (e) => {
+  // ─── ACCURATE FISH DETECTION (recorded loop only) ────────────────────────────
+  // Uses LERP-interpolated keyframe coordinates to verify whether the click
+  // landed on a real fish in the video at that exact timestamp.
+  const handleGameTap = (e) => {
     if (!isPlaying || !containerRef.current || !videoRef.current) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    const time = videoRef.current.currentTime;
-    
-    // Calculate distance to targets
-    const distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-    const threshold = 12.0; // Click within 12% is a hit
-    
+    const time   = videoRef.current.currentTime;
+
+    const dist = (x1, y1, x2, y2) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+    const HIT_THRESHOLD = 12; // % radius — must tap within 12% of fish centre
+
     const posF1 = getInterpolatedPosition('f1', time);
     const posF2 = getInterpolatedPosition('f2', time);
-    
-    let hitDetected = false;
-    let hitTargetName = "";
-    let hitX = clickX;
-    let hitY = clickY;
 
-    if (posF1.visible && distance(clickX, clickY, posF1.x, posF1.y) <= threshold) {
-      hitDetected = true;
-      hitTargetName = "Common Snook";
-      hitX = posF1.x;
-      hitY = posF1.y;
-    } else if (posF2.visible && distance(clickX, clickY, posF2.x, posF2.y) <= threshold) {
-      hitDetected = true;
-      hitTargetName = "Yellow Tang";
-      hitX = posF2.x;
-      hitY = posF2.y;
-    }
+    const hitF1 = posF1.visible && dist(clickX, clickY, posF1.x, posF1.y) <= HIT_THRESHOLD;
+    const hitF2 = posF2.visible && dist(clickX, clickY, posF2.x, posF2.y) <= HIT_THRESHOLD;
 
-    if (hitDetected) {
-      if (addShells) {
-        addShells(1);
-      }
-      const nextFishCount = fishCounter + 1;
-      setFishCounter(nextFishCount);
-      triggerFloaty(hitX, hitY, `${hitTargetName} Spotted! +1 Shell`);
+    if (hitF1 || hitF2) {
+      // ✅ Fish detected!
+      if (addShells) addShells(1);
+      const next = fishCounter + 1;
+      setFishCounter(next);
+      triggerFloaty(clickX, clickY, '🐟 Fish Detected! +1 🐚', '#39ff88');
 
-      // Complete Kids Club Scan Sighting Mission: Scan 3 fish
-      if (nextFishCount >= 3) {
+      // Kids Club mission: spot 3 fish
+      if (next >= 3) {
         const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
         if (!completed.includes('cleanup')) {
           completed.push('cleanup');
           localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
-          
-          let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
-          localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
-
+          const xp = Math.min(500, parseInt(localStorage.getItem('swc_kids_xp') || '0', 10) + 100);
+          localStorage.setItem('swc_kids_xp', xp.toString());
           setShowMissionAlert(true);
           setTimeout(() => setShowMissionAlert(false), 5000);
         }
       }
     } else {
-      triggerFloaty(clickX, clickY, `Seawater! +0 Shells`);
+      // 💧 Water — no fish here
+      triggerFloaty(clickX, clickY, '💧 Water Detected! +0', '#60a5fa');
     }
   };
 
-  // YouTube feed tap handling (Auto AI Scan - no quiz)
-  const handleYoutubeFeedTap = (e) => {
-    if (!isPlaying || !containerRef.current) return;
-    if (challengeScanning || selectedLogSpecies || showSeawaterAlert) {
-      // Clear current overlays if clicked again
-      setClickCoords(null);
-      setChallengeScanning(false);
-      setSelectedLogSpecies(null);
-      setShowSeawaterAlert(false);
-      return;
-    }
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setClickCoords({ x: clickX, y: clickY });
-    setChallengeScanning(true);
-
-    // Simulate AI scanning frame buffer (1 second latency)
-    setTimeout(() => {
-      setChallengeScanning(false);
-
-      // 70% chance fish detected, 30% chance seawater only
-      if (Math.random() < 0.7) {
-        const detectedSpecies = speciesList[Math.floor(Math.random() * speciesList.length)];
-        setSelectedLogSpecies(detectedSpecies);
-        const nextFishCount = fishCounter + 1;
-        setFishCounter(nextFishCount);
-
-        if (addShells) {
-          addShells(15);
-        }
-
-        triggerFloaty(clickX, clickY, `🐟 Fish Spotted! +15 🐚`);
-
-        // Complete Kids Club Scan Sighting Mission: Scan 3 fish
-        if (nextFishCount >= 3) {
-          const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
-          if (!completed.includes('cleanup')) {
-            completed.push('cleanup');
-            localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
-            let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
-            localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
-            setShowMissionAlert(true);
-            setTimeout(() => setShowMissionAlert(false), 5000);
-          }
-        }
-      } else {
-        setShowSeawaterAlert(true);
-      }
-    }, 900);
+  // Spawn a floating text label that fades upward and disappears
+  const triggerFloaty = (x, y, text, color = '#39ff88') => {
+    const id = Math.random().toString(36).slice(2, 9);
+    setFloatyTexts(prev => [...prev, { id, text, x, y, color }]);
+    setTimeout(() => setFloatyTexts(prev => prev.filter(f => f.id !== id)), 1400);
   };
 
-  const handleTap = (e) => {
-    if (feedType === 'youtube') {
-      handleYoutubeFeedTap(e);
-    } else {
-      handleSeawaterTap(e);
-    }
-  };
-
-  // Helper to trigger floating shells text
-  const triggerFloaty = (x, y, text) => {
-    const newFloaty = {
-      id: Math.random().toString(36).substring(2, 9),
-      text: text,
-      x: x,
-      y: y,
-      color: "#39ff88"
-    };
-    setFloatyTexts(prev => [...prev, newFloaty]);
-    setTimeout(() => {
-      setFloatyTexts(prev => prev.filter(x => x.id !== newFloaty.id));
-    }, 1200);
-  };
+  const levelInfo = getLevelInfo(shells);
 
   return (
     <section className="liveStage">
       <div className="liveFrame">
         <div className={`underwaterScene ${isPlaying ? 'playing' : 'paused'}`}>
-          {/* HUD Scanning Line */}
+
+          {/* HUD scanning line */}
           {isPlaying && <div className="scanningLine" />}
-          
-          {/* HUD Telemetry Indicator */}
+
+          {/* HUD telemetry bar */}
           {isPlaying && (
             <div className="hudIndicator">
               <span className="hudSignalDot" />
@@ -286,53 +164,39 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* Dynamic Feed Rendering */}
+          {/* ── VIDEO / IFRAME ────────────────────────────── */}
           {feedType === 'youtube' ? (
-            <iframe 
+            <iframe
               id="yt-live-stream"
               src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
-              title="Live Underwater Stream" 
+              title="Live Underwater Stream"
               className="streamBgImage"
-              style={{ 
-                border: 'none', 
-                pointerEvents: 'none',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                zIndex: 1
+              style={{
+                border: 'none', pointerEvents: 'none',
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%', zIndex: 1
               }}
               allow="autoplay; encrypted-media"
             />
           ) : (
-            <video 
+            <video
               ref={videoRef}
               src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
               className="streamBgImage"
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{ 
-                border: 'none', 
-                pointerEvents: 'none',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                zIndex: 1
+              autoPlay loop muted playsInline
+              crossOrigin="anonymous"
+              style={{
+                border: 'none', pointerEvents: 'none',
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%', objectFit: 'cover', zIndex: 1
               }}
             />
           )}
 
-          {/* Glowing Green Beam */}
+          {/* Glowing green beam */}
           <div className="greenBeam" />
 
-          {/* Animated floating bubbles */}
+          {/* Bubbles */}
           {isPlaying && (
             <>
               <div className="bubble b1" />
@@ -343,532 +207,297 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </>
           )}
 
-          {/* Transparent click catcher overlay for direct taps */}
-          {isPlaying && (
-            <div 
+          {/* ── CLICK CATCHER (game loop only) ───────────────── */}
+          {isPlaying && feedType === 'recorded' && (
+            <div
               ref={containerRef}
-              onClick={handleTap}
+              onClick={handleGameTap}
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                zIndex: 8,
-                cursor: 'pointer'
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%',
+                zIndex: 8, cursor: 'crosshair'
               }}
-              title={feedType === 'youtube' ? "Tap on the stream to scan & verify fish sightings!" : "Tap directly on swimming fish to log them!"}
+              title="Tap directly on the fish swimming in the video!"
             />
           )}
 
-          {/* Scanning indicator */}
-          {challengeScanning && clickCoords && (
+          {/* ── YOUTUBE VIEW-ONLY BANNER ──────────────────────── */}
+          {feedType === 'youtube' && isPlaying && (
             <div style={{
-              position: 'absolute',
-              left: `${clickCoords.x}%`,
-              top: `${clickCoords.y}%`,
-              width: '60px',
-              height: '60px',
-              transform: 'translate(-50%, -50%)',
-              border: '3px dashed #39ff88',
-              borderRadius: '50%',
-              zIndex: 90,
-              pointerEvents: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: 'spin 2s linear infinite'
+              position: 'absolute', inset: 0, zIndex: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)'
             }}>
               <div style={{
-                width: '10px',
-                height: '10px',
-                background: '#39ff88',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #39ff88',
-                animation: 'blinkGlow 1.5s infinite alternate'
-              }} />
-            </div>
-          )}
-
-          {/* Quiz removed - auto-award handled in handleYoutubeFeedTap */}
-
-          {/* Sighting Logged Success Overlay */}
-          {selectedLogSpecies && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.75)',
-              backdropFilter: 'blur(6px)',
-              zIndex: 95,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.98) 0%, rgba(3, 17, 28, 0.99) 100%)',
-                border: '2px solid #39ff88',
-                boxShadow: '0 0 30px rgba(57, 255, 136, 0.25)',
-                borderRadius: '24px',
-                padding: '28px 24px',
-                maxWidth: '400px',
-                width: '90%',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '14px',
-                animation: 'slideDownAlert 0.3s ease-out'
+                background: 'linear-gradient(135deg, rgba(6,32,49,0.97) 0%, rgba(3,17,28,0.98) 100%)',
+                border: '2px solid rgba(34,211,238,0.4)',
+                borderRadius: '20px', padding: '28px 32px',
+                maxWidth: '380px', width: '90%', textAlign: 'center',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px',
+                boxShadow: '0 0 30px rgba(34,211,238,0.15)',
+                fontFamily: 'Outfit, sans-serif'
               }}>
-                <div style={{ fontSize: '3rem', margin: '0' }}>{selectedLogSpecies.emoji}</div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.65rem', color: '#39ff88', fontWeight: '900', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                    SIGHTING LOGGED & VERIFIED!
+                <div style={{ fontSize: '2.5rem' }}>📺</div>
+                <div>
+                  <span style={{ fontSize: '0.65rem', color: '#22d3ee', fontWeight: '900',
+                    letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+                    LIVE STREAM — VIEW ONLY
                   </span>
-                  <h4 style={{ margin: 0, fontSize: '1.4rem', color: '#fff', fontWeight: '900' }}>
-                    {selectedLogSpecies.name}
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '800' }}>
+                    Watching the Boynton Beach Inlet Live!
                   </h4>
                 </div>
-
-                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                  {selectedLogSpecies.fact}
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                  The fish-tapping game works on the <strong style={{ color: '#39ff88' }}>Game Loop</strong> — switch below to play and earn shells!
                 </p>
-
-                <div style={{
-                  background: 'rgba(57, 255, 136, 0.1)',
-                  border: '1.5px solid rgba(57, 255, 136, 0.3)',
-                  padding: '6px 16px',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  fontWeight: '800',
-                  color: '#39ff88'
-                }}>
-                  🐚 +15 Shells Wallet
-                </div>
-
                 <button
-                  onClick={() => {
-                    setSelectedLogSpecies(null);
-                    setClickCoords(null);
-                  }}
+                  onClick={() => setFeedType('recorded')}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    padding: '8px 20px',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    marginTop: '8px',
-                    fontFamily: 'Outfit, sans-serif',
+                    background: 'linear-gradient(135deg, #064c72, #0e7490)',
+                    border: '2px solid #22d3ee',
+                    borderRadius: '20px', color: '#fff',
+                    padding: '10px 24px', fontSize: '0.88rem', fontWeight: '900',
+                    cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                    boxShadow: '0 0 15px rgba(34,211,238,0.3)',
                     transition: 'all 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 25px rgba(34,211,238,0.55)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 15px rgba(34,211,238,0.3)'}
                 >
-                  Awesome! Keep Spotting 🔍
+                  🎮 Switch to Game Loop
                 </button>
               </div>
             </div>
           )}
 
-          {/* Seawater Only Alert */}
-          {showSeawaterAlert && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.75)',
-              backdropFilter: 'blur(6px)',
-              zIndex: 95,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '20px',
-                padding: '24px 28px',
-                maxWidth: '380px',
-                width: '90%',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px',
-                animation: 'slideDownAlert 0.3s ease-out'
+          {/* ── FLOATING TAP RESULT TEXTS ─────────────────────── */}
+          <div style={{ position: 'absolute', inset: 0, zIndex: 90, pointerEvents: 'none' }}>
+            {floatyTexts.map(f => (
+              <div key={f.id} style={{
+                position: 'absolute',
+                left: `${f.x}%`, top: `${f.y}%`,
+                transform: 'translate(-50%, -50%)',
+                color: f.color,
+                fontSize: '1.05rem', fontWeight: '900',
+                fontFamily: 'Outfit, sans-serif',
+                textShadow: '0 2px 12px rgba(0,0,0,0.9), 0 0 10px currentColor',
+                pointerEvents: 'none',
+                animation: 'floatUpFade 1.2s forwards ease-out',
+                whiteSpace: 'nowrap'
               }}>
-                <div style={{ fontSize: '3rem', margin: '0' }}>💧</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.65rem', color: '#b7cad6', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    AI Scan Result
-                  </span>
-                  <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>
-                    Seawater / No Match
-                  </h4>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                  No fish identified or verification failed. Keep watching the live stream and click when a fish swims by!
-                </p>
-                <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800', color: '#b7cad6' }}>
-                  🐚 +0 Shells
-                </div>
-                <button
-                  onClick={() => {
-                    setShowSeawaterAlert(false);
-                    setClickCoords(null);
-                  }}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    padding: '8px 20px',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    marginTop: '4px',
-                    fontFamily: 'Outfit, sans-serif',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                >
-                  Scan Again 🔍
-                </button>
+                {f.text}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
-          {/* Floaty Click Indicator Text popups */}
-          {isPlaying && (
-            <div className="floatyLayer" style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 90,
-              pointerEvents: 'none'
-            }}>
-              {floatyTexts.map(f => (
-                <div
-                  key={f.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${f.x}%`,
-                    top: `${f.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    color: f.color,
-                    fontSize: '1rem',
-                    fontWeight: '900',
-                    fontFamily: 'Outfit, sans-serif',
-                    textShadow: '0 2px 10px rgba(0,0,0,0.8), 0 0 8px currentColor',
-                    pointerEvents: 'none',
-                    animation: 'floatUpFade 1s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28)'
-                  }}
-                >
-                  {f.text}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Kids Mission Completed Alert Notification overlay */}
+          {/* ── MISSION COMPLETED BANNER ──────────────────────── */}
           {showMissionAlert && (
             <div style={{
-              position: 'absolute',
-              top: '80px',
-              left: '50%',
+              position: 'absolute', top: '80px', left: '50%',
               transform: 'translateX(-50%)',
-              background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.9) 0%, rgba(3, 17, 28, 0.95) 100%)',
-              border: '2px solid #39ff88',
-              boxShadow: '0 0 25px rgba(57, 255, 136, 0.35)',
-              borderRadius: '12px',
-              padding: '12px 20px',
-              color: '#fff',
-              zIndex: 99,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              animation: 'slideDownAlert 0.4s ease-out',
-              fontFamily: 'Outfit, sans-serif'
+              background: 'linear-gradient(135deg, rgba(6,32,49,0.95) 0%, rgba(3,17,28,0.98) 100%)',
+              border: '2px solid #39ff88', boxShadow: '0 0 25px rgba(57,255,136,0.35)',
+              borderRadius: '12px', padding: '12px 20px', color: '#fff',
+              zIndex: 99, display: 'flex', alignItems: 'center', gap: '12px',
+              animation: 'slideDownAlert 0.4s ease-out', fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ fontSize: '1.5rem' }}>🏆</span>
-              <div style={{ textAlign: 'left' }}>
+              <div>
                 <strong style={{ display: 'block', color: '#39ff88', fontSize: '0.88rem' }}>MISSION COMPLETED!</strong>
-                <span style={{ fontSize: '0.78rem', color: '#b7cad6' }}>Identify Marine Species (+100 XP awarded)</span>
+                <span style={{ fontSize: '0.78rem', color: '#b7cad6' }}>Spotted 3 fish — +100 XP awarded!</span>
               </div>
             </div>
           )}
 
-          {/* Top Info Overlay */}
+          {/* ── TOP INFO OVERLAY ──────────────────────────────── */}
           <div className="streamTopOverlay">
             <div className="streamInfoLeft">
               <div className="liveFeedTitle">
-                <span className="liveFeedDot" style={{ backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee', boxShadow: feedType === 'youtube' ? '0 0 10px #39ff88' : '0 0 10px #22d3ee' }} />
-                <span>{feedType === 'youtube' ? 'LIVE FEED (YOUTUBE)' : 'AI EXPLORER LOOP'}</span>
+                <span className="liveFeedDot" style={{
+                  backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee',
+                  boxShadow: feedType === 'youtube' ? '0 0 10px #39ff88' : '0 0 10px #22d3ee'
+                }} />
+                <span>{feedType === 'youtube' ? 'LIVE FEED (YOUTUBE)' : 'GAME LOOP — AI ACTIVE'}</span>
               </div>
               <div className="streamCamName">
-                {feedType === 'youtube' ? 'Cam 1 - Lantana Dock Live Stream' : 'Reef Simulation - AI Spotting Active'}
+                {feedType === 'youtube' ? 'Cam 1 - Lantana Dock Live Stream' : 'Tap the fish to earn shells!'}
               </div>
             </div>
-            
-            {/* Interactive sighting notification banner */}
+
+            {/* Fish counter badge */}
             <div className="gameHeaderBadge" style={{
-              background: 'rgba(34, 211, 238, 0.12)',
-              border: '1px solid rgba(34, 211, 238, 0.25)',
-              color: '#fff',
-              fontSize: '0.78rem',
-              fontWeight: '800',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 0 10px rgba(34, 211, 238, 0.12)',
+              background: 'rgba(34,211,238,0.12)',
+              border: '1px solid rgba(34,211,238,0.25)',
+              color: '#fff', fontSize: '0.78rem', fontWeight: '800',
+              padding: '6px 14px', borderRadius: '20px',
+              display: 'flex', alignItems: 'center', gap: '8px',
               fontFamily: 'Outfit, sans-serif'
             }}>
-              <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              <span>Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>{feedType === 'youtube' ? 'Watch live feed: Click anywhere to scan & verify fish sightings!' : 'Explorer Loop: Tap directly on real swimming fish to earn shells!'}</span>
+              <span style={{
+                display: 'inline-block', width: '6px', height: '6px',
+                borderRadius: '50%', backgroundColor: '#39ff88',
+                animation: 'blinkGlow 1.5s infinite'
+              }} />
+              <span>🐟 Fish Spotted: <strong style={{ color: '#39ff88' }}>{fishCounter}</strong></span>
+              <span style={{ color: 'rgba(255,255,255,0.35)' }}>|</span>
+              <span style={{ color: '#b7cad6' }}>
+                {feedType === 'recorded' ? 'Tap the fish — not the water!' : 'Switch to Game Loop to play'}
+              </span>
             </div>
 
-            {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
+            {/* Top-right buttons */}
             <div className="streamControlButtonsRight">
-              <button className="iconCircleBtn" onClick={() => alert('Link copied!')} aria-label="Share">
-                <Share2 size={16} />
-              </button>
-              <button className="iconCircleBtn" onClick={() => alert('Snapshot saved to downloads!')} aria-label="Take Snapshot">
-                <Camera size={16} />
-              </button>
-              <button className="iconCircleBtn" onClick={() => alert('Fullscreen activated!')} aria-label="Fullscreen">
-                <Maximize size={16} />
-              </button>
+              <button className="iconCircleBtn" onClick={() => alert('Link copied!')} aria-label="Share"><Share2 size={16} /></button>
+              <button className="iconCircleBtn" onClick={() => alert('Snapshot saved!')} aria-label="Snapshot"><Camera size={16} /></button>
+              <button className="iconCircleBtn" onClick={() => alert('Fullscreen activated!')} aria-label="Fullscreen"><Maximize size={16} /></button>
             </div>
           </div>
 
-          {/* Play Overlay if paused */}
+          {/* Paused overlay */}
           {!isPlaying && (
             <div className="pausedOverlay">
-              <button className="playOverlayBtn" onClick={() => setIsPlaying(true)} aria-label="Play stream">
+              <button className="playOverlayBtn" onClick={() => setIsPlaying(true)} aria-label="Play">
                 <Play size={32} fill="currentColor" />
               </button>
               <p>Stream Paused</p>
             </div>
           )}
 
-          {/* Level Up Celebration Card */}
+          {/* Level Up celebration */}
           {showLevelUpAlert && (
-            <div 
-              onClick={() => setShowLevelUpAlert(null)}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'rgba(2, 12, 21, 0.85)',
-                backdropFilter: 'blur(10px)',
-                zIndex: 100,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '20px',
-                color: '#fff',
-                fontFamily: 'Outfit, sans-serif',
-                cursor: 'pointer'
-              }}
-            >
+            <div onClick={() => setShowLevelUpAlert(null)} style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(2,12,21,0.85)', backdropFilter: 'blur(10px)',
+              zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px', color: '#fff', fontFamily: 'Outfit, sans-serif', cursor: 'pointer'
+            }}>
               <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.98) 0%, rgba(3, 17, 28, 0.99) 100%)',
-                border: '3px solid #39ff88',
-                borderRadius: '24px',
-                padding: '36px 32px',
-                maxWidth: '420px',
-                width: '95%',
-                textAlign: 'center',
-                boxShadow: '0 0 50px rgba(57, 255, 136, 0.35)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '16px',
+                background: 'linear-gradient(135deg, rgba(6,32,49,0.98) 0%, rgba(3,17,28,0.99) 100%)',
+                border: '3px solid #39ff88', borderRadius: '24px',
+                padding: '36px 32px', maxWidth: '420px', width: '95%',
+                textAlign: 'center', boxShadow: '0 0 50px rgba(57,255,136,0.35)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
                 animation: 'slideDownAlert 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
               }}>
-                <div style={{ fontSize: '4.5rem', margin: '0', animation: 'bounceUp 1s infinite alternate' }}>🏆</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#39ff88', fontWeight: '900', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    Congratulations!
-                  </span>
-                  <h3 style={{ margin: 0, fontSize: '2.1rem', color: '#fff', fontWeight: '900', lineHeight: '1.2' }}>
-                    LEVEL UP!
-                  </h3>
+                <div style={{ fontSize: '4.5rem', animation: 'bounceUp 1s infinite alternate' }}>🏆</div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#39ff88', fontWeight: '900',
+                    letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block' }}>Congratulations!</span>
+                  <h3 style={{ margin: '4px 0 0', fontSize: '2.1rem', color: '#fff', fontWeight: '900' }}>LEVEL UP!</h3>
                 </div>
-                <p style={{ margin: '8px 0 0 0', fontSize: '1.1rem', color: '#b7cad6', lineHeight: '1.4' }}>
+                <p style={{ margin: 0, fontSize: '1.1rem', color: '#b7cad6' }}>
                   You reached <strong style={{ color: '#39ff88' }}>Level {showLevelUpAlert.level}</strong>!
                 </p>
                 <div style={{
-                  background: 'rgba(57, 255, 136, 0.1)',
-                  border: '1.5px solid rgba(57, 255, 136, 0.3)',
-                  padding: '8px 20px',
-                  borderRadius: '30px',
-                  fontSize: '0.95rem',
-                  fontWeight: '800',
-                  color: '#39ff88',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  background: 'rgba(57,255,136,0.1)', border: '1.5px solid rgba(57,255,136,0.3)',
+                  padding: '8px 20px', borderRadius: '30px',
+                  fontSize: '0.95rem', fontWeight: '800', color: '#39ff88',
+                  textTransform: 'uppercase', letterSpacing: '0.05em'
                 }}>
                   ⭐ Rank: {showLevelUpAlert.title}
                 </div>
-                <p style={{ margin: '8px 0 0 0', fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.4)' }}>
-                  Tap anywhere to continue playing
+                <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>
+                  Tap anywhere to keep playing
                 </p>
               </div>
             </div>
           )}
 
-          {/* Level Progress HUD Bar */}
-          {isPlaying && (
+          {/* Level progress HUD */}
+          {isPlaying && feedType === 'recorded' && (
             <div style={{
-              position: 'absolute',
-              top: '75px',
-              left: '50%',
+              position: 'absolute', top: '75px', left: '50%',
               transform: 'translateX(-50%)',
-              background: 'rgba(3, 27, 46, 0.85)',
-              backdropFilter: 'blur(8px)',
-              border: '1.5px solid rgba(34, 211, 238, 0.35)',
-              borderRadius: '20px',
-              padding: '6px 16px',
-              color: '#fff',
-              zIndex: 90,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
+              background: 'rgba(3,27,46,0.85)', backdropFilter: 'blur(8px)',
+              border: '1.5px solid rgba(34,211,238,0.35)', borderRadius: '20px',
+              padding: '6px 16px', color: '#fff', zIndex: 90,
+              display: 'flex', alignItems: 'center', gap: '12px',
               boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-              fontFamily: 'Outfit, sans-serif',
-              pointerEvents: 'none',
-              minWidth: '290px',
-              justifyContent: 'space-between'
+              fontFamily: 'Outfit, sans-serif', pointerEvents: 'none',
+              minWidth: '290px', justifyContent: 'space-between'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '1rem' }}>⭐</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Level {getLevelInfo(shells).level}
+                <span>⭐</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#22d3ee',
+                  textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Level {levelInfo.level}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: '#b7cad6' }}>
-                  ({getLevelInfo(shells).title})
-                </span>
+                <span style={{ fontSize: '0.72rem', color: '#b7cad6' }}>({levelInfo.title})</span>
               </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', marginLeft: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, marginLeft: '12px' }}>
                 <div style={{
-                  height: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '3px',
-                  flex: '1',
-                  overflow: 'hidden',
-                  position: 'relative'
+                  height: '6px', background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '3px', flex: 1, overflow: 'hidden'
                 }}>
                   <div style={{
-                    width: getLevelInfo(shells).target 
-                      ? `${((shells - getLevelInfo(shells).prevTarget) / (getLevelInfo(shells).target - getLevelInfo(shells).prevTarget)) * 100}%` 
+                    width: levelInfo.target
+                      ? `${((shells - levelInfo.prevTarget) / (levelInfo.target - levelInfo.prevTarget)) * 100}%`
                       : '100%',
                     height: '100%',
                     background: 'linear-gradient(90deg, #064c72, #22d3ee)',
                     borderRadius: '3px',
-                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                    transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1)'
                   }} />
                 </div>
                 <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#39ff88', whiteSpace: 'nowrap' }}>
-                  {getLevelInfo(shells).target ? `${shells}/${getLevelInfo(shells).target} 🐚` : `${shells} 🐚`}
+                  {levelInfo.target ? `${shells}/${levelInfo.target} 🐚` : `${shells} 🐚`}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Bottom Player Control Bar */}
+          {/* ── BOTTOM CONTROL BAR ────────────────────────────── */}
           <div className="streamBottomControlBar">
-            {/* Left Controls */}
-            <button 
-              className="playerBarBtn"
-              onClick={() => setIsPlaying(!isPlaying)}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-            >
+            <button className="playerBarBtn" onClick={() => setIsPlaying(!isPlaying)}
+              aria-label={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
             </button>
 
-            <button 
-              className="playerBarBtn"
-              onClick={() => setIsMuted(!isMuted)}
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
-            >
+            <button className="playerBarBtn" onClick={() => setIsMuted(!isMuted)}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}>
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
 
             <div className="playerBarLiveStatus">
-              <span className="liveStatusDot" style={{ backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee', boxShadow: feedType === 'youtube' ? '0 0 8px #39ff88' : '0 0 8px #22d3ee' }} />
+              <span className="liveStatusDot" style={{
+                backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee',
+                boxShadow: feedType === 'youtube' ? '0 0 8px #39ff88' : '0 0 8px #22d3ee'
+              }} />
               <span>LIVE</span>
             </div>
 
-            {/* Center Seek/Progress Line */}
             <div className="playerProgressBarContainer">
               <div className="playerProgressBarFill" />
             </div>
 
-            {/* Right Controls */}
             <span className="greenHdBadge">HD</span>
-            
-            {/* Feed Selector Button */}
-            <div style={{ marginRight: '8px' }}>
-              <select
-                value={feedType}
-                onChange={(e) => {
-                  setFeedType(e.target.value);
-                  // Clear overlays
-                  setClickCoords(null);
-                  setChallengeScanning(false);
-                  setActiveChallenge(null);
-                  setSelectedLogSpecies(null);
-                  setShowSeawaterAlert(false);
-                }}
-                style={{
-                  background: 'rgba(6, 32, 49, 0.85)',
-                  border: '1.5px solid rgba(34, 211, 238, 0.45)',
-                  borderRadius: '16px',
-                  color: '#fff',
-                  fontSize: '0.75rem',
-                  fontWeight: '800',
-                  padding: '4px 10px',
-                  cursor: 'pointer',
-                  fontFamily: 'Outfit, sans-serif',
-                  outline: 'none',
-                  boxShadow: '0 0 10px rgba(34, 211, 238, 0.15)'
-                }}
-              >
-                <option value="youtube">📺 Live (YouTube)</option>
-                <option value="recorded">🌊 Game Loop (AI Active)</option>
-              </select>
-            </div>
 
-            <button className="autoDropdownBtn">
-              Auto <span className="dropdownArrow">▼</span>
-            </button>
+            {/* Feed selector */}
+            <select
+              value={feedType}
+              onChange={e => setFeedType(e.target.value)}
+              style={{
+                background: 'rgba(6,32,49,0.9)',
+                border: '1.5px solid rgba(34,211,238,0.45)',
+                borderRadius: '16px', color: '#fff',
+                fontSize: '0.75rem', fontWeight: '800',
+                padding: '4px 10px', cursor: 'pointer',
+                fontFamily: 'Outfit, sans-serif', outline: 'none',
+                boxShadow: '0 0 10px rgba(34,211,238,0.15)', marginRight: '4px'
+              }}
+            >
+              <option value="recorded">🎮 Game Loop (AI Active)</option>
+              <option value="youtube">📺 Live (YouTube)</option>
+            </select>
 
-            <button className="playerBarBtn" onClick={() => alert('Picture in Picture activated!')} aria-label="Picture in Picture">
+            <button className="autoDropdownBtn">Auto <span className="dropdownArrow">▼</span></button>
+
+            <button className="playerBarBtn" onClick={() => alert('Picture in Picture activated!')} aria-label="PiP">
               <Tv size={18} />
             </button>
 
             <div className="settingsDropdownContainer">
-              <button 
-                className="playerBarBtn" 
-                onClick={() => setShowSettings(!showSettings)}
-                aria-label="Settings"
-              >
+              <button className="playerBarBtn" onClick={() => setShowSettings(!showSettings)} aria-label="Settings">
                 <Settings size={18} />
               </button>
               {showSettings && (
@@ -886,30 +515,22 @@ export default function LiveStream({ addShells, shells, currentUser }) {
       </div>
 
       <style>{`
-        @keyframes swimOscillate {
-          from { transform: translateY(-3px) rotate(1deg); }
-          to { transform: translateY(3px) rotate(-1deg); }
-        }
         @keyframes floatUpFade {
-          0% { transform: translate(-50%, -50%) translateY(0); opacity: 1; scale: 1; }
-          100% { transform: translate(-50%, -50%) translateY(-60px); opacity: 0; scale: 0.85; }
+          0%   { transform: translate(-50%, -50%) translateY(0);    opacity: 1; }
+          100% { transform: translate(-50%, -50%) translateY(-70px); opacity: 0; }
         }
         @keyframes blinkGlow {
-          0% { opacity: 0.4; box-shadow: 0 0 2px #39ff88; }
-          50% { opacity: 1; box-shadow: 0 0 8px #39ff88; }
+          0%   { opacity: 0.4; box-shadow: 0 0 2px #39ff88; }
+          50%  { opacity: 1;   box-shadow: 0 0 8px #39ff88; }
           100% { opacity: 0.4; box-shadow: 0 0 2px #39ff88; }
         }
         @keyframes slideDownAlert {
-          from { transform: translate(-50%, -20px); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
+          from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+          to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
         }
         @keyframes bounceUp {
-          0% { transform: translateY(0); }
+          0%   { transform: translateY(0); }
           100% { transform: translateY(-10px); }
-        }
-        @keyframes spin {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
       `}</style>
     </section>
