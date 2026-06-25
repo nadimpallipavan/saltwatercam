@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
-export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
+export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser, gameMode = 'cleanup' }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -12,13 +12,18 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
   const [activeAlert, setActiveAlert] = useState(null);
   const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
 
+  // Floating trash states
+  const [trashItems, setTrashItems] = useState([]);
+  const [trashCleanedCount, setTrashCleanedCount] = useState(0);
+  const [cleanupAlert, setCleanupAlert] = useState(null);
+
   // Gamification floating items states
   const [floatyTexts, setFloatyTexts] = useState([]);
   const [showMissionAlert, setShowMissionAlert] = useState(false);
 
   // Simulated AI detection alerts loop
   useEffect(() => {
-    if (!isPlaying || !aiEnabled) {
+    if (!isPlaying || !aiEnabled || gameMode !== 'ai') {
       setActiveAlert(null);
       return;
     }
@@ -90,9 +95,98 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [showSeawaterAlert]);
 
+  // Simulated floating trash loop (Reef Trash Cleanup Mode)
+  useEffect(() => {
+    if (!isPlaying || !aiEnabled || gameMode !== 'cleanup') {
+      setTrashItems([]);
+      return;
+    }
+
+    const trashTypes = [
+      { emoji: '🍾', label: 'Plastic Bottle', fact: 'Plastic bottles can take 450 years to break down in the ocean!' },
+      { emoji: '🛍️', label: 'Plastic Bag', fact: 'Sea turtles often mistake plastic bags for tasty jellyfish!' },
+      { emoji: '🥤', label: 'Plastic Cup', fact: 'Over 8 million tons of plastic trash enter our oceans every year!' },
+      { emoji: '🥫', label: 'Aluminum Can', fact: 'Recycling aluminum cans saves 95% of the energy needed to make new ones!' },
+      { emoji: '🎈', label: 'Rubber Balloon', fact: 'Balloons can float for miles and end up blocking animals\' stomachs.' }
+    ];
+
+    const spawnTrash = () => {
+      setTrashItems(prev => {
+        // Limit max concurrent trash items to avoid cluttering the screen
+        if (prev.length >= 4) return prev;
+
+        const randomType = trashTypes[Math.floor(Math.random() * trashTypes.length)];
+        const newItem = {
+          id: Math.random().toString(36).substring(2, 9),
+          emoji: randomType.emoji,
+          label: randomType.label,
+          fact: randomType.fact,
+          y: 20 + Math.random() * 55, // Drifts between 20% and 75% depth
+          duration: 10 + Math.random() * 8, // Drifts across in 10-18s
+          scale: 0.85 + Math.random() * 0.55 // Scale between 0.85 and 1.4
+        };
+
+        // Auto-remove trash item after its duration ends
+        setTimeout(() => {
+          setTrashItems(current => current.filter(item => item.id !== newItem.id));
+        }, newItem.duration * 1000);
+
+        return [...prev, newItem];
+      });
+    };
+
+    // Spawn first item after 1.5 seconds, then spawn periodically
+    const firstSpawn = setTimeout(spawnTrash, 1500);
+
+    const spawnInterval = setInterval(() => {
+      spawnTrash();
+    }, 7000 + Math.random() * 4000);
+
+    return () => {
+      clearTimeout(firstSpawn);
+      clearInterval(spawnInterval);
+    };
+  }, [isPlaying, aiEnabled, gameMode]);
+
+  // Trash Click Handler
+  const handleTrashClick = (e, item) => {
+    e.stopPropagation(); // Avoid triggering standard frame click coordinates
+
+    setTrashItems(prev => prev.filter(x => x.id !== item.id));
+    setTrashCleanedCount(prev => prev + 1);
+
+    if (addShells) {
+      addShells(10); // Award +10 Shells for cleaning trash
+    }
+
+    // Trigger floating success text at click coordinates
+    const rect = e.currentTarget.getBoundingClientRect();
+    const parentRect = e.currentTarget.offsetParent.getBoundingClientRect();
+    const clickX = ((rect.left - parentRect.left + rect.width / 2) / parentRect.width) * 100;
+    const clickY = ((rect.top - parentRect.top + rect.height / 2) / parentRect.height) * 100;
+    triggerFloaty(clickX, clickY, `🧼 CLEANED! +10 🐚`);
+
+    // Show temporary educational toast at top center
+    setCleanupAlert({
+      emoji: item.emoji,
+      label: item.label,
+      fact: item.fact
+    });
+  };
+
+  // Auto-clear cleanup alert toast
+  useEffect(() => {
+    if (cleanupAlert) {
+      const timer = setTimeout(() => {
+        setCleanupAlert(null);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [cleanupAlert]);
+
   // Handle click on the video frame overlay
   const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isScanning || selectedLogSpecies || showSeawaterAlert) return;
+    if (!isPlaying || !aiEnabled || gameMode !== 'ai' || isScanning || selectedLogSpecies || showSeawaterAlert) return;
 
     e.stopPropagation();
 
@@ -356,8 +450,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* AI Alert Banner HUD overlay */}
-          {activeAlert && (
+          {/* AI Alert Banner HUD overlay (AI Spotter Mode) */}
+          {gameMode === 'ai' && activeAlert && (
             <div style={{
               position: 'absolute',
               top: '80px',
@@ -397,6 +491,93 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               </div>
             </div>
           )}
+
+          {/* Cleaned Trash educational banner for Reef Cleanup Mode */}
+          {gameMode === 'cleanup' && cleanupAlert && (
+            <div style={{
+              position: 'absolute',
+              top: '80px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(16, 185, 129, 0.18)',
+              backdropFilter: 'blur(8px)',
+              border: '2px solid rgba(16, 185, 129, 0.65)',
+              borderRadius: '16px',
+              padding: '12px 24px',
+              color: '#fff',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.2)',
+              animation: 'pulseCleanBorder 1.5s infinite ease-in-out, slideDownAlert 0.3s ease-out',
+              fontFamily: 'Outfit, sans-serif',
+              pointerEvents: 'none',
+              maxWidth: '420px',
+              width: '90%'
+            }}>
+              <span style={{ fontSize: '2.5rem' }}>{cleanupAlert.emoji}</span>
+              <div style={{ textAlign: 'left' }}>
+                <strong style={{ color: '#34d399', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
+                  🧼 CLEANED: {cleanupAlert.label} (+10🐚)
+                </strong>
+                <span style={{ fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
+                  {cleanupAlert.fact}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Floating Trash Cleanup items for Toddlers (Ages 3+) */}
+          {isPlaying && aiEnabled && gameMode === 'cleanup' && trashItems.map(item => (
+            <button
+              key={item.id}
+              onClick={(e) => handleTrashClick(e, item)}
+              style={{
+                position: 'absolute',
+                top: `${item.y}%`,
+                fontSize: '2.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                zIndex: 85,
+                transform: `scale(${item.scale})`,
+                animation: `driftAcross ${item.duration}s linear forwards`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                outline: 'none',
+                userSelect: 'none',
+                padding: '10px'
+              }}
+              className="floatingTrashBtn"
+            >
+              <span className="trashEmoji" style={{
+                filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.6))',
+                animation: 'trashSway 3s ease-in-out infinite alternate',
+                display: 'inline-block'
+              }}>
+                {item.emoji}
+              </span>
+              <span style={{
+                fontSize: '0.62rem',
+                background: 'rgba(239, 68, 68, 0.95)',
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '20px',
+                marginTop: '4px',
+                fontFamily: 'Outfit, sans-serif',
+                fontWeight: '900',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                letterSpacing: '0.05em'
+              }}>
+                TAP ME! 🧹
+              </span>
+            </button>
+          ))}
 
 
           {/* Seawater Only Alert */}
@@ -543,8 +724,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             
             {/* Interactive cleanup notification banner */}
             <div className="gameHeaderBadge" style={{
-              background: 'rgba(34, 211, 238, 0.15)',
-              border: '1px solid rgba(34, 211, 238, 0.3)',
+              background: gameMode === 'cleanup' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(34, 211, 238, 0.15)',
+              border: gameMode === 'cleanup' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(34, 211, 238, 0.3)',
               color: '#fff',
               fontSize: '0.78rem',
               fontWeight: '800',
@@ -553,13 +734,23 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: '0 0 10px rgba(34, 211, 238, 0.15)',
+              boxShadow: gameMode === 'cleanup' ? '0 0 10px rgba(16, 185, 129, 0.15)' : '0 0 10px rgba(34, 211, 238, 0.15)',
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              <span>📊 Session Sightings Counted: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>Click real feed to log features & verify species</span>
+              {gameMode === 'cleanup' ? (
+                <>
+                  <span>🧹 Ocean Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
+                  <span>Click floating trash to clean the reef!</span>
+                </>
+              ) : (
+                <>
+                  <span>📊 Session Sightings Counted: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
+                  <span>Click real feed to log features & verify species</span>
+                </>
+              )}
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
@@ -756,6 +947,19 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
         @keyframes slideDownAlert {
           from { transform: translate(-50%, -20px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes driftAcross {
+          0% { left: -60px; }
+          100% { left: calc(100% + 60px); }
+        }
+        @keyframes trashSway {
+          0% { transform: rotate(-15deg) translateY(-2px); }
+          100% { transform: rotate(15deg) translateY(2px); }
+        }
+        @keyframes pulseCleanBorder {
+          0% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+          50% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 25px rgba(16, 185, 129, 0.55); }
+          100% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
         }
         @keyframes pulseAlertBorder {
           0% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }

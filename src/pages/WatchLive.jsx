@@ -43,6 +43,7 @@ const gameQuestions = [
 
 export default function WatchLive({ addShells, shells, currentUser }) {
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [gameMode, setGameMode] = useState('cleanup'); // 'cleanup' (Ages 3+) or 'ai' (Ages 6+)
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
   const [emailInput, setEmailInput] = useState('');
 
@@ -87,7 +88,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
   return (
     <div className="watchPageFull" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '64px', paddingTop: '20px' }}>
-      <LiveStream aiEnabled={aiEnabled} addShells={addShells} shells={shells} currentUser={currentUser} />
+      <LiveStream aiEnabled={aiEnabled} addShells={addShells} shells={shells} currentUser={currentUser} gameMode={gameMode} />
       
       {/* AI Species Recognition Toggle Bar */}
       <div className="aiControlCard" style={{
@@ -107,13 +108,72 @@ export default function WatchLive({ addShells, shells, currentUser }) {
         gap: '16px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
       }}>
-        <div style={{ textAlign: 'left' }}>
-          <h4 style={{ margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '0.01em' }}>
-            AI Interactive Scan Lens
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', flex: '1 1 500px', textAlign: 'left' }}>
+          <h4 style={{ margin: '0 0 2px 0', fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '0.01em' }}>
+            Reef Interactive Gaming Lens
           </h4>
-          <p style={{ margin: 0, fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.4' }}>
-            Activate the AI Scan Lens. Click on real fish, turtles, or sharks swimming in the video feed to scan them. Identify the species correctly to verify the sighting and earn shells!
+          <p style={{ margin: '0 0 4px 0', fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.45' }}>
+            {gameMode === 'cleanup' 
+              ? '🧹 Reef Trash Cleanup (Ages 3+): Floating plastic bottles, bags, and cans drift across the camera. Click them to clean the reef and earn shells instantly! Simple and fun click-and-pop game.'
+              : '🔍 AI Spotter Challenge (Ages 6+): Simulated AI alerts flash when marine life is detected. Click the feed during alert windows to scan species, verify sightings, and learn biology facts!'}
           </p>
+          
+          {/* Segmented Mode Selector tabs */}
+          {aiEnabled && (
+            <div style={{
+              display: 'flex',
+              background: 'rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(34, 211, 238, 0.2)',
+              borderRadius: '25px',
+              padding: '2px',
+              gap: '2px',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
+              marginTop: '4px'
+            }}>
+              <button
+                onClick={() => setGameMode('cleanup')}
+                style={{
+                  background: gameMode === 'cleanup' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  fontWeight: '800',
+                  padding: '6px 14px',
+                  borderRadius: '22px',
+                  cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: gameMode === 'cleanup' ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none'
+                }}
+              >
+                🧹 Reef Cleanup (Ages 3+)
+              </button>
+              <button
+                onClick={() => setGameMode('ai')}
+                style={{
+                  background: gameMode === 'ai' ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  fontWeight: '800',
+                  padding: '6px 14px',
+                  borderRadius: '22px',
+                  cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: gameMode === 'ai' ? '0 2px 8px rgba(34, 211, 238, 0.3)' : 'none'
+                }}
+              >
+                🔍 AI Spotter (Ages 6+)
+              </button>
+            </div>
+          )}
         </div>
         
         <button 
@@ -144,7 +204,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             boxShadow: aiEnabled ? '0 0 8px #39ff88' : 'none',
             display: 'inline-block'
           }} />
-          {aiEnabled ? 'AI LENS ACTIVE' : 'ACTIVATE AI LENS'}
+          {aiEnabled ? 'GAMING LENS ACTIVE' : 'ACTIVATE GAMING LENS'}
         </button>
       </div>
  
