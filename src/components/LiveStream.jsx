@@ -9,12 +9,54 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
   const [isScanning, setIsScanning] = useState(false);
   const [selectedLogSpecies, setSelectedLogSpecies] = useState(null);
   const [fishCounter, setFishCounter] = useState(0);
-  const [activeSelection, setActiveSelection] = useState(false);
+  const [activeAlert, setActiveAlert] = useState(null);
   const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
 
   // Gamification floating items states
   const [floatyTexts, setFloatyTexts] = useState([]);
   const [showMissionAlert, setShowMissionAlert] = useState(false);
+
+  // Simulated AI detection alerts loop
+  useEffect(() => {
+    if (!isPlaying || !aiEnabled) {
+      setActiveAlert(null);
+      return;
+    }
+
+    const alertsList = [
+      { type: 'fish', message: 'Common Snook detected swimming near center! 🐟', label: 'Fish' },
+      { type: 'fish', message: 'Atlantic Tarpon spotted near the dock light! 🐟', label: 'Fish' },
+      { type: 'turtle', message: 'Green Sea Turtle spotted on the reef floor! 🐢', label: 'Sea Turtle' },
+      { type: 'shark', message: 'Reef Shark detected in the background reef! 🦈', label: 'Shark' },
+      { type: 'light', message: 'Green attraction light glow intensifying! 🟢', label: 'Green Light' },
+      { type: 'floor', message: 'Stingray activity spotted near the sandy floor! 🪸', label: 'Sea Floor' }
+    ];
+
+    let alertTimeout = null;
+    let clearAlertTimeout = null;
+
+    const scheduleNextAlert = () => {
+      const delay = 15000 + Math.random() * 15000; // Spawns alert every 15-30s
+      alertTimeout = setTimeout(() => {
+        const randomAlert = alertsList[Math.floor(Math.random() * alertsList.length)];
+        setActiveAlert(randomAlert);
+
+        // Alert remains active for 6 seconds
+        clearAlertTimeout = setTimeout(() => {
+          setActiveAlert(null);
+          scheduleNextAlert();
+        }, 6000);
+
+      }, delay);
+    };
+
+    scheduleNextAlert();
+
+    return () => {
+      clearTimeout(alertTimeout);
+      clearTimeout(clearAlertTimeout);
+    };
+  }, [isPlaying, aiEnabled]);
 
   // Handle YouTube iframe play/pause and mute/unmute via postMessage API
   useEffect(() => {
@@ -50,7 +92,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Handle click on the video frame overlay
   const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isScanning || activeSelection || selectedLogSpecies || showSeawaterAlert) return;
+    if (!isPlaying || !aiEnabled || isScanning || selectedLogSpecies || showSeawaterAlert) return;
 
     e.stopPropagation();
 
@@ -61,12 +103,20 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     setClickCoords({ x: clickX, y: clickY });
     setIsScanning(true);
     setShowSeawaterAlert(false);
-    setActiveSelection(false);
+
+    // Save active alert locally to prevent clearing timing race conditions
+    const alertAtClick = activeAlert;
 
     // Run simulated AI scanning latency
     setTimeout(() => {
       setIsScanning(false);
-      setActiveSelection(true);
+
+      if (alertAtClick) {
+        logVerifiedSighting(alertAtClick.type);
+        setActiveAlert(null); // Consume the alert
+      } else {
+        logVerifiedSighting('water');
+      }
     }, 1000);
   };
 
@@ -86,9 +136,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
   };
 
   // Handle user classification selection
-  const handleOptionSelect = (type) => {
-    setActiveSelection(false);
-
+  const logVerifiedSighting = (type) => {
     if (type === 'water') {
       setShowSeawaterAlert(true);
       return;
@@ -179,7 +227,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
       }
 
       if (clickCoords) {
-        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 LOGGED! +15 🐚`);
+        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 VERIFIED! +15 🐚`);
       }
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 unique species
@@ -308,207 +356,48 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Sighting Verification Selection Modal */}
-          {activeSelection && (
+          {/* AI Alert Banner HUD overlay */}
+          {activeAlert && (
             <div style={{
               position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.85)',
+              top: '80px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(239, 68, 68, 0.15)',
               backdropFilter: 'blur(8px)',
-              zIndex: 95,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
+              border: '2px solid rgba(239, 68, 68, 0.6)',
+              borderRadius: '16px',
+              padding: '12px 24px',
               color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 10px rgba(239, 68, 68, 0.2)',
+              animation: 'pulseAlertBorder 2s infinite ease-in-out, slideDownAlert 0.3s ease-out',
+              fontFamily: 'Outfit, sans-serif',
+              pointerEvents: 'none' // Click passes through to the underlying scanner overlay
             }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: '2px solid #22d3ee',
-                borderRadius: '20px',
-                padding: '24px 28px',
-                maxWidth: '440px',
-                width: '90%',
-                textAlign: 'center',
-                boxShadow: '0 0 40px rgba(34, 211, 238, 0.25)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '14px',
-                animation: 'slideDownAlert 0.3s ease-out'
-              }}>
-                <div style={{ fontSize: '3rem', margin: '0' }}>🔍</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.62rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    AI Sighting Scan
-                  </span>
-                  <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800', lineHeight: '1.3' }}>
-                    What did you spot? Select what you see in the live feed:
-                  </h4>
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', marginTop: '6px' }}>
-                  <button 
-                    onClick={() => handleOptionSelect('fish')} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                      e.currentTarget.style.borderColor = '#22d3ee';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    🐟 Fish
-                  </button>
-                  <button 
-                    onClick={() => handleOptionSelect('turtle')} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                      e.currentTarget.style.borderColor = '#22d3ee';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    🐢 Sea Turtle
-                  </button>
-                  <button 
-                    onClick={() => handleOptionSelect('shark')} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                      e.currentTarget.style.borderColor = '#22d3ee';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    🦈 Shark
-                  </button>
-                  <button 
-                    onClick={() => handleOptionSelect('light')} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                      e.currentTarget.style.borderColor = '#22d3ee';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    🟢 Green Light
-                  </button>
-                  <button 
-                    onClick={() => handleOptionSelect('floor')} 
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                      e.currentTarget.style.borderColor = '#22d3ee';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    🪸 Sea Floor
-                  </button>
-                  <button 
-                    onClick={() => handleOptionSelect('water')} 
-                    style={{
-                      background: 'rgba(244, 63, 94, 0.1)',
-                      border: '1.5px solid rgba(244, 63, 94, 0.25)',
-                      color: '#f43f5e',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s',
-                      gridColumn: 'span 2'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'
-                    }}
-                  >
-                    💧 Just Water
-                  </button>
-                </div>
+              <span className="blinkingRedDot" style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: '#ef4444',
+                boxShadow: '0 0 10px #ef4444',
+                display: 'inline-block',
+                animation: 'blinkDot 1s infinite'
+              }} />
+              <div style={{ textAlign: 'left' }}>
+                <strong style={{ color: '#ff6b6b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
+                  🚨 AI ALERT: ACTIVE SIGHTING
+                </strong>
+                <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>
+                  {activeAlert.message} Click the feed to scan! <strong style={{ color: '#39ff88' }}>(+15🐚)</strong>
+                </span>
               </div>
             </div>
           )}
+
 
           {/* Seawater Only Alert */}
           {showSeawaterAlert && (
@@ -867,6 +756,16 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
         @keyframes slideDownAlert {
           from { transform: translate(-50%, -20px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes pulseAlertBorder {
+          0% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+          100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        }
+        @keyframes blinkDot {
+          0% { opacity: 0.3; }
+          50% { opacity: 1; }
+          100% { opacity: 0.3; }
         }
         .scanTargetRing {
           border: 2px dashed #22d3ee;
