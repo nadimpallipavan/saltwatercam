@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   // Sighting reporting game states
-  const [clickCoords, setClickCoords] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
+  const containerRef = useRef(null);
+  const [scannerPos, setScannerPos] = useState({ x: 50, y: 50 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [scanningTargetId, setScanningTargetId] = useState(null);
+  const [scanProgress, setScanProgress] = useState(0);
   const [fishCounter, setFishCounter] = useState(0);
   const [activeAlert, setActiveAlert] = useState(null);
 
@@ -122,13 +125,13 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
       if (target.type === 'trash') {
         setActiveAlert({
           type: 'trash',
-          message: `Plastic debris (${target.label}) detected! Tap the red AI box to clean it! (+10 🐚)`,
+          message: `Plastic debris (${target.label}) detected! Drag the AI Scanner Box onto it to clean it! (+10 🐚)`,
           label: target.label
         });
       } else {
         setActiveAlert({
           type: 'fish',
-          message: `${target.label} detected swimming! Tap the blue AI box! (+1 🐚)`,
+          message: `${target.label} detected swimming! Drag the AI Scanner Box onto it to verify species! (+1 🐚)`,
           label: target.label
         });
       }
@@ -137,26 +140,19 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [detections, isPlaying, aiEnabled]);
 
-  // Handle species or trash detection click
-  const handleDetectionClick = (detection, e) => {
-    e.stopPropagation(); // Avoid triggering standard frame click coordinates
-
+  // Handle species or trash detection scan success
+  const handleScanSuccess = (target) => {
     // Hide target immediately
-    setDetections(prev => prev.map(item => item.id === detection.id ? { ...item, visible: false } : item));
+    setDetections(prev => prev.map(item => item.id === target.id ? { ...item, visible: false } : item));
 
-    const rect = e.currentTarget.parentNode.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    if (detection.type === 'fish') {
-      // Award +1 Shell for spotting a fish
+    if (target.type === 'fish') {
       if (addShells) {
         addShells(1);
       }
       
       const nextFishCount = fishCounter + 1;
       setFishCounter(nextFishCount);
-      triggerFloaty(clickX, clickY, `🐟 Fish Spot! +1 🐚`);
+      triggerFloaty(scannerPos.x, scannerPos.y, `🐟 Identified: ${target.label}! +1 🐚`);
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 fish
       if (nextFishCount >= 3) {
@@ -173,18 +169,16 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
         }
       }
     } else {
-      // Award +10 Shells for cleaning trash
       if (addShells) {
         addShells(10);
       }
       setTrashCleanedCount(prev => prev + 1);
-      triggerFloaty(clickX, clickY, `🧼 Cleaned! +10 🐚`);
+      triggerFloaty(scannerPos.x, scannerPos.y, `🧼 Cleaned: ${target.label}! +10 🐚`);
 
-      // Show temporary educational toast at top center
       setCleanupAlert({
-        emoji: detection.emoji,
-        label: detection.label,
-        fact: detection.fact
+        emoji: target.emoji,
+        label: target.label,
+        fact: target.fact
       });
     }
   };
@@ -199,27 +193,116 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [cleanupAlert]);
 
-  // Handle click on the video frame overlay (empty water)
-  const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isScanning) return;
-
-    e.stopPropagation();
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setClickCoords({ x: clickX, y: clickY });
-    setIsScanning(true);
-
-    // Fast 300ms scanning feedback
-    setTimeout(() => {
-      setIsScanning(false);
-      setClickCoords(null);
-      // Clicking empty seawater always awards 0 shells
-      triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
-    }, 300);
+  // Drag and Scan logic
+  const handleDragMove = (clientX, clientY) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    let x = ((clientX - rect.left) / rect.width) * 100;
+    let y = ((clientY - rect.top) / rect.height) * 100;
+    
+    // Constrain center within container boundary margins
+    x = Math.max(8, Math.min(92, x));
+    y = Math.max(6, Math.min(94, y));
+    setScannerPos({ x, y });
   };
+
+  const handleDragRelease = () => {
+    if (!isPlaying || !aiEnabled) return;
+    const activeTargets = detections.filter(d => d.visible);
+    const alignedTarget = activeTargets.find(d => {
+      const dx = Math.abs(scannerPos.x - d.x);
+      const dy = Math.abs(scannerPos.y - d.y);
+      return dx <= 5.5 && dy <= 5.5;
+    });
+
+    if (!alignedTarget) {
+      triggerFloaty(scannerPos.x, scannerPos.y, `💧 Seawater! +0 🐚`);
+    }
+  };
+
+  const handleFrameClick = (e) => {
+    if (!isPlaying || !aiEnabled || isDragging || scanningTargetId) return;
+
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    let clickX = ((e.clientX - rect.left) / rect.width) * 100;
+    let clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    clickX = Math.max(8, Math.min(92, clickX));
+    clickY = Math.max(6, Math.min(94, clickY));
+
+    setScannerPos({ x: clickX, y: clickY });
+
+    setTimeout(() => {
+      const activeTargets = detections.filter(d => d.visible);
+      const alignedTarget = activeTargets.find(d => {
+        const dx = Math.abs(clickX - d.x);
+        const dy = Math.abs(clickY - d.y);
+        return dx <= 5.5 && dy <= 5.5;
+      });
+      if (!alignedTarget) {
+        triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
+      }
+    }, 100);
+  };
+
+  // Alignment Check Loop
+  useEffect(() => {
+    if (!isPlaying || !aiEnabled) {
+      setScanningTargetId(null);
+      setScanProgress(0);
+      return;
+    }
+
+    const activeTargets = detections.filter(d => d.visible);
+    const alignedTarget = activeTargets.find(d => {
+      const dx = Math.abs(scannerPos.x - d.x);
+      const dy = Math.abs(scannerPos.y - d.y);
+      return dx <= 5.5 && dy <= 5.5;
+    });
+
+    if (alignedTarget) {
+      if (scanningTargetId !== alignedTarget.id) {
+        setScanningTargetId(alignedTarget.id);
+        setScanProgress(0);
+      }
+    } else {
+      setScanningTargetId(null);
+      setScanProgress(0);
+    }
+  }, [scannerPos, detections, isPlaying, aiEnabled, scanningTargetId]);
+
+  // Scan Progress Incrementer
+  useEffect(() => {
+    if (!scanningTargetId) {
+      setScanProgress(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setScanProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [scanningTargetId]);
+
+  // Handle Scan Completion
+  useEffect(() => {
+    if (scanProgress === 100 && scanningTargetId) {
+      const target = detections.find(d => d.id === scanningTargetId);
+      if (target && target.visible) {
+        handleScanSuccess(target);
+      }
+      setScanningTargetId(null);
+      setScanProgress(0);
+    }
+  }, [scanProgress, scanningTargetId, detections]);
 
   // Helper to trigger floating shells text
   const triggerFloaty = (x, y, text) => {
@@ -289,8 +372,31 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           {/* Interactive AI Scanning Lens Overlays (Covering background video clicks) */}
           {isPlaying && aiEnabled && (
             <div 
+              ref={containerRef}
               className="aiScanOverlay"
               onClick={handleFrameClick}
+              onMouseMove={(e) => {
+                if (isDragging) {
+                  handleDragMove(e.clientX, e.clientY);
+                }
+              }}
+              onTouchMove={(e) => {
+                if (isDragging && e.touches.length > 0) {
+                  handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+                }
+              }}
+              onMouseUp={() => {
+                if (isDragging) {
+                  setIsDragging(false);
+                  handleDragRelease();
+                }
+              }}
+              onTouchEnd={() => {
+                if (isDragging) {
+                  setIsDragging(false);
+                  handleDragRelease();
+                }
+              }}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -298,44 +404,93 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 width: '100%',
                 height: '100%',
                 zIndex: 8,
-                cursor: isScanning ? 'wait' : 'crosshair'
+                cursor: isDragging ? 'grabbing' : 'crosshair'
               }}
-              title="AI Lens Active: Click anywhere on the live video feed to scan!"
+              title="AI Lens Active: Drag the AI Scanner Box over targets to identify/clean!"
             />
           )}
 
-          {/* Pulsing Target Scan Reticle */}
-          {isScanning && clickCoords && (
+          {/* Draggable AI Scanner Box Reticle */}
+          {isPlaying && aiEnabled && (
             <div
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
               style={{
                 position: 'absolute',
-                left: `${clickCoords.x}%`,
-                top: `${clickCoords.y}%`,
+                left: `${scannerPos.x}%`,
+                top: `${scannerPos.y}%`,
+                width: '16%',
+                height: '12%',
+                border: scanningTargetId ? '2.5px solid #39ff88' : '2.5px solid #22d3ee',
+                boxShadow: scanningTargetId 
+                  ? '0 0 15px rgba(57, 255, 136, 0.5), inset 0 0 8px rgba(57, 255, 136, 0.2)' 
+                  : '0 0 12px rgba(34, 211, 238, 0.4), inset 0 0 6px rgba(34, 211, 238, 0.1)',
+                borderRadius: '8px',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 15,
-                pointerEvents: 'none'
+                cursor: isDragging ? 'grabbing' : 'grab',
+                zIndex: 80,
+                touchAction: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'auto',
+                transition: isDragging ? 'none' : 'all 0.1s ease-out'
               }}
             >
-              <div className="scanTargetRing" />
-              <div className="scanRadarPulse" />
+              <div className="reticleCorner tl" />
+              <div className="reticleCorner tr" />
+              <div className="reticleCorner bl" />
+              <div className="reticleCorner br" />
+
+              {scanningTargetId && (
+                <div className="scanSweepBar" />
+              )}
+
+              {scanningTargetId ? (
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#39ff88',
+                  fontWeight: '900',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.85)',
+                  fontFamily: 'Outfit, sans-serif'
+                }}>
+                  {scanProgress}%
+                </div>
+              ) : (
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: '#22d3ee',
+                  boxShadow: '0 0 8px #22d3ee'
+                }} />
+              )}
+
               <div style={{
                 position: 'absolute',
-                top: '32px',
+                top: '-18px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                backgroundColor: 'rgba(3, 27, 46, 0.9)',
-                border: '1.5px solid #22d3ee',
-                color: '#22d3ee',
-                padding: '4px 10px',
-                borderRadius: '20px',
-                fontSize: '0.68rem',
+                backgroundColor: scanningTargetId ? '#39ff88' : '#22d3ee',
+                color: '#031b2e',
+                padding: '2px 8px',
+                fontSize: '0.58rem',
                 fontWeight: '900',
+                borderRadius: '3px',
                 whiteSpace: 'nowrap',
-                fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 0 12px rgba(34, 211, 238, 0.4)',
-                animation: 'blinkGlow 1s infinite'
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                pointerEvents: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                fontFamily: 'Outfit, sans-serif'
               }}>
-                AI LENS SCANNING...
+                {scanningTargetId ? 'SCANNING' : 'AI LENS'}
               </div>
             </div>
           )}
@@ -477,50 +632,27 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Simulated AI Detection Bounding Boxes */}
+          {/* Simulated AI Detection Target Outlines */}
           {isPlaying && aiEnabled && detections.filter(d => d.visible).map(d => (
             <div
               key={d.id}
-              onClick={(e) => handleDetectionClick(d, e)}
               style={{
                 position: 'absolute',
                 left: `${d.x}%`,
                 top: `${d.y}%`,
                 width: `${d.w}%`,
                 height: `${d.h}%`,
-                border: d.type === 'fish' ? '1.5px solid #22d3ee' : '1.5px solid #ef4444',
+                border: d.type === 'fish' ? '1.5px dashed rgba(34, 211, 238, 0.7)' : '1.5px dashed rgba(239, 68, 68, 0.7)',
                 boxShadow: d.type === 'fish' 
-                  ? '0 0 10px rgba(34, 211, 238, 0.4), inset 0 0 5px rgba(34, 211, 238, 0.1)' 
-                  : '0 0 10px rgba(239, 68, 68, 0.4), inset 0 0 5px rgba(239, 68, 68, 0.1)',
+                  ? '0 0 6px rgba(34, 211, 238, 0.2)' 
+                  : '0 0 6px rgba(239, 68, 68, 0.2)',
                 borderRadius: '6px',
                 transform: 'translate(-50%, -50%)',
-                pointerEvents: 'auto',
-                cursor: 'pointer',
-                zIndex: 10,
-                transition: 'all 0.3s ease-out',
-                fontFamily: 'Outfit, sans-serif'
+                pointerEvents: 'none', // Allow mouse/touch drag events to pass through to container
+                zIndex: 9,
+                transition: 'all 0.3s ease-out'
               }}
-              title={`Click to Identify/Clean: ${d.label}`}
-            >
-              {/* Label Tag */}
-              <div style={{
-                position: 'absolute',
-                top: '-18px',
-                left: '-1.5px',
-                backgroundColor: d.type === 'fish' ? '#22d3ee' : '#ef4444',
-                color: '#031b2e',
-                padding: '2px 6px',
-                fontSize: '0.58rem',
-                fontWeight: '900',
-                borderRadius: '3px 3px 0 0',
-                whiteSpace: 'nowrap',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                pointerEvents: 'none'
-              }}>
-                {d.label} [{d.confidence}%]
-              </div>
-            </div>
+            />
           ))}
 
 
@@ -613,11 +745,11 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              <span>🐟 Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
+              <span>🐟 Fish Scanned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
               <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
               <span>🧹 Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
               <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>Watch live feed: Click fish (+1 🐚) & trash (+10 🐚) to Level Up!</span>
+              <span>Drag AI Scanner Box onto targets to identify fish (+1 🐚) & clean trash (+10 🐚)!</span>
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
@@ -817,32 +949,32 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           50% { opacity: 1; }
           100% { opacity: 0.3; }
         }
-        .scanTargetRing {
-          border: 2px dashed #22d3ee;
-          border-radius: 50%;
-          width: 52px;
-          height: 52px;
-          animation: spinRing 4s linear infinite;
+        @keyframes scannerSweep {
+          0% { top: 4px; }
+          100% { top: calc(100% - 6px); }
         }
-        .scanRadarPulse {
+        .scanSweepBar {
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          border: 2px solid #22d3ee;
-          border-radius: 50%;
-          width: 14px;
-          height: 14px;
-          animation: pingRadar 1s ease-out infinite;
+          left: 4px;
+          right: 4px;
+          height: 2px;
+          background: #39ff88;
+          box-shadow: 0 0 8px #39ff88;
+          animation: scannerSweep 1.2s infinite alternate ease-in-out;
+          pointer-events: none;
         }
-        @keyframes spinRing {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        .reticleCorner {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-color: currentColor;
+          border-style: solid;
+          pointer-events: none;
         }
-        @keyframes pingRadar {
-          0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-          100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
-        }
+        .reticleCorner.tl { top: 4px; left: 4px; border-width: 2px 0 0 2px; border-top-left-radius: 2px; }
+        .reticleCorner.tr { top: 4px; right: 4px; border-width: 2px 2px 0 0; border-top-right-radius: 2px; }
+        .reticleCorner.bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; border-bottom-left-radius: 2px; }
+        .reticleCorner.br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; border-bottom-right-radius: 2px; }
       `}</style>
     </section>
   );
