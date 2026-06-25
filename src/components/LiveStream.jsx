@@ -195,7 +195,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           {/* Real Live YouTube Stream */}
           <iframe 
             id="yt-live-stream"
-            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+            src="https://www.youtube.com/embed/1zcIUk66HX4?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=1zcIUk66HX4"
             title="Live Underwater Stream" 
             className="streamBgImage"
             style={{ 
