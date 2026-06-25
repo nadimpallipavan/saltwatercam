@@ -19,15 +19,14 @@ export default function Hero({ setPage }) {
           <span className="aquaText">PLAY & EXPLORE!</span>
         </h1>
 
-        {/* Subtitle */}
         <p className="heroText">
-          Watch underwater animals in real-time, identify passing species, clean up plastic trash, and earn shells to redeem cool explorer rewards!
+          Spot real sea creatures, earn shells &amp; become an Ocean Explorer!
         </p>
 
         {/* Action buttons from mockup */}
         <div className="heroActions">
           <button className="primaryBtn watchLiveBtn" onClick={() => setPage('watch')}>
-            <Play size={18} fill="currentColor" /> 🎮 WATCH & PLAY LIVE
+            <Play size={18} fill="currentColor" /> Play Live
           </button>
           
           <button className="secondaryBtn exploreBtn" onClick={() => setPage('kids-club')}>
