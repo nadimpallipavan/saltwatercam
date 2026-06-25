@@ -1,17 +1,65 @@
 import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
+const keyframes = {
+  f1: [ // Bannerfish (swims left to right)
+    { t: 0, x: 15, y: 35, visible: true },
+    { t: 4, x: 45, y: 48, visible: true },
+    { t: 8, x: 75, y: 38, visible: true },
+    { t: 11, x: 92, y: 25, visible: true },
+    { t: 13, x: 95, y: 20, visible: false }
+  ],
+  f2: [ // Yellow Tang (swims right to left)
+    { t: 0, x: 90, y: 70, visible: false },
+    { t: 2, x: 85, y: 65, visible: true },
+    { t: 6, x: 50, y: 55, visible: true },
+    { t: 10, x: 20, y: 45, visible: true },
+    { t: 13, x: 5, y: 40, visible: false }
+  ],
+  t1: [ // Plastic Bottle (drifts top to bottom)
+    { t: 0, x: 30, y: 15, visible: true },
+    { t: 4, x: 35, y: 38, visible: true },
+    { t: 8, x: 32, y: 60, visible: true },
+    { t: 13, x: 38, y: 85, visible: true }
+  ]
+};
+
+const getInterpolatedPosition = (targetId, time) => {
+  const frames = keyframes[targetId];
+  if (!frames) return { x: 0, y: 0, visible: false };
+
+  let i = 0;
+  while (i < frames.length - 1 && frames[i + 1].t < time) {
+    i++;
+  }
+
+  const f0 = frames[i];
+  const f1 = frames[i + 1] || f0;
+
+  if (f0.t === f1.t) return { x: f0.x, y: f0.y, visible: f0.visible };
+
+  const ratio = (time - f0.t) / (f1.t - f0.t);
+  const x = f0.x + (f1.x - f0.x) * ratio;
+  const y = f0.y + (f1.y - f0.y) * ratio;
+  const visible = ratio < 0.5 ? f0.visible : f1.visible;
+
+  return { x, y, visible };
+};
+
 export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   // Sighting classification game states
   const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const scannerPosRef = useRef({ x: 50, y: 50 });
   const [scannerPos, setScannerPos] = useState({ x: 50, y: 50 });
   const [isDragging, setIsDragging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [showClassification, setShowClassification] = useState(false);
+  const [activeTargets, setActiveTargets] = useState([]);
+  const [alignedTarget, setAlignedTarget] = useState(null);
   const [fishCounter, setFishCounter] = useState(0);
 
   const [trashCleanedCount, setTrashCleanedCount] = useState(0);
@@ -44,6 +92,56 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [shells, currentLevel]);
 
+  // Update target coordinates smoothly using requestAnimationFrame
+  useEffect(() => {
+    let animationFrameId;
+
+    const updatePositions = () => {
+      const video = videoRef.current;
+      if (video && !video.paused) {
+        const time = video.currentTime;
+        const targets = [
+          { id: 'f1', type: 'fish', label: 'Bannerfish', w: 14, h: 10, ...getInterpolatedPosition('f1', time) },
+          { id: 'f2', type: 'fish', label: 'Yellow Tang', w: 10, h: 8, ...getInterpolatedPosition('f2', time) },
+          { id: 't1', type: 'trash', label: 'Plastic Bottle', w: 11, h: 9, emoji: '🧼', fact: 'Plastic bottles can take 450 years to disintegrate in the sea!', ...getInterpolatedPosition('t1', time) }
+        ];
+        setActiveTargets(targets);
+
+        const currentPos = scannerPosRef.current;
+        const aligned = targets.find(d => {
+          if (!d.visible) return false;
+          const dx = Math.abs(currentPos.x - d.x);
+          const dy = Math.abs(currentPos.y - d.y);
+          return dx <= 8 && dy <= 8;
+        });
+        setAlignedTarget(aligned || null);
+      }
+      animationFrameId = requestAnimationFrame(updatePositions);
+    };
+
+    animationFrameId = requestAnimationFrame(updatePositions);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  // Handle native video play/pause and mute/unmute
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.play().catch(err => console.log("Autoplay blocked:", err));
+    } else {
+      video.pause();
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = isMuted;
+  }, [isMuted]);
+
   // Scan Progress Incrementer
   useEffect(() => {
     if (!isScanning) {
@@ -56,7 +154,11 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
         if (prev >= 100) {
           clearInterval(interval);
           setIsScanning(false);
-          setShowClassification(true);
+          if (alignedTarget && alignedTarget.visible) {
+            handleAutoClassify(alignedTarget);
+          } else {
+            triggerFloaty(scannerPos.x, scannerPos.y, `💧 Seawater! +0 🐚`);
+          }
           return 100;
         }
         return prev + 10;
@@ -64,19 +166,17 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 50);
 
     return () => clearInterval(interval);
-  }, [isScanning]);
+  }, [isScanning, alignedTarget, scannerPos]);
 
-  // Handle classification and award points
-  const handleClassify = (type) => {
-    setShowClassification(false);
-    
-    if (type === 'fish') {
+  // Handle automatic classification and award points
+  const handleAutoClassify = (target) => {
+    if (target.type === 'fish') {
       if (addShells) {
         addShells(1);
       }
       const nextFishCount = fishCounter + 1;
       setFishCounter(nextFishCount);
-      triggerFloaty(scannerPos.x, scannerPos.y, `🐟 Fish Sighting! +1 🐚`);
+      triggerFloaty(target.x, target.y, `🐟 ${target.label} Scanned! +1 🐚`);
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 fish
       if (nextFishCount >= 3) {
@@ -92,29 +192,18 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           setTimeout(() => setShowMissionAlert(false), 5000);
         }
       }
-    } else if (type === 'trash') {
+    } else if (target.type === 'trash') {
       if (addShells) {
         addShells(10);
       }
       setTrashCleanedCount(prev => prev + 1);
-      triggerFloaty(scannerPos.x, scannerPos.y, `🧼 Debris Cleaned! +10 🐚`);
+      triggerFloaty(target.x, target.y, `🧼 Cleaned: ${target.label}! +10 🐚`);
 
-      // Show temporary educational fact banner at top center
-      const facts = [
-        "Plastic bags can float in the ocean for years, blocking turtle stomachs.",
-        "Over 8 million tons of plastic enter our oceans every year, harming fish.",
-        "Aluminum cans take up to 200 years to break down in saltwater.",
-        "Recycling plastic helps protect local fish species from microplastic ingestion.",
-        "Plastic bottles can take 450 years to disintegrate in the sea."
-      ];
-      const randomFact = facts[Math.floor(Math.random() * facts.length)];
       setCleanupAlert({
         emoji: "🧼",
-        label: "Ocean Debris",
-        fact: randomFact
+        label: target.label,
+        fact: target.fact
       });
-    } else {
-      triggerFloaty(scannerPos.x, scannerPos.y, `💧 Seawater Logged! +0 🐚`);
     }
   };
 
@@ -130,7 +219,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Drag and Scan logic
   const handleDragMove = (clientX, clientY) => {
-    if (!containerRef.current || isScanning || showClassification) return;
+    if (!containerRef.current || isScanning) return;
     const rect = containerRef.current.getBoundingClientRect();
     let x = ((clientX - rect.left) / rect.width) * 100;
     let y = ((clientY - rect.top) / rect.height) * 100;
@@ -138,16 +227,19 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     // Constrain center within container boundary margins
     x = Math.max(8, Math.min(92, x));
     y = Math.max(6, Math.min(94, y));
-    setScannerPos({ x, y });
+    
+    const newPos = { x, y };
+    setScannerPos(newPos);
+    scannerPosRef.current = newPos;
   };
 
   const handleDragRelease = () => {
-    if (!isPlaying || !aiEnabled || isScanning || showClassification) return;
+    if (!isPlaying || !aiEnabled || isScanning) return;
     setIsScanning(true);
   };
 
   const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isDragging || isScanning || showClassification) return;
+    if (!isPlaying || !aiEnabled || isDragging || isScanning) return;
 
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -157,7 +249,9 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     clickX = Math.max(8, Math.min(92, clickX));
     clickY = Math.max(6, Math.min(94, clickY));
 
-    setScannerPos({ x: clickX, y: clickY });
+    const newPos = { x: clickX, y: clickY };
+    setScannerPos(newPos);
+    scannerPosRef.current = newPos;
     setIsScanning(true);
   };
 
@@ -176,8 +270,6 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 1200);
   };
 
-
-
   return (
     <section className="liveStage">
       <div className="liveFrame">
@@ -193,12 +285,15 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Real Live YouTube Stream */}
-          <iframe 
-            id="yt-live-stream"
-            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
-            title="Live Underwater Stream" 
+          {/* Real Live Video Stream */}
+          <video 
+            ref={videoRef}
+            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
             className="streamBgImage"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{ 
               border: 'none', 
               pointerEvents: 'none',
@@ -207,9 +302,9 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               left: 0,
               width: '100%',
               height: '100%',
+              objectFit: 'cover',
               zIndex: 1
             }}
-            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing Green Beam */}
@@ -286,10 +381,10 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 height: '12%',
                 border: isScanning 
                   ? '2.5px solid #39ff88' 
-                  : (showClassification ? '2.5px solid #facc15' : '2.5px solid #22d3ee'),
+                  : (alignedTarget && alignedTarget.visible ? '2.5px solid #facc15' : '2.5px solid #22d3ee'),
                 boxShadow: isScanning 
                   ? '0 0 15px rgba(57, 255, 136, 0.5), inset 0 0 8px rgba(57, 255, 136, 0.2)' 
-                  : (showClassification 
+                  : (alignedTarget && alignedTarget.visible 
                       ? '0 0 15px rgba(250, 204, 21, 0.5), inset 0 0 8px rgba(250, 204, 21, 0.2)' 
                       : '0 0 12px rgba(34, 211, 238, 0.4), inset 0 0 6px rgba(34, 211, 238, 0.1)'),
                 borderRadius: '8px',
@@ -328,8 +423,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  background: showClassification ? '#facc15' : '#22d3ee',
-                  boxShadow: showClassification ? '0 0 8px #facc15' : '0 0 8px #22d3ee'
+                  background: (alignedTarget && alignedTarget.visible) ? '#facc15' : '#22d3ee',
+                  boxShadow: (alignedTarget && alignedTarget.visible) ? '0 0 8px #facc15' : '0 0 8px #22d3ee'
                 }} />
               )}
 
@@ -340,7 +435,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 transform: 'translateX(-50%)',
                 backgroundColor: isScanning 
                   ? '#39ff88' 
-                  : (showClassification ? '#facc15' : '#22d3ee'),
+                  : (alignedTarget && alignedTarget.visible ? '#facc15' : '#22d3ee'),
                 color: '#031b2e',
                 padding: '2px 8px',
                 fontSize: '0.58rem',
@@ -353,121 +448,49 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
                 fontFamily: 'Outfit, sans-serif'
               }}>
-                {isScanning ? 'SCANNING' : (showClassification ? 'CLASSIFY' : 'AI LENS')}
+                {isScanning ? 'SCANNING' : (alignedTarget && alignedTarget.visible ? 'AI LOCK ON' : 'AI LENS')}
               </div>
             </div>
           )}
 
-          {/* Sighting Classification Panel Overlay */}
-          {isPlaying && aiEnabled && showClassification && (
-            <div style={{
-              position: 'absolute',
-              bottom: '50px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(3, 27, 46, 0.92)',
-              backdropFilter: 'blur(16px)',
-              border: '2px solid rgba(34, 211, 238, 0.5)',
-              borderRadius: '20px',
-              padding: '16px 24px',
-              width: '90%',
-              maxWidth: '480px',
-              zIndex: 95,
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(34, 211, 238, 0.25)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              textAlign: 'center',
-              fontFamily: 'Outfit, sans-serif',
-              animation: 'slideDownAlert 0.3s ease-out reverse'
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <strong style={{ color: '#22d3ee', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  AI Lens Analyzer
-                </strong>
-                <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: '800' }}>
-                  What did you classify under the scanner?
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between' }}>
-                <button
-                  onClick={() => handleClassify('fish')}
-                  style={{
-                    flex: '1',
-                    background: 'rgba(34, 211, 238, 0.1)',
-                    border: '1.5px solid #22d3ee',
-                    borderRadius: '12px',
-                    padding: '12px 6px',
-                    color: '#fff',
-                    fontWeight: '800',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontFamily: 'Outfit, sans-serif',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.2)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.1)'}
-                >
-                  <span style={{ fontSize: '1.4rem' }}>🐟</span>
-                  <span>Real Fish (+1 🐚)</span>
-                </button>
-
-                <button
-                  onClick={() => handleClassify('trash')}
-                  style={{
-                    flex: '1',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1.5px solid #ef4444',
-                    borderRadius: '12px',
-                    padding: '12px 6px',
-                    color: '#fff',
-                    fontWeight: '800',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontFamily: 'Outfit, sans-serif',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                >
-                  <span style={{ fontSize: '1.4rem' }}>🧼</span>
-                  <span>Real Trash (+10 🐚)</span>
-                </button>
-
-                <button
-                  onClick={() => handleClassify('seawater')}
-                  style={{
-                    flex: '1',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px 6px',
-                    color: '#cbd5e0',
-                    fontWeight: '800',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontFamily: 'Outfit, sans-serif',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
-                >
-                  <span style={{ fontSize: '1.4rem' }}>💧</span>
-                  <span>Seawater (+0 🐚)</span>
-                </button>
+          {/* Lock-on Bounding Box */}
+          {isPlaying && aiEnabled && alignedTarget && alignedTarget.visible && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${alignedTarget.x}%`,
+                top: `${alignedTarget.y}%`,
+                width: `${alignedTarget.w}%`,
+                height: `${alignedTarget.h}%`,
+                border: alignedTarget.type === 'fish' ? '2px solid #22d3ee' : '2px solid #ef4444',
+                boxShadow: alignedTarget.type === 'fish' 
+                  ? '0 0 15px rgba(34, 211, 238, 0.7), inset 0 0 8px rgba(34, 211, 238, 0.3)' 
+                  : '0 0 15px rgba(239, 68, 68, 0.7), inset 0 0 8px rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                zIndex: 9,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.1s ease-out'
+              }}
+            >
+              {/* Subtle AI Lock Indicator label */}
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '0',
+                backgroundColor: alignedTarget.type === 'fish' ? '#22d3ee' : '#ef4444',
+                color: '#031b2e',
+                padding: '1px 4px',
+                fontSize: '0.5rem',
+                fontWeight: '900',
+                borderRadius: '2px',
+                whiteSpace: 'nowrap',
+                textTransform: 'uppercase'
+              }}>
+                [AI LOCK: {alignedTarget.label}]
               </div>
             </div>
           )}
