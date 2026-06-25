@@ -109,10 +109,10 @@ export default function WatchLive({ addShells, shells, currentUser }) {
       }}>
         <div style={{ textAlign: 'left' }}>
           <h4 style={{ margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '0.01em' }}>
-            AI Species Recognition
+            AI Interactive Scan Lens
           </h4>
           <p style={{ margin: 0, fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.4' }}>
-            Overlay simulated real-time bounding boxes and confidence tags to identify passing marine life in the feed.
+            Click directly on the live video feed to scan and identify passing fish species, green under-dock light glows, or sand reef structures.
           </p>
         </div>
         
@@ -144,7 +144,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             boxShadow: aiEnabled ? '0 0 8px #39ff88' : 'none',
             display: 'inline-block'
           }} />
-          {aiEnabled ? 'AI DETECTION ACTIVE' : 'ACTIVATE AI DETECTION'}
+          {aiEnabled ? 'AI LENS ACTIVE' : 'ACTIVATE AI LENS'}
         </button>
       </div>
  
