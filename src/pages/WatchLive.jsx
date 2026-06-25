@@ -426,7 +426,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
           )}
         </div>
 
-        {/* Shell Savings & Cash Exchange Bank */}
+        {/* Kids Shell Club & Conservation Bank */}
         <div style={{
           padding: '24px',
           background: 'rgba(6, 32, 49, 0.45)',
@@ -444,7 +444,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
               <div>
                 <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.01em' }}>
-                  <span>🏦</span> Shell Savings Bank
+                  <span>🏦</span> Kids Shell Bank & Club
                 </h4>
                 
                 {/* Balance Summary Grid */}
@@ -454,15 +454,17 @@ export default function WatchLive({ addShells, shells, currentUser }) {
                     <strong style={{ fontSize: '1.3rem', color: '#22d3ee', fontFamily: 'Outfit, sans-serif' }}>🐚 {shells}</strong>
                   </div>
                   <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Cash Value</span>
-                    <strong style={{ fontSize: '1.3rem', color: '#39ff88', fontFamily: 'Outfit, sans-serif' }}>💵 ${(shells * 0.01).toFixed(2)}</strong>
+                    <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Explorer Status</span>
+                    <strong style={{ fontSize: '1.05rem', color: '#39ff88', fontFamily: 'Outfit, sans-serif' }}>
+                      {shells >= 500 ? '👑 Master Scout' : '🐠 Active Scout'}
+                    </strong>
                   </div>
                 </div>
 
-                {/* Progress bar towards $5.00 cashout limit */}
+                {/* Progress bar towards Master Scientist Explorer Level */}
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6', marginBottom: '4px', fontWeight: '800' }}>
-                    <span>Next Cash Out Goal ($5.00)</span>
+                    <span>Next Rank Level (Master Scout)</span>
                     <span>{Math.min(500, shells)} / 500 shells</span>
                   </div>
                   <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -479,60 +481,38 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
               {/* Action Forms */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {/* Cash Out Action */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <input 
-                    type="email" 
-                    placeholder="Enter PayPal/Venmo Email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#fff',
-                      fontSize: '0.78rem',
-                      fontFamily: 'Outfit, sans-serif',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (!emailInput || !emailInput.includes('@')) {
-                        alert('Please enter a valid email address!');
-                        return;
-                      }
-                      addShells(-500);
-                      setExchangeSuccess({ type: 'cash', amount: 500, value: 5.00, details: emailInput });
-                      setEmailInput('');
-                    }}
-                    disabled={shells < 500}
-                    style={{
-                      background: shells >= 500 
-                        ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' 
-                        : 'rgba(255, 255, 255, 0.05)',
-                      border: '1.5px solid rgba(34, 211, 238, 0.25)',
-                      color: shells >= 500 ? '#fff' : '#b7cad6',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      fontSize: '0.78rem',
-                      fontWeight: '800',
-                      cursor: shells >= 500 ? 'pointer' : 'default',
-                      fontFamily: 'Outfit, sans-serif',
-                      transition: 'all 0.2s',
-                      opacity: shells >= 500 ? 1 : 0.6
-                    }}
-                    onMouseEnter={(e) => {
-                      if (shells >= 500) e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (shells >= 500) e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    {shells >= 500 ? '💵 Redeem $5.00 Cash Out (500 Shells)' : '🔒 Need 500 Shells to Cash Out'}
-                  </button>
-                </div>
+                {/* Badge Unlock Action */}
+                <button
+                  onClick={() => {
+                    if (shells < 200) return;
+                    addShells(-200);
+                    setExchangeSuccess({ type: 'badge', amount: 200 });
+                  }}
+                  disabled={shells < 200}
+                  style={{
+                    background: shells >= 200 
+                      ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' 
+                      : 'rgba(255, 255, 255, 0.05)',
+                    border: '1.5px solid rgba(34, 211, 238, 0.25)',
+                    color: shells >= 200 ? '#fff' : '#b7cad6',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    fontSize: '0.78rem',
+                    fontWeight: '800',
+                    cursor: shells >= 200 ? 'pointer' : 'default',
+                    fontFamily: 'Outfit, sans-serif',
+                    transition: 'all 0.2s',
+                    opacity: shells >= 200 ? 1 : 0.6
+                  }}
+                  onMouseEnter={(e) => {
+                    if (shells >= 200) e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (shells >= 200) e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {shells >= 200 ? '🏆 Unlock Master Explorer Badge (200 Shells)' : '🔒 Need 200 Shells for Explorer Badge'}
+                </button>
 
                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 0' }} />
 
@@ -540,7 +520,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
                 <button
                   onClick={() => {
                     addShells(-100);
-                    setExchangeSuccess({ type: 'donation', amount: 100, value: 1.00 });
+                    setExchangeSuccess({ type: 'donation', amount: 100 });
                   }}
                   disabled={shells < 100}
                   style={{
@@ -567,26 +547,26 @@ export default function WatchLive({ addShells, shells, currentUser }) {
                     }
                   }}
                 >
-                  {shells >= 100 ? '🐠 Donate $1.00 to Artificial Reef (100 Shells)' : '🔒 Need 100 Shells to Donate'}
+                  {shells >= 100 ? '🐠 Donate 100 Shells to Plant a Coral Reef' : '🔒 Need 100 Shells to Donate'}
                 </button>
               </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', height: '100%' }}>
               <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 10px rgba(57, 255, 136, 0.3))' }}>
-                {exchangeSuccess.type === 'cash' ? '💸' : '🌊'}
+                {exchangeSuccess.type === 'badge' ? '🏆' : '🪸'}
               </span>
               <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem', fontWeight: '800', color: '#fff', margin: 0 }}>
-                {exchangeSuccess.type === 'cash' ? 'Redemption Successful!' : 'Thank you, Conservationist!'}
+                {exchangeSuccess.type === 'badge' ? 'Explorer Badge Unlocked!' : 'Thank you, Conservationist!'}
               </h4>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                {exchangeSuccess.type === 'cash' ? (
+                {exchangeSuccess.type === 'badge' ? (
                   <>
-                    Your request to cash out <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> for <strong style={{ color: '#39ff88' }}>${exchangeSuccess.value.toFixed(2)} USD</strong> has been received! Payment sent to <strong style={{ color: '#22d3ee' }}>{exchangeSuccess.details}</strong>.
+                    Congratulations! You traded <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to unlock the special <strong style={{ color: '#22d3ee' }}>Master Explorer Badge</strong>! Keep exploring and learning to save our oceans!
                   </>
                 ) : (
                   <>
-                    You converted <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to donate <strong style={{ color: '#39ff88' }}>${exchangeSuccess.value.toFixed(2)} USD</strong> cash value to support the Palm Beach Artificial Reef Program!
+                    Fantastic! You donated <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to help plant a virtual coral reef structure, building a safe new home for sea turtles, crabs, and fish!
                   </>
                 )}
               </p>

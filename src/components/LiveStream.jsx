@@ -4,13 +4,12 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-// Sighting Verification Challenge game states
+  // Sighting reporting game states
   const [clickCoords, setClickCoords] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedLogSpecies, setSelectedLogSpecies] = useState(null);
   const [fishCounter, setFishCounter] = useState(0);
-  const [activeChallenge, setActiveChallenge] = useState(null);
-  const [challengeFailed, setChallengeFailed] = useState(false);
+  const [activeSelection, setActiveSelection] = useState(false);
   const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
 
   // Gamification floating items states
@@ -51,7 +50,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Handle click on the video frame overlay
   const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isScanning || activeChallenge || selectedLogSpecies || showSeawaterAlert) return;
+    if (!isPlaying || !aiEnabled || isScanning || activeSelection || selectedLogSpecies || showSeawaterAlert) return;
 
     e.stopPropagation();
 
@@ -61,156 +60,13 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
     setClickCoords({ x: clickX, y: clickY });
     setIsScanning(true);
-    setChallengeFailed(false);
     setShowSeawaterAlert(false);
-    setActiveChallenge(null);
+    setActiveSelection(false);
 
-    // Run simulated AI scanning verification latency
+    // Run simulated AI scanning latency
     setTimeout(() => {
       setIsScanning(false);
-
-      // AI Scan classification based on vertical (Y) and horizontal (X) click zones
-      if (clickY < 35) {
-        // Top area: green light glow or baitfish
-        if (clickX < 55) {
-          // Confirm green dock light instantly
-          const result = {
-            name: "Neon Green Dock Light Glow",
-            emoji: "🟢",
-            color: "Bright Emerald / Neon Green Glow",
-            confidence: "98.8%",
-            shells: 10,
-            fact: "The green light under Lantana Dock attracts microscopic zooplankton. This draws in small baitfish, which eventually attracts large gamefish like Snook to feed at night!"
-          };
-          setSelectedLogSpecies(result);
-          setFishCounter(prev => prev + 1);
-          if (addShells) addShells(10);
-          triggerFloaty(clickX, clickY, `🐚 +10 (Light Logged)`);
-        } else {
-          // Baitfish: 50% chance of swarm detection
-          if (Math.random() < 0.5) {
-            const result = {
-              name: "Baitfish Swarm (Glass Minnows)",
-              emoji: "🐟",
-              color: "Silvery Translucent Glow",
-              confidence: "96.4%",
-              shells: 10,
-              fact: "Baitfish travel in massive schools. Swimming in tightly packed groups confuses predators and makes it harder for them to target individual fish!"
-            };
-            setSelectedLogSpecies(result);
-            setFishCounter(prev => prev + 1);
-            if (addShells) addShells(10);
-            triggerFloaty(clickX, clickY, `🐚 +10 (Swarm Logged)`);
-          } else {
-            setShowSeawaterAlert(true);
-          }
-        }
-      } else if (clickY > 70) {
-        // Bottom area: Sandy floor, stingrays, or reef structure
-        if (Math.random() < 0.5) {
-          const result = {
-            name: "Southern Stingray",
-            emoji: "🌊",
-            color: "Sandy Beige & Brown",
-            confidence: "95.2%",
-            shells: 10,
-            fact: "Stingrays glide along the ocean floor. They use their pectoral fins to bury themselves in the sand to hide from passing hammerhead sharks!"
-          };
-          setSelectedLogSpecies(result);
-          setFishCounter(prev => prev + 1);
-          if (addShells) addShells(10);
-          triggerFloaty(clickX, clickY, `🐚 +10 (Stingray Logged)`);
-        } else {
-          const result = {
-            name: "Sandy Sea Floor & Coral Structure",
-            emoji: "🪸",
-            color: "Tan Sand & Coral Rock Brown",
-            confidence: "97.1%",
-            shells: 10,
-            fact: "Rocky limestone reef structures provide vital cracks, caves, and overhangs for small crabs, spiny lobsters, and juvenile reef fish to hide in!"
-          };
-          setSelectedLogSpecies(result);
-          setFishCounter(prev => prev + 1);
-          if (addShells) addShells(10);
-          triggerFloaty(clickX, clickY, `🐚 +10 (Reef Logged)`);
-        }
-      } else {
-        // Middle channel: 70% chance of a fish sighting challenge, 30% chance of seawater only
-        if (Math.random() < 0.7) {
-          // Generate a multiple choice species challenge
-          const speciesList = [
-            {
-              name: "Green Sea Turtle",
-              emoji: "🐢",
-              color: "Olive Green & Dark Brown Shell",
-              confidence: "99.2%",
-              fact: "Green Sea Turtles are air-breathing reptiles that can hold their breath for up to 5 hours! They graze on seagrasses and algae on the reef floor."
-            },
-            {
-              name: "Reef Shark",
-              emoji: "🦈",
-              color: "Slate Grey Skin & White Belly",
-              confidence: "97.8%",
-              fact: "Reef sharks are apex predators that keep the local fish populations healthy. They are very shy, docile, and avoid humans."
-            },
-            {
-              name: "Common Snook",
-              emoji: "🐟",
-              color: "Silver Body with a Black Lateral Stripe",
-              confidence: "98.3%",
-              fact: "The Snook has a dark black line running down its side called a lateral line. It acts like a radar, helping them feel water vibrations to hunt in the dark!"
-            },
-            {
-              name: "Goliath Grouper",
-              emoji: "🐡",
-              color: "Mottled Olive Brown & Grey",
-              confidence: "96.5%",
-              fact: "Goliath Groupers can grow larger than a refrigerator and weigh up to 800 lbs! They are territorial and defend their reef caves by making low booming sounds."
-            },
-            {
-              name: "Atlantic Tarpon",
-              emoji: "🐟",
-              color: "Metallic Silver scales",
-              confidence: "97.9%",
-              fact: "Tarpons are known as the Silver King! They have huge reflective scales that shine like metal and can gulp air at the surface to breathe in low-oxygen water."
-            },
-            {
-              name: "Yellow Tang",
-              emoji: "🐠",
-              color: "Bright Golden Yellow",
-              confidence: "98.1%",
-              fact: "Yellow Tangs are tireless reef cleaners. They graze on algae growing on sea turtle shells and corals, keeping the entire ecosystem healthy!"
-            },
-            {
-              name: "Blue Tang",
-              emoji: "🐟",
-              color: "Vibrant Neon Blue & Yellow Fin Highlights",
-              confidence: "98.6%",
-              fact: "Blue Tang surgeonfish are crucial for algae control. They can change their color to deep purple at night to blend with reef shadows!"
-            }
-          ];
-
-          const selected = speciesList[Math.floor(Math.random() * speciesList.length)];
-          selected.shells = 15; // Challenges award 15 shells
-          
-          // Generate options: correct answer + 2 wrong answers
-          const otherSpecies = speciesList.filter(s => s.name !== selected.name);
-          const wrong1 = otherSpecies[Math.floor(Math.random() * otherSpecies.length)];
-          const otherSpecies2 = otherSpecies.filter(s => s.name !== wrong1.name);
-          const wrong2 = otherSpecies2[Math.floor(Math.random() * otherSpecies2.length)];
-
-          // Shuffle options
-          const options = [selected.name, wrong1.name, wrong2.name].sort(() => Math.random() - 0.5);
-
-          setActiveChallenge({
-            species: selected,
-            options: options
-          });
-        } else {
-          // Seawater only
-          setShowSeawaterAlert(true);
-        }
-      }
+      setActiveSelection(true);
     }, 1000);
   };
 
@@ -229,23 +85,101 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 1200);
   };
 
-  // Handle challenge choice verification
-  const handleChallengeChoice = (choice) => {
-    if (!activeChallenge || challengeFailed) return;
+  // Handle user classification selection
+  const handleOptionSelect = (type) => {
+    setActiveSelection(false);
 
-    if (choice === activeChallenge.species.name) {
-      // Success! Sighting Verified
-      const result = activeChallenge.species;
-      setActiveChallenge(null);
+    if (type === 'water') {
+      setShowSeawaterAlert(true);
+      return;
+    }
+
+    let result = null;
+
+    if (type === 'fish') {
+      const fishSpecies = [
+        {
+          name: "Common Snook",
+          emoji: "🐟",
+          color: "Silver Body with a Black Lateral Stripe",
+          confidence: "98.3%",
+          fact: "The Snook has a dark black line running down its side called a lateral line. It acts like a radar, helping them feel water vibrations to hunt in the dark!"
+        },
+        {
+          name: "Atlantic Tarpon",
+          emoji: "🐟",
+          color: "Metallic Silver scales",
+          confidence: "97.9%",
+          fact: "Tarpons are known as the Silver King! They have huge reflective scales that shine like metal and can gulp air at the surface to breathe in low-oxygen water."
+        },
+        {
+          name: "Goliath Grouper",
+          emoji: "🐡",
+          color: "Mottled Olive Brown & Grey",
+          confidence: "96.5%",
+          fact: "Goliath Groupers can grow larger than a refrigerator and weigh up to 800 lbs! They are territorial and defend their reef caves by making low booming sounds."
+        },
+        {
+          name: "Yellow Tang",
+          emoji: "🐠",
+          color: "Bright Golden Yellow",
+          confidence: "98.1%",
+          fact: "Yellow Tangs are tireless reef cleaners. They graze on algae growing on sea turtle shells and corals, keeping the entire ecosystem healthy!"
+        },
+        {
+          name: "Blue Tang",
+          emoji: "🐟",
+          color: "Vibrant Neon Blue & Yellow Fin Highlights",
+          confidence: "98.6%",
+          fact: "Blue Tang surgeonfish are crucial for algae control. They can change their color to deep purple at night to blend with reef shadows!"
+        }
+      ];
+      result = fishSpecies[Math.floor(Math.random() * fishSpecies.length)];
+    } else if (type === 'turtle') {
+      result = {
+        name: "Green Sea Turtle",
+        emoji: "🐢",
+        color: "Olive Green & Dark Brown Shell",
+        confidence: "99.2%",
+        fact: "Green Sea Turtles are air-breathing reptiles that can hold their breath for up to 5 hours! They graze on seagrasses and algae on the reef floor."
+      };
+    } else if (type === 'shark') {
+      result = {
+        name: "Reef Shark",
+        emoji: "🦈",
+        color: "Slate Grey Skin & White Belly",
+        confidence: "97.8%",
+        fact: "Reef sharks are apex predators that keep the local fish populations healthy. They are very shy, docile, and avoid humans."
+      };
+    } else if (type === 'light') {
+      result = {
+        name: "Neon Green Dock Light Glow",
+        emoji: "🟢",
+        color: "Bright Emerald / Neon Green Glow",
+        confidence: "98.8%",
+        fact: "The green light under Lantana Dock attracts microscopic zooplankton. This draws in small baitfish, which eventually attracts large gamefish like Snook to feed at night!"
+      };
+    } else if (type === 'floor') {
+      result = {
+        name: "Sandy Sea Floor & Coral Structure",
+        emoji: "🪸",
+        color: "Tan Sand & Coral Rock Brown",
+        confidence: "97.1%",
+        fact: "Rocky limestone reef structures provide vital cracks, caves, and overhangs for small crabs, spiny lobsters, and juvenile reef fish to hide in!"
+      };
+    }
+
+    if (result) {
+      result.shells = 15; // Logged sightings award 15 shells
       setSelectedLogSpecies(result);
       setFishCounter(prev => prev + 1);
 
       if (addShells) {
-        addShells(15); // Verified challenge gives +15 shells
+        addShells(15);
       }
 
       if (clickCoords) {
-        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 VERIFIED! +15 🐚`);
+        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 LOGGED! +15 🐚`);
       }
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 unique species
@@ -268,16 +202,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           }
         }
       }
-      setClickCoords(null);
-    } else {
-      // Sighting verification failed
-      setChallengeFailed(true);
-      setTimeout(() => {
-        setActiveChallenge(null);
-        setChallengeFailed(false);
-        setClickCoords(null);
-      }, 2000);
     }
+    setClickCoords(null);
   };
 
   return (
@@ -382,8 +308,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Sighting Verification Challenge Modal */}
-          {activeChallenge && (
+          {/* Sighting Verification Selection Modal */}
+          {activeSelection && (
             <div style={{
               position: 'absolute',
               inset: 0,
@@ -400,79 +326,186 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: challengeFailed ? '2px solid #f43f5e' : '2px solid #22d3ee',
+                border: '2px solid #22d3ee',
                 borderRadius: '20px',
                 padding: '24px 28px',
-                maxWidth: '420px',
+                maxWidth: '440px',
                 width: '90%',
                 textAlign: 'center',
-                boxShadow: challengeFailed ? '0 0 40px rgba(244, 63, 94, 0.3)' : '0 0 40px rgba(34, 211, 238, 0.25)',
+                boxShadow: '0 0 40px rgba(34, 211, 238, 0.25)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '14px',
                 animation: 'slideDownAlert 0.3s ease-out'
               }}>
-                {challengeFailed ? (
-                  <>
-                    <div style={{ fontSize: '3.5rem', margin: '0' }}>❌</div>
-                    <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#f43f5e', fontWeight: '800' }}>
-                      AI Sighting Denied!
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                      Incorrect species identified. Keep watching closely and try again!
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '2.5rem' }}>❔</span>
-                      <span style={{ fontSize: '3.5rem', filter: 'brightness(0) opacity(0.35)', animation: 'swimOscillate 2s infinite alternate', display: 'inline-block' }}>
-                        {activeChallenge.species.emoji}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontSize: '0.62rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                        AI Sighting Challenge 🔬
-                      </span>
-                      <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#fff', fontWeight: '800', lineHeight: '1.3' }}>
-                        AI spotted a creature! Identify the species to confirm sighting and earn shells:
-                      </h4>
-                    </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '6px' }}>
-                      {activeChallenge.options.map((option, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleChallengeChoice(option)}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                            color: '#fff',
-                            padding: '10px 14px',
-                            borderRadius: '10px',
-                            fontSize: '0.85rem',
-                            fontWeight: '800',
-                            cursor: 'pointer',
-                            textAlign: 'center',
-                            fontFamily: 'Outfit, sans-serif',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                            e.currentTarget.style.borderColor = '#22d3ee';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                          }}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                <div style={{ fontSize: '3rem', margin: '0' }}>🔍</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.62rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    AI Sighting Scan
+                  </span>
+                  <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800', lineHeight: '1.3' }}>
+                    What did you spot? Select what you see in the live feed:
+                  </h4>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', marginTop: '6px' }}>
+                  <button 
+                    onClick={() => handleOptionSelect('fish')} 
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                      e.currentTarget.style.borderColor = '#22d3ee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    🐟 Fish
+                  </button>
+                  <button 
+                    onClick={() => handleOptionSelect('turtle')} 
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                      e.currentTarget.style.borderColor = '#22d3ee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    🐢 Sea Turtle
+                  </button>
+                  <button 
+                    onClick={() => handleOptionSelect('shark')} 
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                      e.currentTarget.style.borderColor = '#22d3ee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    🦈 Shark
+                  </button>
+                  <button 
+                    onClick={() => handleOptionSelect('light')} 
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                      e.currentTarget.style.borderColor = '#22d3ee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    🟢 Green Light
+                  </button>
+                  <button 
+                    onClick={() => handleOptionSelect('floor')} 
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
+                      e.currentTarget.style.borderColor = '#22d3ee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                  >
+                    🪸 Sea Floor
+                  </button>
+                  <button 
+                    onClick={() => handleOptionSelect('water')} 
+                    style={{
+                      background: 'rgba(244, 63, 94, 0.1)',
+                      border: '1.5px solid rgba(244, 63, 94, 0.25)',
+                      color: '#f43f5e',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontFamily: 'Outfit, sans-serif',
+                      transition: 'all 0.2s',
+                      gridColumn: 'span 2'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'
+                    }}
+                  >
+                    💧 Just Water
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -728,9 +761,6 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 <div style={{ display: 'flex', gap: '12px', marginTop: '2px' }}>
                   <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid #39ff88', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', color: '#39ff88' }}>
                     🐚 +{selectedLogSpecies.shells || 10} Shells Wallet
-                  </div>
-                  <div style={{ background: 'rgba(34, 211, 238, 0.1)', border: '1px solid #22d3ee', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', color: '#22d3ee' }}>
-                    💵 +${((selectedLogSpecies.shells || 10) * 0.01).toFixed(2)} USD Value
                   </div>
                 </div>
                 <button

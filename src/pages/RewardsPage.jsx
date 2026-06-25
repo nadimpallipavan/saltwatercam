@@ -79,7 +79,7 @@ export default function RewardsPage({
         charityName: charityId === 'Kingston' ? 'Kingston K9 Search & Rescue' : 'SaltwaterCam Conservation Fund',
         charityDomain: charityId === 'Kingston' ? 'Kingstonk9.com' : 'saltwatercam.com',
         amount: amount,
-        valueDollars: (amount / 10).toFixed(2),
+        valueDollars: (amount / 10).toFixed(0),
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         user: currentUser ? currentUser.username : 'Guest Explorer',
         avatar: currentUser ? currentUser.avatar : '🐚'
@@ -220,7 +220,7 @@ export default function RewardsPage({
         </div>
         <p style={{ fontSize: '0.88rem', color: '#b7cad6', margin: '0 0 28px 0', lineHeight: '1.5', maxWidth: '800px' }}>
           Pledge your collected shells to these approved non-profit organizations. 
-          For every <strong>10 shells (🐚) pledged, we record $1.00 of simulated conservation funding</strong> for telemetry infrastructure.
+          For every <strong>10 shells (🐚) pledged, we record 1 simulated Conservation Impact Point</strong> to support local reefs.
         </p>
 
         {/* Auth warning */}
@@ -317,7 +317,7 @@ export default function RewardsPage({
               </div>
               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6' }}>
                 <span>Your Pledges: <strong>{userDonations.Kingston} 🐚</strong></span>
-                <span>Value: <strong>${(userDonations.Kingston / 10).toFixed(2)}</strong></span>
+                <span>Impact: <strong>{(userDonations.Kingston / 10).toFixed(0)} Points</strong></span>
               </div>
             </div>
 
@@ -438,7 +438,7 @@ export default function RewardsPage({
               </div>
               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6' }}>
                 <span>Your Pledges: <strong>{userDonations.Saltwater} 🐚</strong></span>
-                <span>Value: <strong>${(userDonations.Saltwater / 10).toFixed(2)}</strong></span>
+                <span>Impact: <strong>{(userDonations.Saltwater / 10).toFixed(0)} Points</strong></span>
               </div>
             </div>
 
@@ -728,8 +728,8 @@ export default function RewardsPage({
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>{activeReceipt.amount} 🐚</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#b7cad6' }}>Simulated Value:</span>
-                  <span style={{ color: '#39ff88', fontWeight: 'bold' }}>${activeReceipt.valueDollars} USD</span>
+                  <span style={{ color: '#b7cad6' }}>Simulated Impact:</span>
+                  <span style={{ color: '#39ff88', fontWeight: 'bold' }}>{activeReceipt.valueDollars} Points</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#b7cad6' }}>Date:</span>
