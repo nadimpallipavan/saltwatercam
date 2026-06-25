@@ -1,47 +1,68 @@
 import { useState, useEffect } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
-export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser, gameMode = 'cleanup' }) {
+export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   // Sighting reporting game states
   const [clickCoords, setClickCoords] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [selectedLogSpecies, setSelectedLogSpecies] = useState(null);
   const [fishCounter, setFishCounter] = useState(0);
   const [activeAlert, setActiveAlert] = useState(null);
-  const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
 
   // Floating trash states
   const [trashItems, setTrashItems] = useState([]);
   const [trashCleanedCount, setTrashCleanedCount] = useState(0);
   const [cleanupAlert, setCleanupAlert] = useState(null);
 
+  // Level progression helper and states
+  const getLevelInfo = (shellCount) => {
+    if (shellCount < 20) return { level: 1, target: 20, prevTarget: 0, title: "Tadpole Scout" };
+    if (shellCount < 50) return { level: 2, target: 50, prevTarget: 20, title: "Reef Explorer" };
+    if (shellCount < 100) return { level: 3, target: 100, prevTarget: 50, title: "Marine Protector" };
+    if (shellCount < 200) return { level: 4, target: 200, prevTarget: 100, title: "Ocean Guardian" };
+    return { level: 5, target: null, prevTarget: 200, title: "Grand Master Protector" };
+  };
+
+  const [currentLevel, setCurrentLevel] = useState(() => getLevelInfo(shells).level);
+  const [showLevelUpAlert, setShowLevelUpAlert] = useState(null);
+
   // Gamification floating items states
   const [floatyTexts, setFloatyTexts] = useState([]);
   const [showMissionAlert, setShowMissionAlert] = useState(false);
 
+  // Monitor level progression
+  useEffect(() => {
+    const info = getLevelInfo(shells);
+    if (info.level > currentLevel) {
+      setCurrentLevel(info.level);
+      setShowLevelUpAlert(info);
+    } else if (info.level < currentLevel) {
+      setCurrentLevel(info.level);
+    }
+  }, [shells, currentLevel]);
+
   // Simulated AI detection alerts loop
   useEffect(() => {
-    if (!isPlaying || !aiEnabled || gameMode !== 'ai') {
+    if (!isPlaying || !aiEnabled) {
       setActiveAlert(null);
       return;
     }
 
     const alertsList = [
-      { type: 'fish', message: 'Common Snook detected swimming near center! 🐟', label: 'Fish' },
-      { type: 'fish', message: 'Atlantic Tarpon spotted near the dock light! 🐟', label: 'Fish' },
-      { type: 'turtle', message: 'Green Sea Turtle spotted on the reef floor! 🐢', label: 'Sea Turtle' },
-      { type: 'shark', message: 'Reef Shark detected in the background reef! 🦈', label: 'Shark' },
-      { type: 'light', message: 'Green attraction light glow intensifying! 🟢', label: 'Green Light' },
-      { type: 'floor', message: 'Stingray activity spotted near the sandy floor! 🪸', label: 'Sea Floor' }
+      { type: 'fish', message: 'Common Snook detected swimming! 🐟 Tap video! (+1 🐚)', label: 'Fish' },
+      { type: 'fish', message: 'Atlantic Tarpon spotted near dock light! 🐟 Tap video! (+1 🐚)', label: 'Fish' },
+      { type: 'turtle', message: 'Green Sea Turtle spotted! 🐢 Tap video! (+1 🐚)', label: 'Sea Turtle' },
+      { type: 'shark', message: 'Reef Shark cruising in the reef! 🦈 Tap video! (+1 🐚)', label: 'Shark' },
+      { type: 'light', message: 'Baitfish swarming around light! 🟢 Tap video! (+1 🐚)', label: 'Green Light' },
+      { type: 'floor', message: 'Stingray gliding on sandy floor! 🪸 Tap video! (+1 🐚)', label: 'Sea Floor' }
     ];
 
     let alertTimeout = null;
     let clearAlertTimeout = null;
 
     const scheduleNextAlert = () => {
-      const delay = 15000 + Math.random() * 15000; // Spawns alert every 15-30s
+      const delay = 12000 + Math.random() * 12000; // Spawns alert every 12-24s
       alertTimeout = setTimeout(() => {
         const randomAlert = alertsList[Math.floor(Math.random() * alertsList.length)];
         setActiveAlert(randomAlert);
@@ -97,7 +118,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Simulated floating trash loop (Reef Trash Cleanup Mode)
   useEffect(() => {
-    if (!isPlaying || !aiEnabled || gameMode !== 'cleanup') {
+    if (!isPlaying || !aiEnabled) {
       setTrashItems([]);
       return;
     }
@@ -146,7 +167,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
       clearTimeout(firstSpawn);
       clearInterval(spawnInterval);
     };
-  }, [isPlaying, aiEnabled, gameMode]);
+  }, [isPlaying, aiEnabled]);
 
   // Trash Click Handler
   const handleTrashClick = (e, item) => {
@@ -164,7 +185,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     const parentRect = e.currentTarget.offsetParent.getBoundingClientRect();
     const clickX = ((rect.left - parentRect.left + rect.width / 2) / parentRect.width) * 100;
     const clickY = ((rect.top - parentRect.top + rect.height / 2) / parentRect.height) * 100;
-    triggerFloaty(clickX, clickY, `🧼 CLEANED! +10 🐚`);
+    triggerFloaty(clickX, clickY, `🧼 Cleaned! +10 🐚`);
 
     // Show temporary educational toast at top center
     setCleanupAlert({
@@ -186,7 +207,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Handle click on the video frame overlay
   const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || gameMode !== 'ai' || isScanning || selectedLogSpecies || showSeawaterAlert) return;
+    if (!isPlaying || !aiEnabled || isScanning) return;
 
     e.stopPropagation();
 
@@ -196,22 +217,44 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
     setClickCoords({ x: clickX, y: clickY });
     setIsScanning(true);
-    setShowSeawaterAlert(false);
 
-    // Save active alert locally to prevent clearing timing race conditions
     const alertAtClick = activeAlert;
 
-    // Run simulated AI scanning latency
+    // Fast 300ms scanning feedback
     setTimeout(() => {
       setIsScanning(false);
+      setClickCoords(null);
 
       if (alertAtClick) {
-        logVerifiedSighting(alertAtClick.type);
-        setActiveAlert(null); // Consume the alert
+        // Award +1 Shell for spotting a fish
+        if (addShells) {
+          addShells(1);
+        }
+        
+        const nextFishCount = fishCounter + 1;
+        setFishCounter(nextFishCount);
+        triggerFloaty(clickX, clickY, `🐟 Fish Spot! +1 🐚`);
+        setActiveAlert(null); // Consume alert
+
+        // Complete Kids Club Scan Sighting Mission: Scan 3 fish
+        if (nextFishCount >= 3) {
+          const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
+          if (!completed.includes('cleanup')) {
+            completed.push('cleanup');
+            localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
+            
+            let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
+            localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
+
+            setShowMissionAlert(true);
+            setTimeout(() => setShowMissionAlert(false), 5000);
+          }
+        }
       } else {
-        logVerifiedSighting('water');
+        // Seawater tap (0 shells)
+        triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
       }
-    }, 1000);
+    }, 300);
   };
 
   // Helper to trigger floating shells text
@@ -229,124 +272,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 1200);
   };
 
-  // Handle user classification selection
-  const logVerifiedSighting = (type) => {
-    if (type === 'water') {
-      setShowSeawaterAlert(true);
-      return;
-    }
 
-    let result = null;
-
-    if (type === 'fish') {
-      const fishSpecies = [
-        {
-          name: "Common Snook",
-          emoji: "🐟",
-          color: "Silver Body with a Black Lateral Stripe",
-          confidence: "98.3%",
-          fact: "The Snook has a dark black line running down its side called a lateral line. It acts like a radar, helping them feel water vibrations to hunt in the dark!"
-        },
-        {
-          name: "Atlantic Tarpon",
-          emoji: "🐟",
-          color: "Metallic Silver scales",
-          confidence: "97.9%",
-          fact: "Tarpons are known as the Silver King! They have huge reflective scales that shine like metal and can gulp air at the surface to breathe in low-oxygen water."
-        },
-        {
-          name: "Goliath Grouper",
-          emoji: "🐡",
-          color: "Mottled Olive Brown & Grey",
-          confidence: "96.5%",
-          fact: "Goliath Groupers can grow larger than a refrigerator and weigh up to 800 lbs! They are territorial and defend their reef caves by making low booming sounds."
-        },
-        {
-          name: "Yellow Tang",
-          emoji: "🐠",
-          color: "Bright Golden Yellow",
-          confidence: "98.1%",
-          fact: "Yellow Tangs are tireless reef cleaners. They graze on algae growing on sea turtle shells and corals, keeping the entire ecosystem healthy!"
-        },
-        {
-          name: "Blue Tang",
-          emoji: "🐟",
-          color: "Vibrant Neon Blue & Yellow Fin Highlights",
-          confidence: "98.6%",
-          fact: "Blue Tang surgeonfish are crucial for algae control. They can change their color to deep purple at night to blend with reef shadows!"
-        }
-      ];
-      result = fishSpecies[Math.floor(Math.random() * fishSpecies.length)];
-    } else if (type === 'turtle') {
-      result = {
-        name: "Green Sea Turtle",
-        emoji: "🐢",
-        color: "Olive Green & Dark Brown Shell",
-        confidence: "99.2%",
-        fact: "Green Sea Turtles are air-breathing reptiles that can hold their breath for up to 5 hours! They graze on seagrasses and algae on the reef floor."
-      };
-    } else if (type === 'shark') {
-      result = {
-        name: "Reef Shark",
-        emoji: "🦈",
-        color: "Slate Grey Skin & White Belly",
-        confidence: "97.8%",
-        fact: "Reef sharks are apex predators that keep the local fish populations healthy. They are very shy, docile, and avoid humans."
-      };
-    } else if (type === 'light') {
-      result = {
-        name: "Neon Green Dock Light Glow",
-        emoji: "🟢",
-        color: "Bright Emerald / Neon Green Glow",
-        confidence: "98.8%",
-        fact: "The green light under Lantana Dock attracts microscopic zooplankton. This draws in small baitfish, which eventually attracts large gamefish like Snook to feed at night!"
-      };
-    } else if (type === 'floor') {
-      result = {
-        name: "Sandy Sea Floor & Coral Structure",
-        emoji: "🪸",
-        color: "Tan Sand & Coral Rock Brown",
-        confidence: "97.1%",
-        fact: "Rocky limestone reef structures provide vital cracks, caves, and overhangs for small crabs, spiny lobsters, and juvenile reef fish to hide in!"
-      };
-    }
-
-    if (result) {
-      result.shells = 15; // Logged sightings award 15 shells
-      setSelectedLogSpecies(result);
-      setFishCounter(prev => prev + 1);
-
-      if (addShells) {
-        addShells(15);
-      }
-
-      if (clickCoords) {
-        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 VERIFIED! +15 🐚`);
-      }
-
-      // Complete Kids Club Scan Sighting Mission: Scan 3 unique species
-      let scannedSpecies = JSON.parse(localStorage.getItem('swc_scanned_species') || '[]');
-      if (!scannedSpecies.includes(result.name)) {
-        scannedSpecies.push(result.name);
-        localStorage.setItem('swc_scanned_species', JSON.stringify(scannedSpecies));
-
-        if (scannedSpecies.length >= 3) {
-          const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
-          if (!completed.includes('cleanup')) {
-            completed.push('cleanup');
-            localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
-            
-            let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
-            localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
-
-            setShowMissionAlert(true);
-            setTimeout(() => setShowMissionAlert(false), 5000);
-          }
-        }
-      }
-    }
-    setClickCoords(null);
-  };
 
   return (
     <section className="liveStage">
@@ -450,11 +376,70 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* AI Alert Banner HUD overlay (AI Spotter Mode) */}
-          {gameMode === 'ai' && activeAlert && (
+          {/* Level Progress HUD Bar */}
+          {isPlaying && aiEnabled && (
             <div style={{
               position: 'absolute',
-              top: '80px',
+              top: '75px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(3, 27, 46, 0.85)',
+              backdropFilter: 'blur(8px)',
+              border: '1.5px solid rgba(34, 211, 238, 0.35)',
+              borderRadius: '20px',
+              padding: '6px 16px',
+              color: '#fff',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              fontFamily: 'Outfit, sans-serif',
+              pointerEvents: 'none',
+              minWidth: '290px',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '1rem' }}>⭐</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Level {getLevelInfo(shells).level}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#b7cad6' }}>
+                  ({getLevelInfo(shells).title})
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', marginLeft: '12px' }}>
+                <div style={{
+                  height: '6px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  flex: '1',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    width: getLevelInfo(shells).target 
+                      ? `${((shells - getLevelInfo(shells).prevTarget) / (getLevelInfo(shells).target - getLevelInfo(shells).prevTarget)) * 100}%` 
+                      : '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #064c72, #22d3ee)',
+                    borderRadius: '3px',
+                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }} />
+                </div>
+                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#39ff88', whiteSpace: 'nowrap' }}>
+                  {getLevelInfo(shells).target ? `${shells}/${getLevelInfo(shells).target} 🐚` : `${shells} 🐚`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* AI Alert Banner HUD overlay (AI Spotter Mode) */}
+          {activeAlert && (
+            <div style={{
+              position: 'absolute',
+              top: '135px', // Shifted down to stack nicely under Level Progress HUD bar
               left: '50%',
               transform: 'translateX(-50%)',
               background: 'rgba(239, 68, 68, 0.15)',
@@ -486,17 +471,17 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                   🚨 AI ALERT: ACTIVE SIGHTING
                 </strong>
                 <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>
-                  {activeAlert.message} Click the feed to scan! <strong style={{ color: '#39ff88' }}>(+15🐚)</strong>
+                  {activeAlert.message} Click the feed to scan! <strong style={{ color: '#39ff88' }}>(+1🐚)</strong>
                 </span>
               </div>
             </div>
           )}
 
-          {/* Cleaned Trash educational banner for Reef Cleanup Mode */}
-          {gameMode === 'cleanup' && cleanupAlert && (
+          {/* Cleaned Trash educational banner */}
+          {cleanupAlert && (
             <div style={{
               position: 'absolute',
-              top: '80px',
+              top: '135px', // Shifted down to stack nicely under Level Progress HUD bar
               left: '50%',
               transform: 'translateX(-50%)',
               background: 'rgba(16, 185, 129, 0.18)',
@@ -528,8 +513,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Floating Trash Cleanup items for Toddlers (Ages 3+) */}
-          {isPlaying && aiEnabled && gameMode === 'cleanup' && trashItems.map(item => (
+          {/* Floating Trash Cleanup items */}
+          {isPlaying && aiEnabled && trashItems.map(item => (
             <button
               key={item.id}
               onClick={(e) => handleTrashClick(e, item)}
@@ -580,76 +565,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           ))}
 
 
-          {/* Seawater Only Alert */}
-          {showSeawaterAlert && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.7)',
-              backdropFilter: 'blur(4px)',
-              zIndex: 95,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '20px',
-                padding: '24px 28px',
-                maxWidth: '380px',
-                width: '90%',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px',
-                animation: 'slideDownAlert 0.3s ease-out'
-              }}>
-                <div style={{ fontSize: '3rem', margin: '0' }}>💧</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.62rem', color: '#b7cad6', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    AI Scan Result
-                  </span>
-                  <h4 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>
-                    Seawater Only
-                  </h4>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                  No marine life detected at these coordinates. Keep watching the live stream and click when a fish swims by!
-                </p>
-                <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800', color: '#b7cad6' }}>
-                  🐚 +0 Shells
-                </div>
-                <button
-                  onClick={() => {
-                    setShowSeawaterAlert(false);
-                    setClickCoords(null);
-                  }}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
-                    padding: '6px 16px',
-                    borderRadius: '20px',
-                    fontSize: '0.78rem',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    marginTop: '4px',
-                    fontFamily: 'Outfit, sans-serif',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Scan Again 🔍
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {/* Floaty Click Indicator Text popups */}
           {isPlaying && (
@@ -724,8 +640,8 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             
             {/* Interactive cleanup notification banner */}
             <div className="gameHeaderBadge" style={{
-              background: gameMode === 'cleanup' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(34, 211, 238, 0.15)',
-              border: gameMode === 'cleanup' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(34, 211, 238, 0.3)',
+              background: 'rgba(34, 211, 238, 0.12)',
+              border: '1px solid rgba(34, 211, 238, 0.25)',
               color: '#fff',
               fontSize: '0.78rem',
               fontWeight: '800',
@@ -734,23 +650,15 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: gameMode === 'cleanup' ? '0 0 10px rgba(16, 185, 129, 0.15)' : '0 0 10px rgba(34, 211, 238, 0.15)',
+              boxShadow: '0 0 10px rgba(34, 211, 238, 0.12)',
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              {gameMode === 'cleanup' ? (
-                <>
-                  <span>🧹 Ocean Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-                  <span>Click floating trash to clean the reef!</span>
-                </>
-              ) : (
-                <>
-                  <span>📊 Session Sightings Counted: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-                  <span>Click real feed to log features & verify species</span>
-                </>
-              )}
+              <span>🐟 Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
+              <span>🧹 Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
+              <span>Watch live feed: Click fish (+1 🐚) & trash (+10 🐚) to Level Up!</span>
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
@@ -777,93 +685,68 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Sighting Success Modal Overlay */}
-          {selectedLogSpecies && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.85)',
-              backdropFilter: 'blur(8px)',
-              zIndex: 99,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
+          {/* Level Up Celebration Card */}
+          {showLevelUpAlert && (
+            <div 
+              onClick={() => setShowLevelUpAlert(null)}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(2, 12, 21, 0.85)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 100,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                color: '#fff',
+                fontFamily: 'Outfit, sans-serif',
+                cursor: 'pointer'
+              }}
+            >
               <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: '2px solid #22d3ee',
-                borderRadius: '20px',
-                padding: '24px 28px',
-                maxWidth: '460px',
-                width: '90%',
+                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.98) 0%, rgba(3, 17, 28, 0.99) 100%)',
+                border: '3px solid #39ff88',
+                borderRadius: '24px',
+                padding: '36px 32px',
+                maxWidth: '420px',
+                width: '95%',
                 textAlign: 'center',
-                boxShadow: '0 0 40px rgba(34, 211, 238, 0.25)',
+                boxShadow: '0 0 50px rgba(57, 255, 136, 0.35)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '12px',
-                animation: 'slideDownAlert 0.3s ease-out'
+                gap: '16px',
+                animation: 'slideDownAlert 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
               }}>
-                <div style={{ fontSize: '3rem', margin: '0', animation: 'swimOscillate 2s infinite alternate' }}>
-                  {selectedLogSpecies.emoji}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '0.62rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    AI SIGHTING LOGGED [{selectedLogSpecies.confidence}]
+                <div style={{ fontSize: '4.5rem', margin: '0', animation: 'bounceUp 1s infinite alternate' }}>🏆</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#39ff88', fontWeight: '900', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    Congratulations!
                   </span>
-                  <h4 style={{ margin: 0, fontSize: '1.4rem', color: '#fff', fontWeight: '800' }}>
-                    Spotted: {selectedLogSpecies.name}
-                  </h4>
+                  <h3 style={{ margin: 0, fontSize: '2.1rem', color: '#fff', fontWeight: '900', lineHeight: '1.2' }}>
+                    LEVEL UP!
+                  </h3>
                 </div>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '6px', 
-                  width: '100%',
-                  background: 'rgba(255, 255, 255, 0.03)', 
-                  padding: '10px 14px', 
-                  borderRadius: '10px',
-                  border: '1.5px solid rgba(34, 211, 238, 0.1)',
-                  textAlign: 'left'
+                <p style={{ margin: '8px 0 0 0', fontSize: '1.1rem', color: '#b7cad6', lineHeight: '1.4' }}>
+                  You reached <strong style={{ color: '#39ff88' }}>Level {showLevelUpAlert.level}</strong>!
+                </p>
+                <div style={{
+                  background: 'rgba(57, 255, 136, 0.1)',
+                  border: '1.5px solid rgba(57, 255, 136, 0.3)',
+                  padding: '8px 20px',
+                  borderRadius: '30px',
+                  fontSize: '0.95rem',
+                  fontWeight: '800',
+                  color: '#39ff88',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>
-                  <div style={{ fontSize: '0.78rem', color: '#b7cad6' }}>
-                    <strong style={{ color: '#22d3ee' }}>Detected Color:</strong> {selectedLogSpecies.color}
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff', lineHeight: '1.45', marginTop: '2px' }}>
-                    <strong style={{ color: '#39ff88', display: 'block', marginBottom: '2px', fontSize: '0.82rem' }}>Science Solution:</strong>
-                    {selectedLogSpecies.fact}
-                  </p>
+                  ⭐ Rank: {showLevelUpAlert.title}
                 </div>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '2px' }}>
-                  <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid #39ff88', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', color: '#39ff88' }}>
-                    🐚 +{selectedLogSpecies.shells || 10} Shells Wallet
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedLogSpecies(null)}
-                  style={{
-                    background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
-                    border: '1.5px solid rgba(34, 211, 238, 0.35)',
-                    color: '#fff',
-                    padding: '8px 24px',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(34, 211, 238, 0.2)',
-                    transition: 'all 0.2s',
-                    marginTop: '4px',
-                    fontFamily: 'Outfit, sans-serif'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  Scan Next Sighting 🔍
-                </button>
+                <p style={{ margin: '8px 0 0 0', fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                  Tap anywhere to continue playing
+                </p>
               </div>
             </div>
           )}
@@ -947,6 +830,10 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
         @keyframes slideDownAlert {
           from { transform: translate(-50%, -20px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes bounceUp {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-10px); }
         }
         @keyframes driftAcross {
           0% { left: -60px; }
