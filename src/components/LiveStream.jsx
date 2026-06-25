@@ -10,10 +10,24 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
   const [fishCounter, setFishCounter] = useState(0);
   const [activeAlert, setActiveAlert] = useState(null);
 
-  // Floating trash states
-  const [trashItems, setTrashItems] = useState([]);
   const [trashCleanedCount, setTrashCleanedCount] = useState(0);
   const [cleanupAlert, setCleanupAlert] = useState(null);
+
+  // Simulated AI targets tracking (detections)
+  const [detections, setDetections] = useState([
+    { id: 'f1', type: 'fish', label: 'Common Snook', confidence: 98, x: 25, y: 40, w: 14, h: 10, visible: true },
+    { id: 'f2', type: 'fish', label: 'Atlantic Tarpon', confidence: 97, x: 60, y: 25, w: 18, h: 12, visible: false },
+    { id: 'f3', type: 'fish', label: 'Goliath Grouper', confidence: 96, x: 45, y: 65, w: 16, h: 14, visible: true },
+    { id: 'f4', type: 'fish', label: 'Green Sea Turtle', confidence: 99, x: 75, y: 48, w: 13, h: 11, visible: false },
+    { id: 'f5', type: 'fish', label: 'Reef Shark', confidence: 96, x: 15, y: 55, w: 18, h: 11, visible: false },
+    { id: 'f6', type: 'fish', label: 'Yellow Tang', confidence: 98, x: 55, y: 35, w: 10, h: 8, visible: true },
+    
+    { id: 't1', type: 'trash', label: 'Plastic Bottle', emoji: '🍾', fact: 'Plastic bottles can take 450 years to break down in the ocean!', confidence: 89, x: 30, y: 45, w: 10, h: 8, visible: false },
+    { id: 't2', type: 'trash', label: 'Plastic Bag', emoji: '🛍️', fact: 'Sea turtles often mistake plastic bags for tasty jellyfish!', confidence: 91, x: 70, y: 35, w: 12, h: 10, visible: true },
+    { id: 't3', type: 'trash', label: 'Plastic Cup', emoji: '🥤', fact: 'Over 8 million tons of plastic trash enter our oceans every year!', confidence: 88, x: 50, y: 58, w: 10, h: 8, visible: false },
+    { id: 't4', type: 'trash', label: 'Aluminum Can', emoji: '🥫', fact: 'Recycling aluminum cans saves 95% of the energy needed to make new ones!', confidence: 92, x: 20, y: 70, w: 11, h: 9, visible: false },
+    { id: 't5', type: 'trash', label: 'Rubber Balloon', emoji: '🎈', fact: 'Balloons can float for miles and end up blocking animals\' stomachs.', confidence: 87, x: 80, y: 62, w: 10, h: 9, visible: true }
+  ]);
 
   // Level progression helper and states
   const getLevelInfo = (shellCount) => {
@@ -42,148 +56,137 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [shells, currentLevel]);
 
-  // Simulated AI detection alerts loop
+  // Update detections animation and movement
+  useEffect(() => {
+    if (!isPlaying || !aiEnabled) return;
+
+    const interval = setInterval(() => {
+      setDetections(prev => prev.map(d => {
+        const randomAction = Math.random();
+        let nextVisible = d.visible;
+        let nextX = d.x;
+        let nextY = d.y;
+        let nextConf = d.confidence;
+
+        // Randomly toggle visibility
+        if (randomAction > 0.72) {
+          nextVisible = !d.visible;
+        }
+
+        if (nextVisible) {
+          if (d.type === 'trash') {
+            // Trash drifts from left to right
+            let xVal = d.x + 2.5;
+            if (xVal > 95) {
+              xVal = 5 + Math.random() * 10;
+              nextVisible = false; // Hide on wrap around
+            }
+            nextX = xVal;
+            nextY = Math.max(20, Math.min(80, d.y + (Math.random() > 0.5 ? 1 : -1)));
+          } else {
+            // Fish swim around inside container bounds
+            const xVal = d.x + (Math.random() > 0.5 ? 3 : -3);
+            const yVal = d.y + (Math.random() > 0.5 ? 2 : -2);
+            nextX = Math.max(10, Math.min(85, xVal));
+            nextY = Math.max(20, Math.min(75, yVal));
+          }
+          nextConf = Math.min(99, Math.max(85, d.confidence + (Math.random() > 0.5 ? 1 : -1)));
+        } else {
+          // Reset positions occasionally when off-screen
+          if (d.type === 'trash' && Math.random() > 0.8) {
+            nextX = 5 + Math.random() * 15;
+            nextY = 20 + Math.random() * 60;
+          } else if (Math.random() > 0.8) {
+            nextX = 15 + Math.random() * 70;
+            nextY = 20 + Math.random() * 55;
+          }
+        }
+
+        return { ...d, visible: nextVisible, x: nextX, y: nextY, confidence: nextConf };
+      }));
+    }, 1800);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, aiEnabled]);
+
+  // Synchronize HUD active alert banner with current visible detections
   useEffect(() => {
     if (!isPlaying || !aiEnabled) {
       setActiveAlert(null);
       return;
     }
 
-    const alertsList = [
-      { type: 'fish', message: 'Common Snook detected swimming! 🐟 Tap video! (+1 🐚)', label: 'Fish' },
-      { type: 'fish', message: 'Atlantic Tarpon spotted near dock light! 🐟 Tap video! (+1 🐚)', label: 'Fish' },
-      { type: 'turtle', message: 'Green Sea Turtle spotted! 🐢 Tap video! (+1 🐚)', label: 'Sea Turtle' },
-      { type: 'shark', message: 'Reef Shark cruising in the reef! 🦈 Tap video! (+1 🐚)', label: 'Shark' },
-      { type: 'light', message: 'Baitfish swarming around light! 🟢 Tap video! (+1 🐚)', label: 'Green Light' },
-      { type: 'floor', message: 'Stingray gliding on sandy floor! 🪸 Tap video! (+1 🐚)', label: 'Sea Floor' }
-    ];
-
-    let alertTimeout = null;
-    let clearAlertTimeout = null;
-
-    const scheduleNextAlert = () => {
-      const delay = 12000 + Math.random() * 12000; // Spawns alert every 12-24s
-      alertTimeout = setTimeout(() => {
-        const randomAlert = alertsList[Math.floor(Math.random() * alertsList.length)];
-        setActiveAlert(randomAlert);
-
-        // Alert remains active for 6 seconds
-        clearAlertTimeout = setTimeout(() => {
-          setActiveAlert(null);
-          scheduleNextAlert();
-        }, 6000);
-
-      }, delay);
-    };
-
-    scheduleNextAlert();
-
-    return () => {
-      clearTimeout(alertTimeout);
-      clearTimeout(clearAlertTimeout);
-    };
-  }, [isPlaying, aiEnabled]);
-
-  // Handle YouTube iframe play/pause and mute/unmute via postMessage API
-  useEffect(() => {
-    const iframe = document.getElementById('yt-live-stream');
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage(JSON.stringify({
-        event: 'command',
-        func: isPlaying ? 'playVideo' : 'pauseVideo'
-      }), '*');
+    const visibleDetections = detections.filter(d => d.visible);
+    if (visibleDetections.length > 0) {
+      const target = visibleDetections[0];
+      if (target.type === 'trash') {
+        setActiveAlert({
+          type: 'trash',
+          message: `Plastic debris (${target.label}) detected! Tap the red AI box to clean it! (+10 🐚)`,
+          label: target.label
+        });
+      } else {
+        setActiveAlert({
+          type: 'fish',
+          message: `${target.label} detected swimming! Tap the blue AI box! (+1 🐚)`,
+          label: target.label
+        });
+      }
+    } else {
+      setActiveAlert(null);
     }
-  }, [isPlaying]);
+  }, [detections, isPlaying, aiEnabled]);
 
-  useEffect(() => {
-    const iframe = document.getElementById('yt-live-stream');
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage(JSON.stringify({
-        event: 'command',
-        func: isMuted ? 'mute' : 'unMute'
-      }), '*');
-    }
-  }, [isMuted]);
-
-
-
-  // Simulated floating trash loop (Reef Trash Cleanup Mode)
-  useEffect(() => {
-    if (!isPlaying || !aiEnabled) {
-      setTrashItems([]);
-      return;
-    }
-
-    const trashTypes = [
-      { emoji: '🍾', label: 'Plastic Bottle', fact: 'Plastic bottles can take 450 years to break down in the ocean!' },
-      { emoji: '🛍️', label: 'Plastic Bag', fact: 'Sea turtles often mistake plastic bags for tasty jellyfish!' },
-      { emoji: '🥤', label: 'Plastic Cup', fact: 'Over 8 million tons of plastic trash enter our oceans every year!' },
-      { emoji: '🥫', label: 'Aluminum Can', fact: 'Recycling aluminum cans saves 95% of the energy needed to make new ones!' },
-      { emoji: '🎈', label: 'Rubber Balloon', fact: 'Balloons can float for miles and end up blocking animals\' stomachs.' }
-    ];
-
-    const spawnTrash = () => {
-      setTrashItems(prev => {
-        // Limit max concurrent trash items to avoid cluttering the screen
-        if (prev.length >= 4) return prev;
-
-        const randomType = trashTypes[Math.floor(Math.random() * trashTypes.length)];
-        const newItem = {
-          id: Math.random().toString(36).substring(2, 9),
-          emoji: randomType.emoji,
-          label: randomType.label,
-          fact: randomType.fact,
-          y: 20 + Math.random() * 55, // Drifts between 20% and 75% depth
-          duration: 10 + Math.random() * 8, // Drifts across in 10-18s
-          scale: 0.85 + Math.random() * 0.55 // Scale between 0.85 and 1.4
-        };
-
-        // Auto-remove trash item after its duration ends
-        setTimeout(() => {
-          setTrashItems(current => current.filter(item => item.id !== newItem.id));
-        }, newItem.duration * 1000);
-
-        return [...prev, newItem];
-      });
-    };
-
-    // Spawn first item after 1.5 seconds, then spawn periodically
-    const firstSpawn = setTimeout(spawnTrash, 1500);
-
-    const spawnInterval = setInterval(() => {
-      spawnTrash();
-    }, 7000 + Math.random() * 4000);
-
-    return () => {
-      clearTimeout(firstSpawn);
-      clearInterval(spawnInterval);
-    };
-  }, [isPlaying, aiEnabled]);
-
-  // Trash Click Handler
-  const handleTrashClick = (e, item) => {
+  // Handle species or trash detection click
+  const handleDetectionClick = (detection, e) => {
     e.stopPropagation(); // Avoid triggering standard frame click coordinates
 
-    setTrashItems(prev => prev.filter(x => x.id !== item.id));
-    setTrashCleanedCount(prev => prev + 1);
+    // Hide target immediately
+    setDetections(prev => prev.map(item => item.id === detection.id ? { ...item, visible: false } : item));
 
-    if (addShells) {
-      addShells(10); // Award +10 Shells for cleaning trash
+    const rect = e.currentTarget.parentNode.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (detection.type === 'fish') {
+      // Award +1 Shell for spotting a fish
+      if (addShells) {
+        addShells(1);
+      }
+      
+      const nextFishCount = fishCounter + 1;
+      setFishCounter(nextFishCount);
+      triggerFloaty(clickX, clickY, `🐟 Fish Spot! +1 🐚`);
+
+      // Complete Kids Club Scan Sighting Mission: Scan 3 fish
+      if (nextFishCount >= 3) {
+        const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
+        if (!completed.includes('cleanup')) {
+          completed.push('cleanup');
+          localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
+          
+          let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
+          localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
+
+          setShowMissionAlert(true);
+          setTimeout(() => setShowMissionAlert(false), 5000);
+        }
+      }
+    } else {
+      // Award +10 Shells for cleaning trash
+      if (addShells) {
+        addShells(10);
+      }
+      setTrashCleanedCount(prev => prev + 1);
+      triggerFloaty(clickX, clickY, `🧼 Cleaned! +10 🐚`);
+
+      // Show temporary educational toast at top center
+      setCleanupAlert({
+        emoji: detection.emoji,
+        label: detection.label,
+        fact: detection.fact
+      });
     }
-
-    // Trigger floating success text at click coordinates
-    const rect = e.currentTarget.getBoundingClientRect();
-    const parentRect = e.currentTarget.offsetParent.getBoundingClientRect();
-    const clickX = ((rect.left - parentRect.left + rect.width / 2) / parentRect.width) * 100;
-    const clickY = ((rect.top - parentRect.top + rect.height / 2) / parentRect.height) * 100;
-    triggerFloaty(clickX, clickY, `🧼 Cleaned! +10 🐚`);
-
-    // Show temporary educational toast at top center
-    setCleanupAlert({
-      emoji: item.emoji,
-      label: item.label,
-      fact: item.fact
-    });
   };
 
   // Auto-clear cleanup alert toast
@@ -196,7 +199,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [cleanupAlert]);
 
-  // Handle click on the video frame overlay
+  // Handle click on the video frame overlay (empty water)
   const handleFrameClick = (e) => {
     if (!isPlaying || !aiEnabled || isScanning) return;
 
@@ -209,42 +212,12 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     setClickCoords({ x: clickX, y: clickY });
     setIsScanning(true);
 
-    const alertAtClick = activeAlert;
-
     // Fast 300ms scanning feedback
     setTimeout(() => {
       setIsScanning(false);
       setClickCoords(null);
-
-      if (alertAtClick) {
-        // Award +1 Shell for spotting a fish
-        if (addShells) {
-          addShells(1);
-        }
-        
-        const nextFishCount = fishCounter + 1;
-        setFishCounter(nextFishCount);
-        triggerFloaty(clickX, clickY, `🐟 Fish Spot! +1 🐚`);
-        setActiveAlert(null); // Consume alert
-
-        // Complete Kids Club Scan Sighting Mission: Scan 3 fish
-        if (nextFishCount >= 3) {
-          const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
-          if (!completed.includes('cleanup')) {
-            completed.push('cleanup');
-            localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
-            
-            let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
-            localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
-
-            setShowMissionAlert(true);
-            setTimeout(() => setShowMissionAlert(false), 5000);
-          }
-        }
-      } else {
-        // Seawater tap (0 shells)
-        triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
-      }
+      // Clicking empty seawater always awards 0 shells
+      triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
     }, 300);
   };
 
@@ -504,55 +477,50 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Floating Trash Cleanup items */}
-          {isPlaying && aiEnabled && trashItems.map(item => (
-            <button
-              key={item.id}
-              onClick={(e) => handleTrashClick(e, item)}
+          {/* Simulated AI Detection Bounding Boxes */}
+          {isPlaying && aiEnabled && detections.filter(d => d.visible).map(d => (
+            <div
+              key={d.id}
+              onClick={(e) => handleDetectionClick(d, e)}
               style={{
                 position: 'absolute',
-                top: `${item.y}%`,
-                fontSize: '2.5rem',
-                background: 'none',
-                border: 'none',
+                left: `${d.x}%`,
+                top: `${d.y}%`,
+                width: `${d.w}%`,
+                height: `${d.h}%`,
+                border: d.type === 'fish' ? '1.5px solid #22d3ee' : '1.5px solid #ef4444',
+                boxShadow: d.type === 'fish' 
+                  ? '0 0 10px rgba(34, 211, 238, 0.4), inset 0 0 5px rgba(34, 211, 238, 0.1)' 
+                  : '0 0 10px rgba(239, 68, 68, 0.4), inset 0 0 5px rgba(239, 68, 68, 0.1)',
+                borderRadius: '6px',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'auto',
                 cursor: 'pointer',
-                zIndex: 85,
-                transform: `scale(${item.scale})`,
-                animation: `driftAcross ${item.duration}s linear forwards`,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                outline: 'none',
-                userSelect: 'none',
-                padding: '10px'
+                zIndex: 10,
+                transition: 'all 0.3s ease-out',
+                fontFamily: 'Outfit, sans-serif'
               }}
-              className="floatingTrashBtn"
+              title={`Click to Identify/Clean: ${d.label}`}
             >
-              <span className="trashEmoji" style={{
-                filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.6))',
-                animation: 'trashSway 3s ease-in-out infinite alternate',
-                display: 'inline-block'
-              }}>
-                {item.emoji}
-              </span>
-              <span style={{
-                fontSize: '0.62rem',
-                background: 'rgba(239, 68, 68, 0.95)',
-                color: 'white',
+              {/* Label Tag */}
+              <div style={{
+                position: 'absolute',
+                top: '-18px',
+                left: '-1.5px',
+                backgroundColor: d.type === 'fish' ? '#22d3ee' : '#ef4444',
+                color: '#031b2e',
                 padding: '2px 6px',
-                borderRadius: '20px',
-                marginTop: '4px',
-                fontFamily: 'Outfit, sans-serif',
+                fontSize: '0.58rem',
                 fontWeight: '900',
+                borderRadius: '3px 3px 0 0',
                 whiteSpace: 'nowrap',
-                pointerEvents: 'none',
-                boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                letterSpacing: '0.05em'
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                pointerEvents: 'none'
               }}>
-                TAP ME! 🧹
-              </span>
-            </button>
+                {d.label} [{d.confidence}%]
+              </div>
+            </div>
           ))}
 
 
