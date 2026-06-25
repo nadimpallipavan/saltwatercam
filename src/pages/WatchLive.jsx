@@ -112,7 +112,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             AI Interactive Scan Lens
           </h4>
           <p style={{ margin: 0, fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.4' }}>
-            Click directly on the live video feed to scan and identify passing fish species, green under-dock light glows, or sand reef structures.
+            Activate the AI Sighting Logger. Click on real fish, turtles, or sharks swimming in the live video feed to count them, verify species, and log solutions to earn shells.
           </p>
         </div>
         
