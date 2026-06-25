@@ -1,69 +1,266 @@
 import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
-const keyframes = {
-  f1: [ // Bannerfish (swims left to right)
-    { t: 0, x: 15, y: 35, visible: true },
-    { t: 4, x: 45, y: 48, visible: true },
-    { t: 8, x: 75, y: 38, visible: true },
-    { t: 11, x: 92, y: 25, visible: true },
-    { t: 13, x: 95, y: 20, visible: false }
-  ],
-  f2: [ // Yellow Tang (swims right to left)
-    { t: 0, x: 90, y: 70, visible: false },
-    { t: 2, x: 85, y: 65, visible: true },
-    { t: 6, x: 50, y: 55, visible: true },
-    { t: 10, x: 20, y: 45, visible: true },
-    { t: 13, x: 5, y: 40, visible: false }
-  ],
-  t1: [ // Plastic Bottle (drifts top to bottom)
-    { t: 0, x: 30, y: 15, visible: true },
-    { t: 4, x: 35, y: 38, visible: true },
-    { t: 8, x: 32, y: 60, visible: true },
-    { t: 13, x: 38, y: 85, visible: true }
-  ]
-};
-
-const getInterpolatedPosition = (targetId, time) => {
-  const frames = keyframes[targetId];
-  if (!frames) return { x: 0, y: 0, visible: false };
-
-  let i = 0;
-  while (i < frames.length - 1 && frames[i + 1].t < time) {
-    i++;
+// Helper to render high-quality realistic SVG sprites for fish and trash
+function TargetSprite({ type, label }) {
+  if (type === 'fish') {
+    if (label === 'Common Snook') {
+      return (
+        <svg viewBox="0 0 120 50" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Snook: Sleek body, black lateral line */}
+          <path d="M 10 25 C 25 15, 60 12, 95 22 C 105 20, 115 12, 118 25 C 115 38, 105 30, 95 28 C 60 38, 25 35, 10 25 Z" fill="url(#snookGrad)" />
+          {/* Tail Fin */}
+          <path d="M 95 25 L 110 12 L 106 25 L 110 38 Z" fill="#718096" opacity="0.8" />
+          {/* Gills & Head */}
+          <path d="M 28 17 C 29 25, 29 30, 27 33" stroke="#2d3748" strokeWidth="1" fill="none" />
+          <circle cx="18" cy="22" r="2.5" fill="#fef08a" />
+          <circle cx="18.5" cy="22" r="1" fill="#000" />
+          {/* Distinct Black Lateral Line */}
+          <path d="M 28 25 C 50 23, 75 24, 95 26" stroke="#1a202c" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          {/* Fins */}
+          <path d="M 50 14 L 58 8 L 62 14 Z" fill="#718096" opacity="0.8" /> {/* Dorsal */}
+          <path d="M 75 14 L 85 10 L 88 15 Z" fill="#718096" opacity="0.8" /> {/* 2nd Dorsal */}
+          <path d="M 42 32 L 48 38 L 46 32 Z" fill="#718096" opacity="0.8" /> {/* Pectoral */}
+          <path d="M 65 31 L 71 36 L 68 31 Z" fill="#718096" opacity="0.8" /> {/* Pelvic */}
+          
+          <defs>
+            <linearGradient id="snookGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4a5568" />
+              <stop offset="30%" stopColor="#cbd5e0" />
+              <stop offset="70%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#a0aec0" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Atlantic Tarpon') {
+      return (
+        <svg viewBox="0 0 130 50" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Tarpon: Shiny silver large scales, upturned mouth */}
+          <path d="M 8 28 C 18 20, 50 10, 100 20 C 110 18, 120 12, 125 25 C 120 38, 110 32, 100 30 C 50 40, 18 36, 8 28 Z" fill="url(#tarponGrad)" />
+          {/* Large upturned jaw */}
+          <path d="M 8 28 C 12 28, 16 31, 14 33 C 12 33, 9 30, 8 28" fill="#4a5568" />
+          <circle cx="16" cy="24" r="3" fill="#cbd5e0" />
+          <circle cx="16.5" cy="24" r="1.2" fill="#000" />
+          {/* Large Tail Fin */}
+          <path d="M 100 25 L 122 10 L 115 25 L 122 40 Z" fill="#4a5568" opacity="0.9" />
+          {/* Long dorsal filament */}
+          <path d="M 68 15 C 65 5, 75 2, 85 8 L 74 15 Z" fill="#2d3748" />
+          {/* Pelvic fin */}
+          <path d="M 52 35 L 58 42 L 56 35 Z" fill="#4a5568" opacity="0.8" />
+          
+          <defs>
+            <linearGradient id="tarponGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#718096" />
+              <stop offset="40%" stopColor="#edf2f7" />
+              <stop offset="80%" stopColor="#cbd5e0" />
+              <stop offset="100%" stopColor="#718096" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Goliath Grouper') {
+      return (
+        <svg viewBox="0 0 110 60" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Grouper: Heavy mottled body, rounded tail */}
+          <path d="M 8 30 C 20 12, 70 12, 90 28 C 96 26, 100 25, 104 30 C 100 35, 96 34, 90 32 C 70 48, 20 48, 8 30 Z" fill="url(#grouperGrad)" />
+          {/* Rounded Tail Fin */}
+          <path d="M 90 30 C 100 20, 106 30, 106 30 C 106 30, 100 40, 90 30" fill="#2d3748" />
+          <circle cx="18" cy="27" r="2.8" fill="#e2e8f0" />
+          <circle cx="18.5" cy="27" r="1.2" fill="#000" />
+          {/* Mottled dark spots */}
+          <circle cx="35" cy="25" r="1.5" fill="#1a202c" opacity="0.7" />
+          <circle cx="45" cy="20" r="2" fill="#1a202c" opacity="0.7" />
+          <circle cx="55" cy="28" r="1.8" fill="#1a202c" opacity="0.7" />
+          <circle cx="65" cy="22" r="2.2" fill="#1a202c" opacity="0.7" />
+          <circle cx="40" cy="35" r="2.5" fill="#1a202c" opacity="0.7" />
+          <circle cx="50" cy="38" r="1.5" fill="#1a202c" opacity="0.7" />
+          <circle cx="62" cy="36" r="2" fill="#1a202c" opacity="0.7" />
+          <circle cx="75" cy="30" r="2.4" fill="#1a202c" opacity="0.7" />
+          {/* Heavy fins */}
+          <path d="M 45 16 C 55 10, 75 10, 80 18 Z" fill="#2d3748" />
+          <path d="M 38 38 C 42 46, 48 46, 44 38 Z" fill="#2d3748" />
+          
+          <defs>
+            <linearGradient id="grouperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1a202c" />
+              <stop offset="45%" stopColor="#718096" />
+              <stop offset="90%" stopColor="#4a5568" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Green Sea Turtle') {
+      return (
+        <svg viewBox="0 0 100 80" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Turtle: Oval shell, flippers, head */}
+          <path d="M 70 20 L 85 10 L 78 25 Z" fill="#2f3e22" />
+          <path d="M 70 60 L 85 70 L 78 55 Z" fill="#2f3e22" />
+          <ellipse cx="50" cy="40" rx="28" ry="22" fill="url(#turtleShellGrad)" stroke="#1c2813" strokeWidth="1.5" />
+          <ellipse cx="50" cy="40" rx="20" ry="14" fill="none" stroke="#1c2813" strokeWidth="1" strokeDasharray="3 3" />
+          <path d="M 22 40 L 78 40 M 50 18 L 50 62" stroke="#1c2813" strokeWidth="1" strokeDasharray="3 3" />
+          <path d="M 38 24 C 28 8, 12 10, 8 18 C 12 25, 28 28, 38 24 Z" fill="#3f512b" stroke="#1c2813" strokeWidth="0.5" />
+          <path d="M 38 56 C 28 72, 12 70, 8 62 C 12 55, 28 52, 38 56 Z" fill="#3f512b" stroke="#1c2813" strokeWidth="0.5" />
+          <path d="M 22 40 C 15 35, 8 36, 6 40 C 8 44, 15 45, 22 40 Z" fill="#3f512b" />
+          <circle cx="10" cy="38" r="1.2" fill="#fff" />
+          <circle cx="10" cy="38" r="0.6" fill="#000" />
+          
+          <defs>
+            <linearGradient id="turtleShellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#556b2f" />
+              <stop offset="50%" stopColor="#6b8e23" />
+              <stop offset="100%" stopColor="#2e8b57" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Reef Shark') {
+      return (
+        <svg viewBox="0 0 130 50" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Shark: Sleek grey body, sharp dorsal fin */}
+          <path d="M 6 25 C 20 14, 55 10, 95 21 C 105 19, 115 15, 124 25 C 115 35, 105 31, 95 29 C 55 40, 20 36, 6 25 Z" fill="url(#sharkGrad)" />
+          <path d="M 44 14 C 48 2, 58 4, 62 14 Z" fill="#4a5568" />
+          <path d="M 38 31 C 36 43, 44 48, 48 31 Z" fill="#4a5568" />
+          <path d="M 98 25 L 122 8 L 114 25 L 120 42 L 105 29 Z" fill="#2d3748" />
+          <circle cx="15" cy="22" r="1.5" fill="#000" />
+          <path d="M 23 20 L 23 28 M 26 21 L 26 27 M 29 22 L 29 26" stroke="#2d3748" strokeWidth="1" />
+          
+          <defs>
+            <linearGradient id="sharkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2d3748" />
+              <stop offset="50%" stopColor="#718096" />
+              <stop offset="100%" stopColor="#4a5568" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Yellow Tang') {
+      return (
+        <svg viewBox="0 0 80 60" style={{ width: '100%', height: '100%', overflow: 'visible', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {/* Yellow Tang: Oval bright yellow body */}
+          <path d="M 6 30 C 12 10, 48 5, 60 22 C 68 25, 74 20, 76 30 C 74 40, 68 35, 60 38 C 48 55, 12 50, 6 30 Z" fill="url(#yellowTangGrad)" />
+          <path d="M 60 30 L 72 18 L 68 30 L 72 42 Z" fill="#eab308" />
+          <circle cx="16" cy="24" r="3.2" fill="#fff" />
+          <circle cx="16.5" cy="24" r="1.5" fill="#000" />
+          <path d="M 52 29 L 58 30 L 52 31 Z" fill="#fff" />
+          <path d="M 25 11 C 38 6, 52 10, 56 18 Z" fill="#eab308" />
+          <path d="M 25 49 C 38 54, 52 50, 56 42 Z" fill="#eab308" />
+          
+          <defs>
+            <linearGradient id="yellowTangGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#facc15" />
+              <stop offset="100%" stopColor="#eab308" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+  } else {
+    // Trash types
+    if (label === 'Plastic Bottle') {
+      return (
+        <svg viewBox="0 0 50 100" style={{ width: '100%', height: '100%', overflow: 'visible', opacity: 0.8, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>
+          <path d="M 20 8 L 30 8 L 30 18 L 38 25 L 38 88 L 12 88 L 12 25 L 20 18 Z" fill="rgba(147, 197, 253, 0.45)" stroke="#60a5fa" strokeWidth="1.5" />
+          <rect x="18" y="2" width="14" height="6" rx="1" fill="#2563eb" />
+          <line x1="16" y1="36" x2="34" y2="36" stroke="rgba(255,255,255,0.7)" strokeWidth="1" />
+          <line x1="16" y1="44" x2="34" y2="44" stroke="rgba(255,255,255,0.7)" strokeWidth="1" />
+          <rect x="12" y="52" width="26" height="15" fill="rgba(59, 130, 246, 0.3)" />
+          <path d="M 18 78 Q 25 74, 32 78" stroke="#60a5fa" strokeWidth="1" fill="none" />
+        </svg>
+      );
+    }
+    if (label === 'Plastic Bag') {
+      return (
+        <svg viewBox="0 0 80 90" style={{ width: '100%', height: '100%', overflow: 'visible', opacity: 0.75, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
+          <path d="M 22 28 C 16 12, 28 8, 30 25 C 38 8, 50 12, 46 28 C 58 32, 62 76, 45 84 C 30 86, 12 82, 10 68 C 8 46, 14 32, 22 28 Z" fill="rgba(241, 245, 249, 0.4)" stroke="#cbd5e1" strokeWidth="1.5" />
+          <path d="M 24 38 Q 38 48, 44 34 M 18 52 Q 32 58, 48 50 M 26 72 Q 40 68, 54 74" stroke="#e2e8f0" strokeWidth="1" fill="none" />
+        </svg>
+      );
+    }
+    if (label === 'Plastic Cup') {
+      return (
+        <svg viewBox="0 0 60 90" style={{ width: '100%', height: '100%', overflow: 'visible', opacity: 0.8, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
+          <path d="M 12 12 L 48 12 L 40 82 L 20 82 Z" fill="rgba(226, 232, 240, 0.45)" stroke="#94a3b8" strokeWidth="1.5" />
+          <ellipse cx="30" cy="12" rx="18" ry="4" fill="rgba(255,255,255,0.2)" stroke="#94a3b8" strokeWidth="1.5" />
+          <path d="M 16 48 L 44 48 L 40 82 L 20 82 Z" fill="rgba(147, 197, 253, 0.2)" />
+        </svg>
+      );
+    }
+    if (label === 'Aluminum Can') {
+      return (
+        <svg viewBox="0 0 60 85" style={{ width: '100%', height: '100%', overflow: 'visible', opacity: 0.85, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>
+          <path d="M 15 15 L 45 15 C 48 24, 42 28, 45 42 C 40 50, 48 55, 45 74 L 15 74 C 12 60, 18 55, 15 42 C 18 28, 12 24, 15 15 Z" fill="url(#canGrad)" stroke="#ef4444" strokeWidth="1.5" />
+          <ellipse cx="30" cy="15" rx="15" ry="3" fill="#cbd5e0" stroke="#94a3b8" strokeWidth="1" />
+          <rect x="28" y="10" width="4" height="6" rx="1" fill="#718096" />
+          <path d="M 15 32 Q 30 25, 43 30 M 13 54 Q 28 60, 45 48" stroke="#b91c1c" strokeWidth="1.5" fill="none" />
+          
+          <defs>
+            <linearGradient id="canGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
+    if (label === 'Rubber Balloon') {
+      return (
+        <svg viewBox="0 0 60 100" style={{ width: '100%', height: '100%', overflow: 'visible', opacity: 0.85, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>
+          <ellipse cx="30" cy="35" rx="18" ry="24" fill="url(#balloonGrad)" />
+          <path d="M 28 59 L 32 59 L 30 65 Z" fill="#b91c1c" />
+          <path d="M 30 65 Q 26 78, 34 85 Q 28 92, 30 98" stroke="#e2e8f0" strokeWidth="1" fill="none" />
+          <ellipse cx="22" cy="25" rx="4" ry="7" transform="rotate(-15 22 25)" fill="rgba(255,255,255,0.45)" />
+          
+          <defs>
+            <linearGradient id="balloonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+    }
   }
-
-  const f0 = frames[i];
-  const f1 = frames[i + 1] || f0;
-
-  if (f0.t === f1.t) return { x: f0.x, y: f0.y, visible: f0.visible };
-
-  const ratio = (time - f0.t) / (f1.t - f0.t);
-  const x = f0.x + (f1.x - f0.x) * ratio;
-  const y = f0.y + (f1.y - f0.y) * ratio;
-  const visible = ratio < 0.5 ? f0.visible : f1.visible;
-
-  return { x, y, visible };
-};
+  
+  return (
+    <svg viewBox="0 0 80 50" style={{ width: '100%', height: '100%' }}>
+      <ellipse cx="40" cy="25" rx="30" ry="15" fill="rgba(34, 211, 238, 0.4)" stroke="#22d3ee" strokeWidth="1.5" />
+    </svg>
+  );
+}
 
 export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  // Sighting classification game states
   const containerRef = useRef(null);
-  const videoRef = useRef(null);
-  const scannerPosRef = useRef({ x: 50, y: 50 });
-  const [scannerPos, setScannerPos] = useState({ x: 50, y: 50 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [activeTargets, setActiveTargets] = useState([]);
-  const [alignedTarget, setAlignedTarget] = useState(null);
   const [fishCounter, setFishCounter] = useState(0);
-
   const [trashCleanedCount, setTrashCleanedCount] = useState(0);
   const [cleanupAlert, setCleanupAlert] = useState(null);
+
+  // Simulated AI targets tracking (detections)
+  const [detections, setDetections] = useState([
+    { id: 'f1', type: 'fish', label: 'Common Snook', confidence: 98, x: 25, y: 40, w: 14, h: 10, visible: true },
+    { id: 'f2', type: 'fish', label: 'Atlantic Tarpon', confidence: 97, x: 60, y: 25, w: 18, h: 12, visible: false },
+    { id: 'f3', type: 'fish', label: 'Goliath Grouper', confidence: 96, x: 45, y: 65, w: 16, h: 14, visible: true },
+    { id: 'f4', type: 'fish', label: 'Green Sea Turtle', confidence: 99, x: 75, y: 48, w: 13, h: 11, visible: false },
+    { id: 'f5', type: 'fish', label: 'Reef Shark', confidence: 96, x: 15, y: 55, w: 18, h: 11, visible: false },
+    { id: 'f6', type: 'fish', label: 'Yellow Tang', confidence: 98, x: 55, y: 35, w: 10, h: 8, visible: true },
+    
+    { id: 't1', type: 'trash', label: 'Plastic Bottle', emoji: '🍾', fact: 'Plastic bottles can take 450 years to break down in the ocean!', confidence: 89, x: 30, y: 45, w: 10, h: 8, visible: false },
+    { id: 't2', type: 'trash', label: 'Plastic Bag', emoji: '🛍️', fact: 'Sea turtles often mistake plastic bags for tasty jellyfish!', confidence: 91, x: 70, y: 35, w: 12, h: 10, visible: true },
+    { id: 't3', type: 'trash', label: 'Plastic Cup', emoji: '🥤', fact: 'Over 8 million tons of plastic trash enter our oceans every year!', confidence: 88, x: 50, y: 58, w: 10, h: 8, visible: false },
+    { id: 't4', type: 'trash', label: 'Aluminum Can', emoji: '🥫', fact: 'Recycling aluminum cans saves 95% of the energy needed to make new ones!', confidence: 92, x: 20, y: 70, w: 11, h: 9, visible: false },
+    { id: 't5', type: 'trash', label: 'Rubber Balloon', emoji: '🎈', fact: 'Balloons can float for miles and end up blocking animals\' stomachs.', confidence: 87, x: 80, y: 62, w: 10, h: 9, visible: true }
+  ]);
 
   // Level progression helper and states
   const getLevelInfo = (shellCount) => {
@@ -92,91 +289,71 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }
   }, [shells, currentLevel]);
 
-  // Update target coordinates smoothly using requestAnimationFrame
+  // Update detections animation and movement
   useEffect(() => {
-    let animationFrameId;
-
-    const updatePositions = () => {
-      const video = videoRef.current;
-      if (video && !video.paused) {
-        const time = video.currentTime;
-        const targets = [
-          { id: 'f1', type: 'fish', label: 'Bannerfish', w: 14, h: 10, ...getInterpolatedPosition('f1', time) },
-          { id: 'f2', type: 'fish', label: 'Yellow Tang', w: 10, h: 8, ...getInterpolatedPosition('f2', time) },
-          { id: 't1', type: 'trash', label: 'Plastic Bottle', w: 11, h: 9, emoji: '🧼', fact: 'Plastic bottles can take 450 years to disintegrate in the sea!', ...getInterpolatedPosition('t1', time) }
-        ];
-        setActiveTargets(targets);
-
-        const currentPos = scannerPosRef.current;
-        const aligned = targets.find(d => {
-          if (!d.visible) return false;
-          const dx = Math.abs(currentPos.x - d.x);
-          const dy = Math.abs(currentPos.y - d.y);
-          return dx <= 8 && dy <= 8;
-        });
-        setAlignedTarget(aligned || null);
-      }
-      animationFrameId = requestAnimationFrame(updatePositions);
-    };
-
-    animationFrameId = requestAnimationFrame(updatePositions);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  // Handle native video play/pause and mute/unmute
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isPlaying) {
-      video.play().catch(err => console.log("Autoplay blocked:", err));
-    } else {
-      video.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = isMuted;
-  }, [isMuted]);
-
-  // Scan Progress Incrementer
-  useEffect(() => {
-    if (!isScanning) {
-      setScanProgress(0);
-      return;
-    }
+    if (!isPlaying || !aiEnabled) return;
 
     const interval = setInterval(() => {
-      setScanProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsScanning(false);
-          if (alignedTarget && alignedTarget.visible) {
-            handleAutoClassify(alignedTarget);
-          } else {
-            triggerFloaty(scannerPos.x, scannerPos.y, `💧 Seawater! +0 🐚`);
-          }
-          return 100;
+      setDetections(prev => prev.map(d => {
+        const randomAction = Math.random();
+        let nextVisible = d.visible;
+        let nextX = d.x;
+        let nextY = d.y;
+        let nextConf = d.confidence;
+
+        // Randomly toggle visibility
+        if (randomAction > 0.72) {
+          nextVisible = !d.visible;
         }
-        return prev + 10;
-      });
-    }, 50);
+
+        if (nextVisible) {
+          if (d.type === 'trash') {
+            // Trash drifts from left to right
+            let xVal = d.x + 2.5;
+            if (xVal > 95) {
+              xVal = 5 + Math.random() * 10;
+              nextVisible = false; // Hide on wrap around
+            }
+            nextX = xVal;
+            nextY = Math.max(20, Math.min(80, d.y + (Math.random() > 0.5 ? 1 : -1)));
+          } else {
+            // Fish swim around inside container bounds
+            const xVal = d.x + (Math.random() > 0.5 ? 3 : -3);
+            const yVal = d.y + (Math.random() > 0.5 ? 2 : -2);
+            nextX = Math.max(10, Math.min(85, xVal));
+            nextY = Math.max(20, Math.min(75, yVal));
+          }
+          nextConf = Math.min(99, Math.max(85, d.confidence + (Math.random() > 0.5 ? 1 : -1)));
+        } else {
+          // Reset positions occasionally when off-screen
+          if (d.type === 'trash' && Math.random() > 0.8) {
+            nextX = 5 + Math.random() * 15;
+            nextY = 20 + Math.random() * 60;
+          } else if (Math.random() > 0.8) {
+            nextX = 15 + Math.random() * 70;
+            nextY = 20 + Math.random() * 55;
+          }
+        }
+
+        return { ...d, visible: nextVisible, x: nextX, y: nextY, confidence: nextConf };
+      }));
+    }, 1800);
 
     return () => clearInterval(interval);
-  }, [isScanning, alignedTarget, scannerPos]);
+  }, [isPlaying, aiEnabled]);
 
-  // Handle automatic classification and award points
-  const handleAutoClassify = (target) => {
-    if (target.type === 'fish') {
+  // Click on a target (fish or trash)
+  const handleTargetTap = (d, e) => {
+    e.stopPropagation(); // Stop click from propagating to the background seawater handler
+    if (!isPlaying || !aiEnabled) return;
+
+    if (d.type === 'fish') {
       if (addShells) {
         addShells(1);
       }
       const nextFishCount = fishCounter + 1;
       setFishCounter(nextFishCount);
-      triggerFloaty(target.x, target.y, `🐟 ${target.label} Scanned! +1 🐚`);
+      triggerFloaty(d.x, d.y, `🐟 Fish Sighted! +1 🐚`);
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 fish
       if (nextFishCount >= 3) {
@@ -192,19 +369,29 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           setTimeout(() => setShowMissionAlert(false), 5000);
         }
       }
-    } else if (target.type === 'trash') {
+    } else if (d.type === 'trash') {
       if (addShells) {
         addShells(10);
       }
       setTrashCleanedCount(prev => prev + 1);
-      triggerFloaty(target.x, target.y, `🧼 Cleaned: ${target.label}! +10 🐚`);
+      triggerFloaty(d.x, d.y, `🧼 Cleaned: ${d.label}! +10 🐚`);
 
       setCleanupAlert({
         emoji: "🧼",
-        label: target.label,
-        fact: target.fact
+        label: d.label,
+        fact: d.fact
       });
     }
+  };
+
+  // Click on empty seawater (background click)
+  const handleSeawaterTap = (e) => {
+    if (!isPlaying || !aiEnabled || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    triggerFloaty(clickX, clickY, `💧 Seawater! +0 🐚`);
   };
 
   // Auto-clear cleanup alert toast
@@ -216,44 +403,6 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
       return () => clearTimeout(timer);
     }
   }, [cleanupAlert]);
-
-  // Drag and Scan logic
-  const handleDragMove = (clientX, clientY) => {
-    if (!containerRef.current || isScanning) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    let x = ((clientX - rect.left) / rect.width) * 100;
-    let y = ((clientY - rect.top) / rect.height) * 100;
-    
-    // Constrain center within container boundary margins
-    x = Math.max(8, Math.min(92, x));
-    y = Math.max(6, Math.min(94, y));
-    
-    const newPos = { x, y };
-    setScannerPos(newPos);
-    scannerPosRef.current = newPos;
-  };
-
-  const handleDragRelease = () => {
-    if (!isPlaying || !aiEnabled || isScanning) return;
-    setIsScanning(true);
-  };
-
-  const handleFrameClick = (e) => {
-    if (!isPlaying || !aiEnabled || isDragging || isScanning) return;
-
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    let clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    let clickY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    clickX = Math.max(8, Math.min(92, clickX));
-    clickY = Math.max(6, Math.min(94, clickY));
-
-    const newPos = { x: clickX, y: clickY };
-    setScannerPos(newPos);
-    scannerPosRef.current = newPos;
-    setIsScanning(true);
-  };
 
   // Helper to trigger floating shells text
   const triggerFloaty = (x, y, text) => {
@@ -285,15 +434,12 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Real Live Video Stream */}
-          <video 
-            ref={videoRef}
-            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
+          {/* Real Live YouTube Stream */}
+          <iframe 
+            id="yt-live-stream"
+            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+            title="Live Underwater Stream" 
             className="streamBgImage"
-            autoPlay
-            loop
-            muted
-            playsInline
             style={{ 
               border: 'none', 
               pointerEvents: 'none',
@@ -302,9 +448,9 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               left: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
               zIndex: 1
             }}
+            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing Green Beam */}
@@ -321,34 +467,11 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </>
           )}
 
-          {/* Interactive AI Scanning Lens Overlays (Covering background video clicks) */}
+          {/* Transparent click catcher overlay for Seawater taps */}
           {isPlaying && aiEnabled && (
             <div 
               ref={containerRef}
-              className="aiScanOverlay"
-              onClick={handleFrameClick}
-              onMouseMove={(e) => {
-                if (isDragging) {
-                  handleDragMove(e.clientX, e.clientY);
-                }
-              }}
-              onTouchMove={(e) => {
-                if (isDragging && e.touches.length > 0) {
-                  handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
-                }
-              }}
-              onMouseUp={() => {
-                if (isDragging) {
-                  setIsDragging(false);
-                  handleDragRelease();
-                }
-              }}
-              onTouchEnd={() => {
-                if (isDragging) {
-                  setIsDragging(false);
-                  handleDragRelease();
-                }
-              }}
+              onClick={handleSeawaterTap}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -356,245 +479,39 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
                 width: '100%',
                 height: '100%',
                 zIndex: 8,
-                cursor: isDragging ? 'grabbing' : 'crosshair'
+                cursor: 'pointer'
               }}
-              title="AI Lens Active: Drag the AI Scanner Box over live creatures/trash to classify!"
+              title="Click directly on passing fish or trash to log them and clean up the ocean!"
             />
           )}
 
-          {/* Draggable AI Scanner Box Reticle */}
-          {isPlaying && aiEnabled && (
+          {/* Clickable Realistic Fish & Trash Overlays (No borders, no names, borderless) */}
+          {isPlaying && aiEnabled && detections.filter(d => d.visible).map(d => (
             <div
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                setIsDragging(true);
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                setIsDragging(true);
-              }}
+              key={d.id}
+              onClick={(e) => handleTargetTap(d, e)}
               style={{
                 position: 'absolute',
-                left: `${scannerPos.x}%`,
-                top: `${scannerPos.y}%`,
-                width: '16%',
-                height: '12%',
-                border: isScanning 
-                  ? '2.5px solid #39ff88' 
-                  : (alignedTarget && alignedTarget.visible ? '2.5px solid #facc15' : '2.5px solid #22d3ee'),
-                boxShadow: isScanning 
-                  ? '0 0 15px rgba(57, 255, 136, 0.5), inset 0 0 8px rgba(57, 255, 136, 0.2)' 
-                  : (alignedTarget && alignedTarget.visible 
-                      ? '0 0 15px rgba(250, 204, 21, 0.5), inset 0 0 8px rgba(250, 204, 21, 0.2)' 
-                      : '0 0 12px rgba(34, 211, 238, 0.4), inset 0 0 6px rgba(34, 211, 238, 0.1)'),
-                borderRadius: '8px',
+                left: `${d.x}%`,
+                top: `${d.y}%`,
+                width: `${d.w}%`,
+                height: `${d.h}%`,
                 transform: 'translate(-50%, -50%)',
-                cursor: isDragging ? 'grabbing' : 'grab',
-                zIndex: 80,
-                touchAction: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'auto',
-                transition: isDragging ? 'none' : 'all 0.1s ease-out'
-              }}
-            >
-              <div className="reticleCorner tl" />
-              <div className="reticleCorner tr" />
-              <div className="reticleCorner bl" />
-              <div className="reticleCorner br" />
-
-              {isScanning && (
-                <div className="scanSweepBar" />
-              )}
-
-              {isScanning ? (
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: '#39ff88',
-                  fontWeight: '900',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.85)',
-                  fontFamily: 'Outfit, sans-serif'
-                }}>
-                  {scanProgress}%
-                </div>
-              ) : (
-                <div style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: (alignedTarget && alignedTarget.visible) ? '#facc15' : '#22d3ee',
-                  boxShadow: (alignedTarget && alignedTarget.visible) ? '0 0 8px #facc15' : '0 0 8px #22d3ee'
-                }} />
-              )}
-
-              <div style={{
-                position: 'absolute',
-                top: '-18px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                backgroundColor: isScanning 
-                  ? '#39ff88' 
-                  : (alignedTarget && alignedTarget.visible ? '#facc15' : '#22d3ee'),
-                color: '#031b2e',
-                padding: '2px 8px',
-                fontSize: '0.58rem',
-                fontWeight: '900',
-                borderRadius: '3px',
-                whiteSpace: 'nowrap',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                pointerEvents: 'none',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                fontFamily: 'Outfit, sans-serif'
-              }}>
-                {isScanning ? 'SCANNING' : (alignedTarget && alignedTarget.visible ? 'AI LOCK ON' : 'AI LENS')}
-              </div>
-            </div>
-          )}
-
-          {/* Lock-on Bounding Box */}
-          {isPlaying && aiEnabled && alignedTarget && alignedTarget.visible && (
-            <div
-              style={{
-                position: 'absolute',
-                left: `${alignedTarget.x}%`,
-                top: `${alignedTarget.y}%`,
-                width: `${alignedTarget.w}%`,
-                height: `${alignedTarget.h}%`,
-                border: alignedTarget.type === 'fish' ? '2px solid #22d3ee' : '2px solid #ef4444',
-                boxShadow: alignedTarget.type === 'fish' 
-                  ? '0 0 15px rgba(34, 211, 238, 0.7), inset 0 0 8px rgba(34, 211, 238, 0.3)' 
-                  : '0 0 15px rgba(239, 68, 68, 0.7), inset 0 0 8px rgba(239, 68, 68, 0.3)',
-                borderRadius: '8px',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
+                cursor: 'pointer',
                 zIndex: 9,
+                animation: d.type === 'fish' 
+                  ? 'swimOscillate 2.5s infinite alternate ease-in-out' 
+                  : 'trashSway 3.5s infinite alternate ease-in-out',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.1s ease-out'
+                padding: '4px',
+                opacity: 0.78
               }}
             >
-              {/* Subtle AI Lock Indicator label */}
-              <div style={{
-                position: 'absolute',
-                top: '-15px',
-                left: '0',
-                backgroundColor: alignedTarget.type === 'fish' ? '#22d3ee' : '#ef4444',
-                color: '#031b2e',
-                padding: '1px 4px',
-                fontSize: '0.5rem',
-                fontWeight: '900',
-                borderRadius: '2px',
-                whiteSpace: 'nowrap',
-                textTransform: 'uppercase'
-              }}>
-                [AI LOCK: {alignedTarget.label}]
-              </div>
+              <TargetSprite type={d.type} label={d.label} />
             </div>
-          )}
-
-          {/* Level Progress HUD Bar */}
-          {isPlaying && aiEnabled && (
-            <div style={{
-              position: 'absolute',
-              top: '75px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(3, 27, 46, 0.85)',
-              backdropFilter: 'blur(8px)',
-              border: '1.5px solid rgba(34, 211, 238, 0.35)',
-              borderRadius: '20px',
-              padding: '6px 16px',
-              color: '#fff',
-              zIndex: 90,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-              fontFamily: 'Outfit, sans-serif',
-              pointerEvents: 'none',
-              minWidth: '290px',
-              justifyContent: 'space-between'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '1rem' }}>⭐</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Level {getLevelInfo(shells).level}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: '#b7cad6' }}>
-                  ({getLevelInfo(shells).title})
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', marginLeft: '12px' }}>
-                <div style={{
-                  height: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '3px',
-                  flex: '1',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    width: getLevelInfo(shells).target 
-                      ? `${((shells - getLevelInfo(shells).prevTarget) / (getLevelInfo(shells).target - getLevelInfo(shells).prevTarget)) * 100}%` 
-                      : '100%',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #064c72, #22d3ee)',
-                    borderRadius: '3px',
-                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#39ff88', whiteSpace: 'nowrap' }}>
-                  {getLevelInfo(shells).target ? `${shells}/${getLevelInfo(shells).target} 🐚` : `${shells} 🐚`}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* AI Alert Banner HUD deleted */}
-
-          {/* Cleaned Trash educational banner */}
-          {cleanupAlert && (
-            <div style={{
-              position: 'absolute',
-              top: '135px', // Shifted down to stack nicely under Level Progress HUD bar
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(16, 185, 129, 0.18)',
-              backdropFilter: 'blur(8px)',
-              border: '2px solid rgba(16, 185, 129, 0.65)',
-              borderRadius: '16px',
-              padding: '12px 24px',
-              color: '#fff',
-              zIndex: 90,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.2)',
-              animation: 'pulseCleanBorder 1.5s infinite ease-in-out, slideDownAlert 0.3s ease-out',
-              fontFamily: 'Outfit, sans-serif',
-              pointerEvents: 'none',
-              maxWidth: '420px',
-              width: '90%'
-            }}>
-              <span style={{ fontSize: '2.5rem' }}>{cleanupAlert.emoji}</span>
-              <div style={{ textAlign: 'left' }}>
-                <strong style={{ color: '#34d399', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
-                  🧼 CLEANED: {cleanupAlert.label} (+10🐚)
-                </strong>
-                <span style={{ fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
-                  {cleanupAlert.fact}
-                </span>
-              </div>
-            </div>
-          )}
-
-
-
-
+          ))}
 
           {/* Floaty Click Indicator Text popups */}
           {isPlaying && (
@@ -655,7 +572,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Top Info Overlay (Exactly like the mockup) */}
+          {/* Top Info Overlay */}
           <div className="streamTopOverlay">
             <div className="streamInfoLeft">
               <div className="liveFeedTitle">
@@ -683,11 +600,11 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              <span>🐟 Fish Logged: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
+              <span>🐟 Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
               <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
               <span>🧹 Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
               <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>Watch live feed: Drag AI lens onto real fish/trash & log the classification to Level Up!</span>
+              <span>Watch live feed: Click fish (+1 🐚) & clean trash (+10 🐚) directly to Level Up!</span>
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
@@ -780,7 +697,102 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
             </div>
           )}
 
-          {/* Bottom Player Control Bar (Exactly like the mockup) */}
+          {/* Level Progress HUD Bar */}
+          {isPlaying && aiEnabled && (
+            <div style={{
+              position: 'absolute',
+              top: '75px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(3, 27, 46, 0.85)',
+              backdropFilter: 'blur(8px)',
+              border: '1.5px solid rgba(34, 211, 238, 0.35)',
+              borderRadius: '20px',
+              padding: '6px 16px',
+              color: '#fff',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              fontFamily: 'Outfit, sans-serif',
+              pointerEvents: 'none',
+              minWidth: '290px',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '1rem' }}>⭐</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Level {getLevelInfo(shells).level}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#b7cad6' }}>
+                  ({getLevelInfo(shells).title})
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', marginLeft: '12px' }}>
+                <div style={{
+                  height: '6px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px',
+                  flex: '1',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    width: getLevelInfo(shells).target 
+                      ? `${((shells - getLevelInfo(shells).prevTarget) / (getLevelInfo(shells).target - getLevelInfo(shells).prevTarget)) * 100}%` 
+                      : '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #064c72, #22d3ee)',
+                    borderRadius: '3px',
+                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }} />
+                </div>
+                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#39ff88', whiteSpace: 'nowrap' }}>
+                  {getLevelInfo(shells).target ? `${shells}/${getLevelInfo(shells).target} 🐚` : `${shells} 🐚`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Cleaned Trash educational banner */}
+          {cleanupAlert && (
+            <div style={{
+              position: 'absolute',
+              top: '135px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(16, 185, 129, 0.18)',
+              backdropFilter: 'blur(8px)',
+              border: '2px solid rgba(16, 185, 129, 0.65)',
+              borderRadius: '16px',
+              padding: '12px 24px',
+              color: '#fff',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              boxShadow: '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.2)',
+              animation: 'pulseCleanBorder 1.5s infinite ease-in-out, slideDownAlert 0.3s ease-out',
+              fontFamily: 'Outfit, sans-serif',
+              pointerEvents: 'none',
+              maxWidth: '420px',
+              width: '90%'
+            }}>
+              <span style={{ fontSize: '2.5rem' }}>{cleanupAlert.emoji}</span>
+              <div style={{ textAlign: 'left' }}>
+                <strong style={{ color: '#34d399', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
+                  🧼 CLEANED: {cleanupAlert.label} (+10🐚)
+                </strong>
+                <span style={{ fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
+                  {cleanupAlert.fact}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Player Control Bar */}
           <div className="streamBottomControlBar">
             {/* Left Controls */}
             <button 
@@ -804,7 +816,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
               <span>LIVE</span>
             </div>
 
-            {/* Center Seek/Progress Line (Green bar from mockup) */}
+            {/* Center Seek/Progress Line */}
             <div className="playerProgressBarContainer">
               <div className="playerProgressBarFill" />
             </div>
@@ -864,10 +876,6 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           0% { transform: translateY(0); }
           100% { transform: translateY(-10px); }
         }
-        @keyframes driftAcross {
-          0% { left: -60px; }
-          100% { left: calc(100% + 60px); }
-        }
         @keyframes trashSway {
           0% { transform: rotate(-15deg) translateY(-2px); }
           100% { transform: rotate(15deg) translateY(2px); }
@@ -877,42 +885,6 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           50% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 25px rgba(16, 185, 129, 0.55); }
           100% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
         }
-        @keyframes pulseAlertBorder {
-          0% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-          50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
-          100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-        }
-        @keyframes blinkDot {
-          0% { opacity: 0.3; }
-          50% { opacity: 1; }
-          100% { opacity: 0.3; }
-        }
-        @keyframes scannerSweep {
-          0% { top: 4px; }
-          100% { top: calc(100% - 6px); }
-        }
-        .scanSweepBar {
-          position: absolute;
-          left: 4px;
-          right: 4px;
-          height: 2px;
-          background: #39ff88;
-          box-shadow: 0 0 8px #39ff88;
-          animation: scannerSweep 1.2s infinite alternate ease-in-out;
-          pointer-events: none;
-        }
-        .reticleCorner {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-color: currentColor;
-          border-style: solid;
-          pointer-events: none;
-        }
-        .reticleCorner.tl { top: 4px; left: 4px; border-width: 2px 0 0 2px; border-top-left-radius: 2px; }
-        .reticleCorner.tr { top: 4px; right: 4px; border-width: 2px 2px 0 0; border-top-right-radius: 2px; }
-        .reticleCorner.bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; border-bottom-left-radius: 2px; }
-        .reticleCorner.br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; border-bottom-right-radius: 2px; }
       `}</style>
     </section>
   );
