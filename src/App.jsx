@@ -195,7 +195,7 @@ export default function App() {
       case 'home':
         return <Home setPage={setPage} />;
       case 'watch':
-        return <WatchLive addShells={addShells} currentUser={currentUser} />;
+        return <WatchLive addShells={addShells} shells={shells} currentUser={currentUser} />;
       case 'kids-club':
       case 'rewards':
         return (

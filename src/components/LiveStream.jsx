@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
-export default function LiveStream({ aiEnabled = false, addShells, currentUser }) {
+const questTargets = [
+  { type: 'turtle', emoji: '🐢', name: 'Green Sea Turtle', clue: 'Find the slow-swimming animal with a shell!', fact: 'Sea turtles have lived in our oceans for over 110 million years, since the time of the dinosaurs!' },
+  { type: 'shark', emoji: '🦈', name: 'Reef Shark', clue: 'Find the grey explorer fish with a fin!', fact: 'Reef sharks sleep by lying still on the sandy reef bottom while water flows over their gills!' },
+  { type: 'yellow_tang', emoji: '🐠', name: 'Yellow Tang', clue: 'Find the bright yellow fish!', fact: 'Yellow Tangs are super helpful reef cleaners that eat algae to keep the coral healthy!' },
+  { type: 'clown_fish', emoji: '🐠', name: 'Clown Fish', clue: 'Find the orange and white striped fish!', fact: 'Clown Fish live inside sea anemones which protect them from larger predator fish!' },
+  { type: 'blue_tang', emoji: '🐟', name: 'Blue Tang', clue: 'Find the neon blue fish!', fact: 'Blue Tangs can change their color from bright blue to dark purple to hide at night!' },
+  { type: 'octopus', emoji: '🐙', name: 'Octopus', clue: 'Find the eight-legged purple creature!', fact: 'Octopuses have three hearts and blue blood, and can squeeze through tiny cracks!' }
+];
+
+export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeQuest, setActiveQuest] = useState(null);
+  const [successQuest, setSuccessQuest] = useState(null);
 
   // Simulated AI targets tracking
   const [detections, setDetections] = useState([
@@ -18,6 +29,14 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
   const [gameItems, setGameItems] = useState([]);
   const [floatyTexts, setFloatyTexts] = useState([]);
   const [showMissionAlert, setShowMissionAlert] = useState(false);
+
+  // Initialize first active quest
+  useEffect(() => {
+    if (!activeQuest && !successQuest) {
+      const randomQuest = questTargets[Math.floor(Math.random() * questTargets.length)];
+      setActiveQuest(randomQuest);
+    }
+  }, [activeQuest, successQuest]);
 
   useEffect(() => {
     if (!isPlaying || !aiEnabled) return;
@@ -81,22 +100,40 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
         if (prev.length >= 4) return prev; // cap at 4 items
 
         const templates = [
-          { type: 'fish', emoji: '🐠', label: 'Neon Tang', points: 10, size: 50 },
-          { type: 'fish', emoji: '🐟', label: 'Silver Snook', points: 10, size: 52 },
-          { type: 'fish', emoji: '🐡', label: 'Puffer Fish', points: 10, size: 46 },
-          { type: 'trash', emoji: '🧴', label: 'Plastic Bottle', points: 25, size: 48 },
-          { type: 'trash', emoji: '🥤', label: 'Soda Can', points: 25, size: 45 },
-          { type: 'hazard', emoji: '🛢️', label: 'Toxic Barrel', points: 25, size: 54 },
-          { type: 'trash', emoji: '🕸️', label: 'Ghost Net', points: 25, size: 50 },
+          { type: 'turtle', emoji: '🐢', label: 'Green Sea Turtle', points: 50, size: 56 },
+          { type: 'shark', emoji: '🦈', label: 'Reef Shark', points: 50, size: 62 },
+          { type: 'yellow_tang', emoji: '🐠', label: 'Yellow Tang', points: 50, size: 48 },
+          { type: 'clown_fish', emoji: '🐠', label: 'Clown Fish', points: 50, size: 46 },
+          { type: 'blue_tang', emoji: '🐟', label: 'Blue Tang', points: 50, size: 48 },
+          { type: 'octopus', emoji: '🐙', label: 'Octopus', points: 50, size: 50 },
+          { type: 'trash', emoji: '🧴', label: 'Plastic Bottle', points: 25, size: 45 },
+          { type: 'trash', emoji: '🥤', label: 'Soda Can', points: 25, size: 42 },
+          { type: 'hazard', emoji: '🛢️', label: 'Toxic Barrel', points: 25, size: 52 },
+          { type: 'trash', emoji: '🕸️', label: 'Ghost Net', points: 25, size: 48 }
         ];
 
-        const selected = templates[Math.floor(Math.random() * templates.length)];
+        // 35% chance to spawn the active quest target, otherwise pick random template
+        let selected;
+        const roll = Math.random();
+        if (roll < 0.35 && activeQuest) {
+          selected = templates.find(t => t.label === activeQuest.name);
+        }
+        
+        if (!selected) {
+          selected = templates[Math.floor(Math.random() * templates.length)];
+        }
+
+        // Avoid duplicate items currently on screen to keep variety
+        if (prev.some(item => item.label === selected.label)) {
+          return prev;
+        }
+
         const newItem = {
           id: Math.random().toString(36).substring(2, 9),
           ...selected,
           x: 105, // start off-screen to the right
           y: 15 + Math.random() * 60, // random height
-          speed: 0.18 + Math.random() * 0.22, // swim speed
+          speed: 0.16 + Math.random() * 0.18, // swim speed
           hovered: false,
         };
 
@@ -105,7 +142,7 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
     }, 3200);
 
     return () => clearInterval(spawnInterval);
-  }, [isPlaying]);
+  }, [isPlaying, activeQuest]);
 
   // 2. Game loop: Animate movement
   useEffect(() => {
@@ -126,17 +163,31 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
   const handleItemClick = (item, e) => {
     e.stopPropagation();
 
+    // Check if it's the active quest target
+    const isQuestTarget = activeQuest && item.label === activeQuest.name;
+
     // Spawn popup floating text
     const rect = e.currentTarget.parentNode.getBoundingClientRect();
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
 
+    let pointsAwarded = item.points;
+    if (isQuestTarget) {
+      pointsAwarded = 50; // Quests give 50 shells
+    } else if (item.type !== 'trash' && item.type !== 'hazard') {
+      pointsAwarded = 10; // Standard fish clicks give 10 shells
+    }
+
     const newFloaty = {
       id: Math.random().toString(36).substring(2, 9),
-      text: item.type === 'fish' ? `+${item.points} ${item.label} Scanned` : `+${item.points} Cleaned! 🌊`,
+      text: isQuestTarget 
+        ? `🎯 MISSION COMPLETED! +50 🐚` 
+        : (item.type === 'trash' || item.type === 'hazard') 
+          ? `+${pointsAwarded} Cleaned! 🌊` 
+          : `+10 🐚 (Found ${item.label})`,
       x: clickX,
       y: clickY,
-      color: item.type === 'fish' ? '#22d3ee' : '#39ff88'
+      color: isQuestTarget ? '#39ff88' : (item.type === 'trash' || item.type === 'hazard') ? '#22d3ee' : '#22d3ee'
     };
 
     setFloatyTexts(prev => [...prev, newFloaty]);
@@ -144,7 +195,16 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
 
     // Award global shells
     if (addShells) {
-      addShells(item.points);
+      addShells(pointsAwarded);
+    }
+
+    if (isQuestTarget) {
+      // Trigger Sighting Success modal overlay
+      setSuccessQuest({
+        ...activeQuest,
+        points: 50
+      });
+      setActiveQuest(null);
     }
 
     // Complete Kids Club mission if clean up
@@ -442,6 +502,132 @@ export default function LiveStream({ aiEnabled = false, addShells, currentUser }
                 <Play size={32} fill="currentColor" />
               </button>
               <p>Stream Paused</p>
+            </div>
+          )}
+
+          {/* Active Quest HUD */}
+          {isPlaying && activeQuest && (
+            <div className="activeQuestHud" style={{
+              position: 'absolute',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.9) 0%, rgba(3, 17, 28, 0.95) 100%)',
+              border: '1.5px solid rgba(34, 211, 238, 0.45)',
+              borderRadius: '12px',
+              padding: '6px 16px',
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 4px 20px rgba(34, 211, 238, 0.25)',
+              backdropFilter: 'blur(8px)',
+              pointerEvents: 'none',
+              maxWidth: '45%',
+              width: 'max-content',
+              animation: 'fadeIn 0.5s ease',
+              fontFamily: 'Outfit, sans-serif'
+            }}>
+              <span style={{ fontSize: '1.4rem' }}>{activeQuest.emoji}</span>
+              <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+                <span style={{ display: 'block', fontSize: '0.62rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  ACTIVE QUEST
+                </span>
+                <strong style={{ display: 'block', fontSize: '0.8rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Spot the {activeQuest.name}!
+                </strong>
+                <span style={{ display: 'block', fontSize: '0.68rem', color: '#b7cad6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {activeQuest.clue}
+                </span>
+              </div>
+              <div style={{
+                background: 'rgba(34, 211, 238, 0.15)',
+                border: '1px solid rgba(34, 211, 238, 0.3)',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: '900',
+                color: '#22d3ee',
+                fontFamily: 'Outfit, sans-serif',
+                flexShrink: 0
+              }}>
+                +50 🐚
+              </div>
+            </div>
+          )}
+
+          {/* Sighting Success Modal Overlay */}
+          {successQuest && (
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(2, 12, 21, 0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 99,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+              color: '#fff',
+              fontFamily: 'Outfit, sans-serif'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
+                border: '2px solid #39ff88',
+                borderRadius: '20px',
+                padding: '24px',
+                maxWidth: '460px',
+                width: '90%',
+                textAlign: 'center',
+                boxShadow: '0 0 40px rgba(57, 255, 136, 0.25)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '14px',
+                animation: 'slideDownAlert 0.3s ease-out'
+              }}>
+                <div style={{ fontSize: '3rem', margin: '0', animation: 'swimOscillate 2s infinite alternate' }}>
+                  {successQuest.emoji}
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.45rem', color: '#39ff88', fontWeight: '900', letterSpacing: '0.02em' }}>
+                  QUEST COMPLETED!
+                </h3>
+                <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#fff', fontWeight: '800' }}>
+                  You spotted the {successQuest.name}!
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.45', background: 'rgba(255, 255, 255, 0.03)', padding: '10px 14px', borderRadius: '10px' }}>
+                  <strong>Fun Fact:</strong> {successQuest.fact}
+                </p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '2px' }}>
+                  <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid #39ff88', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', color: '#39ff88' }}>
+                    🐚 +50 Shells Wallet
+                  </div>
+                  <div style={{ background: 'rgba(34, 211, 238, 0.1)', border: '1px solid #22d3ee', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', color: '#22d3ee' }}>
+                    💵 +$0.50 USD Reward Value
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSuccessQuest(null)}
+                  style={{
+                    background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                    border: '1.5px solid rgba(34, 211, 238, 0.35)',
+                    color: '#fff',
+                    padding: '8px 24px',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(34, 211, 238, 0.2)',
+                    transition: 'all 0.2s',
+                    marginTop: '4px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  Start Next Quest 🎮
+                </button>
+              </div>
             </div>
           )}
 
