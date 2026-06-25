@@ -109,7 +109,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             <span>🎮</span> Reef Explorer Game
           </h4>
           <p style={{ margin: '0', fontSize: '0.9rem', color: '#b7cad6', lineHeight: '1.5' }}>
-            Watch the live underwater feed! Tap directly on the swimming fish to earn **1 Shell** (+1 🐚) or tap floating plastic trash to clean the reef and earn **10 Shells** (+10 🐚). Tapping empty seawater earns **0 Shells** (+0 🐚). Earn shells to Level Up your rank!
+            Watch the live reef stream! Tap directly on the real fish swimming in the video to earn **1 Shell** (+1 🐚). Tapping empty seawater earns **0 Shells** (+0 🐚). Earn shells to Level Up your explorer rank!
           </p>
         </div>
       </div>

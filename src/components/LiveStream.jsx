@@ -1,19 +1,52 @@
 import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
+const keyframes = {
+  f1: [ // Bannerfish (swims left to right)
+    { t: 0, x: 15, y: 35, visible: true },
+    { t: 4, x: 45, y: 48, visible: true },
+    { t: 8, x: 75, y: 38, visible: true },
+    { t: 11, x: 92, y: 25, visible: true },
+    { t: 13, x: 95, y: 20, visible: false }
+  ],
+  f2: [ // Yellow Tang (swims right to left)
+    { t: 0, x: 90, y: 70, visible: false },
+    { t: 2, x: 85, y: 65, visible: true },
+    { t: 6, x: 50, y: 55, visible: true },
+    { t: 10, x: 20, y: 45, visible: true },
+    { t: 13, x: 5, y: 40, visible: false }
+  ]
+};
 
+const getInterpolatedPosition = (targetId, time) => {
+  const frames = keyframes[targetId];
+  if (!frames) return { x: 0, y: 0, visible: false };
+
+  let i = 0;
+  while (i < frames.length - 1 && frames[i + 1].t < time) {
+    i++;
+  }
+
+  const f0 = frames[i];
+  const f1 = frames[i + 1] || f0;
+
+  if (f0.t === f1.t) return { x: f0.x, y: f0.y, visible: f0.visible };
+
+  const ratio = (time - f0.t) / (f1.t - f0.t);
+  const x = f0.x + (f1.x - f0.x) * ratio;
+  const y = f0.y + (f1.y - f0.y) * ratio;
+  const visible = ratio < 0.5 ? f0.visible : f1.visible;
+
+  return { x, y, visible };
+};
 
 export default function LiveStream({ addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef(null);
+  const videoRef = useRef(null);
   const [fishCounter, setFishCounter] = useState(0);
-  const [trashCleanedCount, setTrashCleanedCount] = useState(0);
-  const [cleanupAlert, setCleanupAlert] = useState(null);
-
-  // Active user sighting report popup state
-  const [activeSighting, setActiveSighting] = useState(null);
 
   // Level progression helper and states
   const getLevelInfo = (shellCount) => {
@@ -42,20 +75,64 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     }
   }, [shells, currentLevel]);
 
-  // No moving simulated elements overlay needed
+  // Sync play/pause and mute states to native video element APIs
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.play().catch(err => console.log("Autoplay blocked:", err));
+    } else {
+      video.pause();
+    }
+  }, [isPlaying]);
 
-  // Log sighting classification (Option 2: Tap-to-Classify Logger)
-  const logSighting = (type) => {
-    if (!activeSighting) return;
-    const { x, y } = activeSighting;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = isMuted;
+  }, [isMuted]);
 
-    if (type === 'fish') {
+  // Click on stream (captures coordinates to verify fish sightings using LERP keyframes)
+  const handleSeawaterTap = (e) => {
+    if (!isPlaying || !containerRef.current || !videoRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    const time = videoRef.current.currentTime;
+    
+    // Calculate distance to targets
+    const distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+    const threshold = 12.0; // Click within 12% is a hit
+    
+    const posF1 = getInterpolatedPosition('f1', time);
+    const posF2 = getInterpolatedPosition('f2', time);
+    
+    let hitDetected = false;
+    let hitTargetName = "";
+    let hitX = clickX;
+    let hitY = clickY;
+
+    if (posF1.visible && distance(clickX, clickY, posF1.x, posF1.y) <= threshold) {
+      hitDetected = true;
+      hitTargetName = "Common Snook";
+      hitX = posF1.x;
+      hitY = posF1.y;
+    } else if (posF2.visible && distance(clickX, clickY, posF2.x, posF2.y) <= threshold) {
+      hitDetected = true;
+      hitTargetName = "Yellow Tang";
+      hitX = posF2.x;
+      hitY = posF2.y;
+    }
+
+    if (hitDetected) {
       if (addShells) {
         addShells(1);
       }
       const nextFishCount = fishCounter + 1;
       setFishCounter(nextFishCount);
-      triggerFloaty(x, y, `Fish Sighted! +1 Shell`);
+      triggerFloaty(hitX, hitY, `${hitTargetName} Spotted! +1 Shell`);
 
       // Complete Kids Club Scan Sighting Mission: Scan 3 fish
       if (nextFishCount >= 3) {
@@ -71,51 +148,10 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           setTimeout(() => setShowMissionAlert(false), 5000);
         }
       }
-    } else if (type === 'trash') {
-      if (addShells) {
-        addShells(10);
-      }
-      setTrashCleanedCount(prev => prev + 1);
-      triggerFloaty(x, y, `Trash Cleaned! +10 Shells`);
-
-      const facts = [
-        "Plastic bottles can take 450 years to break down in the ocean!",
-        "Sea turtles often mistake plastic bags for tasty jellyfish!",
-        "Over 8 million tons of plastic trash enter our oceans every year!",
-        "Recycling aluminum cans saves 95% of the energy needed to make new ones!",
-        "Balloons can float for miles and end up blocking animals' stomachs."
-      ];
-      const randomFact = facts[Math.floor(Math.random() * facts.length)];
-
-      setCleanupAlert({
-        emoji: "🧼",
-        label: "Ocean Debris",
-        fact: randomFact
-      });
+    } else {
+      triggerFloaty(clickX, clickY, `Seawater! +0 Shells`);
     }
-
-    setActiveSighting(null);
   };
-
-  // Click on stream (captures coordinates to open reporting popup)
-  const handleSeawaterTap = (e) => {
-    if (!isPlaying || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setActiveSighting({ x: clickX, y: clickY });
-  };
-
-  // Auto-clear cleanup alert toast
-  useEffect(() => {
-    if (cleanupAlert) {
-      const timer = setTimeout(() => {
-        setCleanupAlert(null);
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [cleanupAlert]);
 
   // Helper to trigger floating shells text
   const triggerFloaty = (x, y, text) => {
@@ -147,12 +183,15 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* Real Live YouTube Stream */}
-          <iframe 
-            id="yt-live-stream"
-            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
-            title="Live Underwater Stream" 
+          {/* Real Live Video Stream */}
+          <video 
+            ref={videoRef}
+            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
             className="streamBgImage"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{ 
               border: 'none', 
               pointerEvents: 'none',
@@ -161,9 +200,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               left: 0,
               width: '100%',
               height: '100%',
+              objectFit: 'cover',
               zIndex: 1
             }}
-            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing Green Beam */}
@@ -180,7 +219,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </>
           )}
 
-          {/* Transparent click catcher overlay for Seawater taps */}
+          {/* Transparent click catcher overlay for direct taps */}
           {isPlaying && (
             <div 
               ref={containerRef}
@@ -194,94 +233,8 @@ export default function LiveStream({ addShells, shells, currentUser }) {
                 zIndex: 8,
                 cursor: 'pointer'
               }}
-              title="Click directly on passing fish or trash to log them and clean up the ocean!"
+              title="Tap directly on real fish swimming in the video feed to log them!"
             />
-          )}
-
-          {/* Sighting Logger Popup (Option 2: Tap-to-Classify Logger) */}
-          {isPlaying && activeSighting && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: 'absolute',
-                left: `${activeSighting.x}%`,
-                top: `${activeSighting.y}%`,
-                transform: 'translate(-50%, -100%) translateY(-12px)',
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.96) 0%, rgba(3, 17, 28, 0.98) 100%)',
-                border: '1.5px solid rgba(34, 211, 238, 0.45)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(34, 211, 238, 0.25)',
-                borderRadius: '12px',
-                padding: '10px 14px',
-                zIndex: 99,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                minWidth: '170px',
-                fontFamily: 'Outfit, sans-serif',
-                pointerEvents: 'auto',
-                cursor: 'default'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.12)', paddingBottom: '6px', gap: '10px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: '900', color: '#22d3ee', letterSpacing: '0.06em' }}>LOG SIGHTING</span>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveSighting(null); }}
-                  style={{ background: 'transparent', color: '#b7cad6', fontSize: '0.8rem', fontWeight: '800', border: 'none', cursor: 'pointer', padding: '0 2px' }}
-                >
-                  ✕
-                </button>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  logSighting('fish');
-                }}
-                style={{
-                  background: 'rgba(34, 211, 238, 0.1)',
-                  border: '1.5px solid rgba(34, 211, 238, 0.3)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  padding: '8px 12px',
-                  fontSize: '0.8rem',
-                  fontWeight: '800',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34, 211, 238, 0.2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34, 211, 238, 0.1)'; }}
-              >
-                🐟 Fish Sighted (+1 🐚)
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  logSighting('trash');
-                }}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1.5px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  padding: '8px 12px',
-                  fontSize: '0.8rem',
-                  fontWeight: '800',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
-              >
-                🧼 Clean Trash (+10 🐚)
-              </button>
-            </div>
           )}
 
           {/* Floaty Click Indicator Text popups */}
@@ -355,7 +308,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               </div>
             </div>
             
-            {/* Interactive cleanup notification banner */}
+            {/* Interactive sighting notification banner */}
             <div className="gameHeaderBadge" style={{
               background: 'rgba(34, 211, 238, 0.12)',
               border: '1px solid rgba(34, 211, 238, 0.25)',
@@ -371,11 +324,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               fontFamily: 'Outfit, sans-serif'
             }}>
               <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', animation: 'blinkGlow 1.5s infinite' }} />
-              <span>🐟 Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
+              <span>Fish Tapped: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{fishCounter}</strong></span>
               <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>🧹 Trash Cleaned: <strong style={{ color: '#39ff88', fontSize: '0.95rem' }}>{trashCleanedCount}</strong></span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>|</span>
-              <span>Watch live feed: Tap anywhere you see fish or trash to log it and Level Up!</span>
+              <span>Watch live feed: Tap directly on the real fish swimming by to earn Shells and Level Up!</span>
             </div>
 
             {/* Top Right Buttons: Share, Camera/Photo, Fullscreen */}
@@ -527,42 +478,6 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* Cleaned Trash educational banner */}
-          {cleanupAlert && (
-            <div style={{
-              position: 'absolute',
-              top: '135px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(16, 185, 129, 0.18)',
-              backdropFilter: 'blur(8px)',
-              border: '2px solid rgba(16, 185, 129, 0.65)',
-              borderRadius: '16px',
-              padding: '12px 24px',
-              color: '#fff',
-              zIndex: 90,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.2)',
-              animation: 'pulseCleanBorder 1.5s infinite ease-in-out, slideDownAlert 0.3s ease-out',
-              fontFamily: 'Outfit, sans-serif',
-              pointerEvents: 'none',
-              maxWidth: '420px',
-              width: '90%'
-            }}>
-              <span style={{ fontSize: '2.5rem' }}>{cleanupAlert.emoji}</span>
-              <div style={{ textAlign: 'left' }}>
-                <strong style={{ color: '#34d399', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '2px' }}>
-                  🧼 CLEANED: {cleanupAlert.label} (+10🐚)
-                </strong>
-                <span style={{ fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
-                  {cleanupAlert.fact}
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Bottom Player Control Bar */}
           <div className="streamBottomControlBar">
             {/* Left Controls */}
@@ -646,15 +561,6 @@ export default function LiveStream({ addShells, shells, currentUser }) {
         @keyframes bounceUp {
           0% { transform: translateY(0); }
           100% { transform: translateY(-10px); }
-        }
-        @keyframes trashSway {
-          0% { transform: rotate(-15deg) translateY(-2px); }
-          100% { transform: rotate(15deg) translateY(2px); }
-        }
-        @keyframes pulseCleanBorder {
-          0% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-          50% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 25px rgba(16, 185, 129, 0.55); }
-          100% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
         }
       `}</style>
     </section>
