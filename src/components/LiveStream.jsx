@@ -49,10 +49,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
   const videoRef = useRef(null);
   const [fishCounter, setFishCounter] = useState(0);
 
-  // AI Quiz/Overlay states
+  // AI Scan/Overlay states
   const [clickCoords, setClickCoords] = useState(null); // { x, y }
   const [challengeScanning, setChallengeScanning] = useState(false);
-  const [activeChallenge, setActiveChallenge] = useState(null); // { species: Object, options: String[] }
   const [selectedLogSpecies, setSelectedLogSpecies] = useState(null); // Object
   const [showSeawaterAlert, setShowSeawaterAlert] = useState(false);
 
@@ -195,14 +194,13 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     }
   };
 
-  // YouTube feed tap handling (AI Sighting Identification Challenge)
+  // YouTube feed tap handling (Auto AI Scan - no quiz)
   const handleYoutubeFeedTap = (e) => {
     if (!isPlaying || !containerRef.current) return;
-    if (challengeScanning || activeChallenge || selectedLogSpecies || showSeawaterAlert) {
+    if (challengeScanning || selectedLogSpecies || showSeawaterAlert) {
       // Clear current overlays if clicked again
       setClickCoords(null);
       setChallengeScanning(false);
-      setActiveChallenge(null);
       setSelectedLogSpecies(null);
       setShowSeawaterAlert(false);
       return;
@@ -215,27 +213,35 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     setClickCoords({ x: clickX, y: clickY });
     setChallengeScanning(true);
 
-    // Simulate AI scanning frame buffer (latency)
+    // Simulate AI scanning frame buffer (1 second latency)
     setTimeout(() => {
       setChallengeScanning(false);
 
-      // 70% chance of triggering identification challenge, 30% chance of seawater
+      // 70% chance fish detected, 30% chance seawater only
       if (Math.random() < 0.7) {
-        const correctSpecies = speciesList[Math.floor(Math.random() * speciesList.length)];
-        
-        // Pick 2 distractors
-        const otherSpecies = speciesList.filter(s => s.name !== correctSpecies.name);
-        const wrong1 = otherSpecies[Math.floor(Math.random() * otherSpecies.length)];
-        const otherSpecies2 = otherSpecies.filter(s => s.name !== wrong1.name);
-        const wrong2 = otherSpecies2[Math.floor(Math.random() * otherSpecies2.length)];
+        const detectedSpecies = speciesList[Math.floor(Math.random() * speciesList.length)];
+        setSelectedLogSpecies(detectedSpecies);
+        const nextFishCount = fishCounter + 1;
+        setFishCounter(nextFishCount);
 
-        // Shuffle options
-        const options = [correctSpecies.name, wrong1.name, wrong2.name].sort(() => Math.random() - 0.5);
+        if (addShells) {
+          addShells(15);
+        }
 
-        setActiveChallenge({
-          species: correctSpecies,
-          options: options
-        });
+        triggerFloaty(clickX, clickY, `🐟 Fish Spotted! +15 🐚`);
+
+        // Complete Kids Club Scan Sighting Mission: Scan 3 fish
+        if (nextFishCount >= 3) {
+          const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
+          if (!completed.includes('cleanup')) {
+            completed.push('cleanup');
+            localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
+            let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
+            localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
+            setShowMissionAlert(true);
+            setTimeout(() => setShowMissionAlert(false), 5000);
+          }
+        }
       } else {
         setShowSeawaterAlert(true);
       }
@@ -247,46 +253,6 @@ export default function LiveStream({ addShells, shells, currentUser }) {
       handleYoutubeFeedTap(e);
     } else {
       handleSeawaterTap(e);
-    }
-  };
-
-  const handleChallengeChoice = (choice) => {
-    if (!activeChallenge) return;
-
-    if (choice === activeChallenge.species.name) {
-      // Success! Sighting Verified
-      const result = activeChallenge.species;
-      setActiveChallenge(null);
-      setSelectedLogSpecies(result);
-      const nextFishCount = fishCounter + 1;
-      setFishCounter(nextFishCount);
-
-      if (addShells) {
-        addShells(15); // Verified challenge gives +15 shells
-      }
-
-      if (clickCoords) {
-        triggerFloaty(clickCoords.x, clickCoords.y, `🎯 VERIFIED! +15 🐚`);
-      }
-
-      // Complete Kids Club Scan Sighting Mission: Scan 3 fish
-      if (nextFishCount >= 3) {
-        const completed = JSON.parse(localStorage.getItem('swc_completed_missions') || '[]');
-        if (!completed.includes('cleanup')) {
-          completed.push('cleanup');
-          localStorage.setItem('swc_completed_missions', JSON.stringify(completed));
-          
-          let currentXp = parseInt(localStorage.getItem('swc_kids_xp') || '0', 10);
-          localStorage.setItem('swc_kids_xp', Math.min(500, currentXp + 100).toString());
-
-          setShowMissionAlert(true);
-          setTimeout(() => setShowMissionAlert(false), 5000);
-        }
-      }
-    } else {
-      // Wrong choice
-      setActiveChallenge(null);
-      setShowSeawaterAlert(true); // Treat as seawater/no match detected
     }
   };
 
@@ -424,101 +390,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* Sighting Challenge Quiz Overlay */}
-          {activeChallenge && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(2, 12, 21, 0.75)',
-              backdropFilter: 'blur(6px)',
-              zIndex: 95,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              color: '#fff',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.98) 0%, rgba(3, 17, 28, 0.99) 100%)',
-                border: '2px solid rgba(34, 211, 238, 0.5)',
-                boxShadow: '0 0 30px rgba(34, 211, 238, 0.25)',
-                borderRadius: '24px',
-                padding: '28px 24px',
-                maxWidth: '400px',
-                width: '90%',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                animation: 'slideDownAlert 0.3s ease-out'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.65rem', color: '#22d3ee', fontWeight: '900', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                    🔍 AI SIGHTING CHALLENGE
-                  </span>
-                  <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', fontWeight: '800' }}>
-                    Verify Your Sighting!
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#b7cad6' }}>
-                    What marine species did you just spot in the live stream?
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
-                  {activeChallenge.options.map(option => (
-                    <button
-                      key={option}
-                      onClick={() => handleChallengeChoice(option)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                        color: '#fff',
-                        padding: '12px 14px',
-                        borderRadius: '12px',
-                        fontSize: '0.85rem',
-                        fontWeight: '800',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        fontFamily: 'Outfit, sans-serif',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(34, 211, 238, 0.15)';
-                        e.currentTarget.style.borderColor = '#22d3ee';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => {
-                    setActiveChallenge(null);
-                    setClickCoords(null);
-                  }}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    fontSize: '0.75rem',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    marginTop: '4px',
-                    textDecoration: 'underline'
-                  }}
-                >
-                  Cancel Scan
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Quiz removed - auto-award handled in handleYoutubeFeedTap */}
 
           {/* Sighting Logged Success Overlay */}
           {selectedLogSpecies && (
