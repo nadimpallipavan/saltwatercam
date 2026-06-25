@@ -42,7 +42,6 @@ const gameQuestions = [
 ];
 
 export default function WatchLive({ addShells, shells, currentUser }) {
-  const [aiEnabled, setAiEnabled] = useState(true);
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
   const [emailInput, setEmailInput] = useState('');
 
@@ -87,9 +86,9 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
   return (
     <div className="watchPageFull" style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '64px', paddingTop: '20px' }}>
-      <LiveStream aiEnabled={aiEnabled} addShells={addShells} shells={shells} currentUser={currentUser} />
+      <LiveStream addShells={addShells} shells={shells} currentUser={currentUser} />
       
-      {/* AI Species Recognition Toggle Bar */}
+      {/* Kids Reef Explorer Game Instructions */}
       <div className="aiControlCard" style={{
         maxWidth: '1220px',
         margin: '0 auto',
@@ -101,51 +100,18 @@ export default function WatchLive({ addShells, shells, currentUser }) {
         width: '90%',
         alignSelf: 'center',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '16px',
+        flexDirection: 'column',
+        gap: '12px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', flex: '1 1 500px', textAlign: 'left' }}>
-          <h4 style={{ margin: '0 0 2px 0', fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '0.01em' }}>
-            Reef Explorer Gaming Lens
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', width: '100%', textAlign: 'left' }}>
+          <h4 style={{ margin: '0 0 2px 0', fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.25rem', fontWeight: '800', letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🎮</span> Reef Explorer Game
           </h4>
-          <p style={{ margin: '0 0 4px 0', fontSize: '0.88rem', color: '#b7cad6', lineHeight: '1.45' }}>
-            Watch the live underwater feed! Tap on real fish when they swim by to earn **1 Shell** (+1 🐚) or click floating plastic trash items to clean the reef and earn **10 Shells** (+10 🐚). Earn shells to Level Up your explorer rank!
+          <p style={{ margin: '0', fontSize: '0.9rem', color: '#b7cad6', lineHeight: '1.5' }}>
+            Watch the live underwater feed! Tap directly on the swimming fish to earn **1 Shell** (+1 🐚) or tap floating plastic trash to clean the reef and earn **10 Shells** (+10 🐚). Tapping empty seawater earns **0 Shells** (+0 🐚). Earn shells to Level Up your rank!
           </p>
         </div>
-        
-        <button 
-          onClick={() => setAiEnabled(!aiEnabled)}
-          style={{
-            background: aiEnabled ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'rgba(255, 255, 255, 0.08)',
-            border: '1.5px solid rgba(34, 211, 238, 0.35)',
-            padding: '10px 24px',
-            borderRadius: '30px',
-            color: '#fff',
-            fontFamily: 'Outfit, sans-serif',
-            fontWeight: '800',
-            fontSize: '0.82rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.3s ease',
-            boxShadow: aiEnabled ? '0 0 15px rgba(34, 211, 238, 0.4)' : 'none',
-            letterSpacing: '0.04em'
-          }}
-        >
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: aiEnabled ? '#39ff88' : '#b7cad6',
-            boxShadow: aiEnabled ? '0 0 8px #39ff88' : 'none',
-            display: 'inline-block'
-          }} />
-          {aiEnabled ? 'GAMING LENS ACTIVE' : 'ACTIVATE GAMING LENS'}
-        </button>
       </div>
  
       {/* Live Ocean Telemetry Dashboard */}

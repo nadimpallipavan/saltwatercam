@@ -237,7 +237,7 @@ function TargetSprite({ type, label }) {
   );
 }
 
-export default function LiveStream({ aiEnabled = false, addShells, shells, currentUser }) {
+export default function LiveStream({ addShells, shells, currentUser }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -291,7 +291,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Update detections animation and movement
   useEffect(() => {
-    if (!isPlaying || !aiEnabled) return;
+    if (!isPlaying) return;
 
     const interval = setInterval(() => {
       setDetections(prev => prev.map(d => {
@@ -340,12 +340,12 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
     }, 1800);
 
     return () => clearInterval(interval);
-  }, [isPlaying, aiEnabled]);
+  }, [isPlaying]);
 
   // Click on a target (fish or trash)
   const handleTargetTap = (d, e) => {
     e.stopPropagation(); // Stop click from propagating to the background seawater handler
-    if (!isPlaying || !aiEnabled) return;
+    if (!isPlaying) return;
 
     if (d.type === 'fish') {
       if (addShells) {
@@ -386,7 +386,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
 
   // Click on empty seawater (background click)
   const handleSeawaterTap = (e) => {
-    if (!isPlaying || !aiEnabled || !containerRef.current) return;
+    if (!isPlaying || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
@@ -468,7 +468,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           )}
 
           {/* Transparent click catcher overlay for Seawater taps */}
-          {isPlaying && aiEnabled && (
+          {isPlaying && (
             <div 
               ref={containerRef}
               onClick={handleSeawaterTap}
@@ -486,7 +486,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           )}
 
           {/* Clickable Realistic Fish & Trash Overlays (No borders, no names, borderless) */}
-          {isPlaying && aiEnabled && detections.filter(d => d.visible).map(d => (
+          {isPlaying && detections.filter(d => d.visible).map(d => (
             <div
               key={d.id}
               onClick={(e) => handleTargetTap(d, e)}
@@ -698,7 +698,7 @@ export default function LiveStream({ aiEnabled = false, addShells, shells, curre
           )}
 
           {/* Level Progress HUD Bar */}
-          {isPlaying && aiEnabled && (
+          {isPlaying && (
             <div style={{
               position: 'absolute',
               top: '75px',
