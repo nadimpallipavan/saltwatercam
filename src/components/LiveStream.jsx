@@ -91,7 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const feedType = 'youtube';
+  const feedType = 'recorded';
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -293,19 +293,22 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* ── VIDEO / IFRAME ────────────────────────────── */}
+          {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
           {hasInteracted && (
-            <iframe
-              id="yt-live-stream"
-              src="https://www.youtube.com/embed/TteSjALao0E?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=TteSjALao0E"
-              title="Live Underwater Stream"
+            <video
+              ref={videoRef}
+              src="https://assets.mixkit.co/videos/preview/mixkit-school-of-colorful-fish-in-an-aquarium-41588-large.mp4"
               className="streamBgImage"
+              autoPlay
+              loop
+              muted
+              playsInline
+              crossOrigin="anonymous"
               style={{
-                border: 'none', pointerEvents: 'none',
                 position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', zIndex: 1
+                width: '100%', height: '100%', zIndex: 1,
+                objectFit: 'cover'
               }}
-              allow="autoplay; encrypted-media"
             />
           )}
 
