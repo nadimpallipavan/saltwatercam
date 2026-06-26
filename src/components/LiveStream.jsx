@@ -172,7 +172,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     } else {
       video.pause();
     }
-  }, [isPlaying, feedType]);
+  }, [isPlaying, feedType, hasInteracted]);
 
   // Sync mute to the <video> element
   useEffect(() => {
