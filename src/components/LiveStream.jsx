@@ -91,7 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const feedType = 'youtube';
+  const feedType = 'recorded';
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -260,18 +260,21 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* ── VIDEO / IFRAME ────────────────────────────── */}
-          <iframe
-            id="yt-live-stream"
-            src="https://www.youtube.com/embed/1La4QG1t86Y?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=1La4QG1t86Y"
-            title="Live Underwater Stream"
+          {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
+          <video
+            ref={videoRef}
+            src="/underwater.mp4"
             className="streamBgImage"
+            autoPlay
+            loop
+            muted
+            playsInline
+            crossOrigin="anonymous"
             style={{
-              border: 'none', pointerEvents: 'none',
               position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', zIndex: 1
+              width: '100%', height: '100%', zIndex: 1,
+              objectFit: 'cover'
             }}
-            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing green beam */}
@@ -447,13 +450,13 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             <div className="streamInfoLeft">
               <div className="liveFeedTitle">
                 <span className="liveFeedDot" style={{
-                  backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee',
-                  boxShadow: feedType === 'youtube' ? '0 0 10px #39ff88' : '0 0 10px #22d3ee'
+                  backgroundColor: '#39ff88',
+                  boxShadow: '0 0 10px #39ff88'
                 }} />
-                <span>{feedType === 'youtube' ? 'LIVE FEED (YOUTUBE)' : 'GAME LOOP — AI ACTIVE'}</span>
+                <span>LIVE FEED (CORS CAMERA)</span>
               </div>
               <div className="streamCamName">
-                {feedType === 'youtube' ? 'Cam 1 - Lantana Dock Live Stream' : 'Tap the fish to earn shells!'}
+                Cam 1 - Lantana Dock Live Stream (AI Scanner active)
               </div>
             </div>
 
@@ -474,7 +477,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <span>🐟 Fish Spotted: <strong style={{ color: '#39ff88' }}>{fishCounter}</strong></span>
               <span style={{ color: 'rgba(255,255,255,0.35)' }}>|</span>
               <span style={{ color: '#b7cad6' }}>
-                {feedType === 'recorded' ? 'Tap the fish — not the water!' : 'Switch to Game Loop to play'}
+                Tap the fish — not the water!
               </span>
             </div>
 
@@ -602,8 +605,8 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
             <div className="playerBarLiveStatus desktopOnlyBtn">
               <span className="liveStatusDot" style={{
-                backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee',
-                boxShadow: feedType === 'youtube' ? '0 0 8px #39ff88' : '0 0 8px #22d3ee'
+                backgroundColor: '#39ff88',
+                boxShadow: '0 0 8px #39ff88'
               }} />
               <span>LIVE</span>
             </div>
