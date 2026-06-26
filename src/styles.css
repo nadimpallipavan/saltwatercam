@@ -1414,13 +1414,18 @@ button:focus-visible, a:focus-visible {
   .nav, .watchBtn, .headerAuthWidget {
     display: none !important;
   }
-  /* Ensure hamburger always snaps to the far right */
+  /* Ensure hamburger always snaps to the far right, and login stays next to it */
   .menuBtn {
     display: flex !important;
-    margin-left: auto !important;
+    margin-left: 16px !important;
     align-items: center;
     justify-content: center;
   }
+  .mobileAuthBtn {
+    display: flex !important;
+    margin-left: auto !important;
+  }
+
   .hero {
     height: calc(100vh - 80px) !important;
     height: calc(100dvh - 80px) !important;
