@@ -91,7 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const feedType = 'youtube';
+  const feedType = 'recorded';
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -181,7 +181,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     video.muted = isMuted;
   }, [isMuted, feedType]);
 
-  // ─── ACCURATE FISH DETECTION (both live and recorded loops) ───────────────────
+  // ─── ACCURATE FISH DETECTION USING NATIVE VIDEO KEYFRAMES ───────────────────
   const handleGameTap = (e) => {
     if (!isPlaying || !containerRef.current) return;
 
@@ -189,34 +189,25 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
     
-    // For live feed, use date-based elapsed seconds. For recorded, use video position.
-    const time = feedType === 'youtube' 
-      ? (Date.now() / 1000) 
-      : (videoRef.current ? videoRef.current.currentTime : 0);
+    const time = videoRef.current ? videoRef.current.currentTime : 0;
 
     const dist = (x1, y1, x2, y2) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
-    const HIT_THRESHOLD = 15; // Must tap within 15% of fish center
+    const HIT_THRESHOLD = 12; // Must tap within 12% of fish center
 
-    let hit = false;
-
-    // Check against simulated/virtual sea animal targets (swimming naturally across both video types)
-    const posV1 = getVirtualFishPosition('v1', time);
-    const posV2 = getVirtualFishPosition('v2', time);
-    const posV3 = getVirtualFishPosition('v3', time);
-    const posV4 = getVirtualFishPosition('v4', time);
+    // Check against real fish positions from keyframes (synced with video currentTime)
+    const posF1 = getInterpolatedPosition('f1', time);
+    const posF2 = getInterpolatedPosition('f2', time);
     
-    const hitV1 = posV1.visible && dist(clickX, clickY, posV1.x, posV1.y) <= HIT_THRESHOLD;
-    const hitV2 = posV2.visible && dist(clickX, clickY, posV2.x, posV2.y) <= HIT_THRESHOLD;
-    const hitV3 = posV3.visible && dist(clickX, clickY, posV3.x, posV3.y) <= HIT_THRESHOLD;
-    const hitV4 = posV4.visible && dist(clickX, clickY, posV4.x, posV4.y) <= HIT_THRESHOLD;
-    hit = hitV1 || hitV2 || hitV3 || hitV4;
+    const hitF1 = posF1.visible && dist(clickX, clickY, posF1.x, posF1.y) <= HIT_THRESHOLD;
+    const hitF2 = posF2.visible && dist(clickX, clickY, posF2.x, posF2.y) <= HIT_THRESHOLD;
 
-    if (hit) {
-      // ✅ Fish detected!
+    if (hitF1 || hitF2) {
+      // ✅ Real fish detected!
       if (addShells) addShells(1);
       const next = fishCounter + 1;
       setFishCounter(next);
-      triggerFloaty(clickX, clickY, '🐟 Fish Detected! +1 🐚', '#39ff88');
+      const fishName = hitF1 ? 'Bannerfish' : 'Yellow Tang';
+      triggerFloaty(clickX, clickY, `🐟 ${fishName} Spotted! +1 🐚`, '#39ff88');
 
       // Kids Club mission: spot 3 fish
       if (next >= 3) {
@@ -295,17 +286,20 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
           {/* ── VIDEO / IFRAME ────────────────────────────── */}
           {hasInteracted && (
-            <iframe
-              id="yt-live-stream"
-              src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
-              title="Live Underwater Stream"
+            <video
+              ref={videoRef}
+              src="underwater.mp4"
               className="streamBgImage"
               style={{
-                border: 'none', pointerEvents: 'none',
+                border: 'none',
                 position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', zIndex: 1
+                width: '100%', height: '100%', zIndex: 1,
+                objectFit: 'cover'
               }}
-              allow="autoplay; encrypted-media"
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
             />
           )}
 
