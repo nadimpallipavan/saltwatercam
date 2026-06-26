@@ -173,25 +173,17 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
     let hit = false;
 
-    if (feedType === 'recorded') {
-      const posF1 = getInterpolatedPosition('f1', time);
-      const posF2 = getInterpolatedPosition('f2', time);
-      const hitF1 = posF1.visible && dist(clickX, clickY, posF1.x, posF1.y) <= HIT_THRESHOLD;
-      const hitF2 = posF2.visible && dist(clickX, clickY, posF2.x, posF2.y) <= HIT_THRESHOLD;
-      hit = hitF1 || hitF2;
-    } else {
-      // Live YouTube feed - check against simulated/virtual sea animal targets
-      const posV1 = getVirtualFishPosition('v1', time);
-      const posV2 = getVirtualFishPosition('v2', time);
-      const posV3 = getVirtualFishPosition('v3', time);
-      const posV4 = getVirtualFishPosition('v4', time);
-      
-      const hitV1 = posV1.visible && dist(clickX, clickY, posV1.x, posV1.y) <= HIT_THRESHOLD;
-      const hitV2 = posV2.visible && dist(clickX, clickY, posV2.x, posV2.y) <= HIT_THRESHOLD;
-      const hitV3 = posV3.visible && dist(clickX, clickY, posV3.x, posV3.y) <= HIT_THRESHOLD;
-      const hitV4 = posV4.visible && dist(clickX, clickY, posV4.x, posV4.y) <= HIT_THRESHOLD;
-      hit = hitV1 || hitV2 || hitV3 || hitV4;
-    }
+    // Check against simulated/virtual sea animal targets (swimming naturally across both video types)
+    const posV1 = getVirtualFishPosition('v1', time);
+    const posV2 = getVirtualFishPosition('v2', time);
+    const posV3 = getVirtualFishPosition('v3', time);
+    const posV4 = getVirtualFishPosition('v4', time);
+    
+    const hitV1 = posV1.visible && dist(clickX, clickY, posV1.x, posV1.y) <= HIT_THRESHOLD;
+    const hitV2 = posV2.visible && dist(clickX, clickY, posV2.x, posV2.y) <= HIT_THRESHOLD;
+    const hitV3 = posV3.visible && dist(clickX, clickY, posV3.x, posV3.y) <= HIT_THRESHOLD;
+    const hitV4 = posV4.visible && dist(clickX, clickY, posV4.x, posV4.y) <= HIT_THRESHOLD;
+    hit = hitV1 || hitV2 || hitV3 || hitV4;
 
     if (hit) {
       // ✅ Fish detected!
@@ -260,7 +252,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           ) : (
             <video
               ref={videoRef}
-              src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
+              src="https://assets.mixkit.co/videos/preview/mixkit-school-of-colorful-fish-in-an-aquarium-41588-large.mp4"
               className="streamBgImage"
               autoPlay loop muted playsInline
               crossOrigin="anonymous"
