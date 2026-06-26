@@ -531,7 +531,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
 
-            <div className="playerBarLiveStatus">
+            <div className="playerBarLiveStatus desktopOnlyBtn">
               <span className="liveStatusDot" style={{
                 backgroundColor: '#39ff88',
                 boxShadow: '0 0 8px #39ff88'
