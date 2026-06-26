@@ -288,7 +288,8 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {hasInteracted && (
             <video
               ref={videoRef}
-              src="underwater.mp4"
+              src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
+              crossOrigin="anonymous"
               className="streamBgImage"
               style={{
                 border: 'none',
@@ -302,7 +303,6 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               playsInline
             />
           )}
-
           {/* Glowing green beam */}
           <div className="greenBeam" />
 
