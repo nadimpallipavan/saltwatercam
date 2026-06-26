@@ -190,9 +190,8 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
     
     const time = videoRef.current ? videoRef.current.currentTime : 0;
-
     const dist = (x1, y1, x2, y2) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
-    const HIT_THRESHOLD = 12; // Must tap within 12% of fish center
+    const HIT_THRESHOLD = 15; // Must tap within 15% of fish center
 
     // Check against real fish positions from keyframes (synced with video currentTime)
     const posF1 = getInterpolatedPosition('f1', time);
