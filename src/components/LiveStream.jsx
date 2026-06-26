@@ -91,7 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const feedType = 'recorded';
+  const feedType = 'youtube';
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -276,9 +276,6 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <p style={{ color: '#b7cad6', margin: 0, fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}>Tap below to connect to the live stream</p>
               <button
                 onClick={() => {
-                  if (videoRef.current) {
-                    videoRef.current.play().catch(() => {});
-                  }
                   setHasInteracted(true);
                   setIsPlaying(true);
                 }}
@@ -296,22 +293,21 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
-          <video
-            ref={videoRef}
-            src="underwater.mp4"
-            className="streamBgImage"
-            autoPlay
-            loop
-            muted
-            playsInline
-            crossOrigin="anonymous"
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', zIndex: 1,
-              objectFit: 'cover'
-            }}
-          />
+          {/* ── VIDEO / IFRAME ────────────────────────────── */}
+          {hasInteracted && (
+            <iframe
+              id="yt-live-stream"
+              src="https://www.youtube.com/embed/EvyHS-F9jZg?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=EvyHS-F9jZg"
+              title="Live Underwater Stream"
+              className="streamBgImage"
+              style={{
+                border: 'none', pointerEvents: 'none',
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%', zIndex: 1
+              }}
+              allow="autoplay; encrypted-media"
+            />
+          )}
 
           {/* Glowing green beam */}
           <div className="greenBeam" />
