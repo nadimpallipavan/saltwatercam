@@ -247,7 +247,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {feedType === 'youtube' ? (
             <iframe
               id="yt-live-stream"
-              src="https://www.youtube.com/embed/fT23X66iQ7Q?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=fT23X66iQ7Q"
+              src="https://www.youtube.com/embed/G3h1hH49s_w?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=G3h1hH49s_w"
               title="Live Underwater Stream"
               className="streamBgImage"
               style={{
