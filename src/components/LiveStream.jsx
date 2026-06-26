@@ -93,6 +93,7 @@ const getVirtualFishPosition = (id, time) => {
 export default function LiveStream({ addShells, shells, currentUser }) {
   const feedType = 'youtube';
   const [isPlaying, setIsPlaying] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef(null);
@@ -260,19 +261,53 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
+          {/* ── START/INTERACTION OVERLAY ──────────────────── */}
+          {!hasInteracted && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(135deg, rgba(2, 12, 21, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
+              backdropFilter: 'blur(10px)',
+              zIndex: 99, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: '20px',
+              fontFamily: 'Outfit, sans-serif'
+            }}>
+              <div style={{ fontSize: '3rem', animation: 'bounceUp 1.5s infinite alternate' }}>🌊</div>
+              <h3 style={{ color: '#fff', margin: 0, fontWeight: '800', fontFamily: 'Outfit, sans-serif' }}>Boynton Beach Inlet Live</h3>
+              <p style={{ color: '#b7cad6', margin: 0, fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}>Tap below to connect to the live stream</p>
+              <button
+                onClick={() => {
+                  setHasInteracted(true);
+                  setIsPlaying(true);
+                }}
+                style={{
+                  background: 'linear-gradient(90deg, #064c72, #22d3ee)',
+                  border: 'none', borderRadius: '30px',
+                  padding: '12px 32px', color: '#fff',
+                  fontSize: '0.95rem', fontWeight: '800',
+                  cursor: 'pointer', boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)',
+                  fontFamily: 'Outfit, sans-serif'
+                }}
+              >
+                Connect Stream ⚡
+              </button>
+            </div>
+          )}
+
           {/* ── VIDEO / IFRAME ────────────────────────────── */}
-          <iframe
-            id="yt-live-stream"
-            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
-            title="Live Underwater Stream"
-            className="streamBgImage"
-            style={{
-              border: 'none', pointerEvents: 'none',
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', zIndex: 1
-            }}
-            allow="autoplay; encrypted-media"
-          />
+          {hasInteracted && (
+            <iframe
+              id="yt-live-stream"
+              src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+              title="Live Underwater Stream"
+              className="streamBgImage"
+              style={{
+                border: 'none', pointerEvents: 'none',
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%', zIndex: 1
+              }}
+              allow="autoplay; encrypted-media"
+            />
+          )}
 
           {/* Glowing green beam */}
           <div className="greenBeam" />
