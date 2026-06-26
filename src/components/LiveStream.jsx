@@ -252,7 +252,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           ) : (
             <video
               ref={videoRef}
-              src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Acuario_Porto_Moniz_2021.webm"
+              src="https://vjs.zencdn.net/v/oceans.mp4"
               className="streamBgImage"
               autoPlay loop muted playsInline
               crossOrigin="anonymous"
