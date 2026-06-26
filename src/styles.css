@@ -1963,6 +1963,15 @@ button:focus-visible, a:focus-visible {
 .mobileInfoBanner {
   display: none;
 }
+.mobileFeedSwitcher {
+  display: none;
+}
+.mobileOnlyBtn {
+  display: none !important;
+}
+.desktopOnlyBtn {
+  display: inline-flex !important;
+}
 
 /* Mobile Viewport Locking for Watch Page to keep live feed fully visible */
 @media (max-width: 860px) {
@@ -1991,6 +2000,13 @@ button:focus-visible, a:focus-visible {
   .levelProgressHud {
     display: none !important;
   }
+  /* Show only play, snapshot, and share icons inside bottom control bar on mobile */
+  .mobileOnlyBtn {
+    display: flex !important;
+  }
+  .desktopOnlyBtn {
+    display: none !important;
+  }
   /* Show the simplified clock and location banner below the video on mobile */
   .mobileInfoBanner {
     display: flex !important;
@@ -2010,6 +2026,34 @@ button:focus-visible, a:focus-visible {
     width: 90%;
     max-width: 380px;
     border: 1px solid rgba(57, 255, 136, 0.2);
+  }
+  /* Show the simplified feed switcher tabs below the video player */
+  .mobileFeedSwitcher {
+    display: flex !important;
+    justify-content: center;
+    gap: 12px;
+    margin: 12px auto 0;
+    width: 90%;
+    max-width: 380px;
+  }
+  .mobileFeedSwitcher button {
+    flex: 1;
+    background: rgba(6, 32, 49, 0.7);
+    border: 1.5px solid rgba(34, 211, 238, 0.25);
+    color: #b7cad6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .mobileFeedSwitcher button.active {
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+    border-color: #22d3ee;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
   }
 }
 

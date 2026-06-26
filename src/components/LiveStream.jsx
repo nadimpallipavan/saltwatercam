@@ -57,6 +57,39 @@ const getInterpolatedPosition = (targetId, time) => {
   };
 };
 
+// Virtual fish positions for the live feed simulation
+const getVirtualFishPosition = (id, time) => {
+  const cycle = time % 15;
+  const progress = cycle / 15;
+
+  if (id === 'v1') {
+    const x = progress * 130 - 15;
+    const y = 35 + Math.sin(progress * Math.PI * 2) * 8;
+    const visible = x >= 0 && x <= 100;
+    return { x, y, visible };
+  }
+  if (id === 'v2') {
+    const x = 115 - progress * 130;
+    const y = 60 + Math.cos(progress * Math.PI * 2) * 10;
+    const visible = x >= 0 && x <= 100;
+    return { x, y, visible };
+  }
+  if (id === 'v3') {
+    const fastCycle = time % 10;
+    const fastProgress = fastCycle / 10;
+    const x = fastProgress * 140 - 20;
+    const y = 25 + Math.sin(fastProgress * Math.PI * 2) * 5;
+    const visible = x >= 0 && x <= 100;
+    return { x, y, visible };
+  }
+  const medCycle = time % 12;
+  const medProgress = medCycle / 12;
+  const x = 120 - medProgress * 140;
+  const y = 75 + Math.sin(medProgress * Math.PI) * 12;
+  const visible = x >= 0 && x <= 100;
+  return { x, y, visible };
+};
+
 export default function LiveStream({ addShells, shells, currentUser }) {
   // 'recorded' = game loop with accurate fish detection | 'youtube' = view-only live stream
   const [feedType, setFeedType] = useState('recorded');
@@ -122,27 +155,45 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     video.muted = isMuted;
   }, [isMuted, feedType]);
 
-  // ─── ACCURATE FISH DETECTION (recorded loop only) ────────────────────────────
-  // Uses LERP-interpolated keyframe coordinates to verify whether the click
-  // landed on a real fish in the video at that exact timestamp.
+  // ─── ACCURATE FISH DETECTION (both live and recorded loops) ───────────────────
   const handleGameTap = (e) => {
-    if (!isPlaying || !containerRef.current || !videoRef.current) return;
+    if (!isPlaying || !containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const clickX = ((e.clientX - rect.left) / rect.width) * 100;
     const clickY = ((e.clientY - rect.top) / rect.height) * 100;
-    const time   = videoRef.current.currentTime;
+    
+    // For live feed, use date-based elapsed seconds. For recorded, use video position.
+    const time = feedType === 'youtube' 
+      ? (Date.now() / 1000) 
+      : (videoRef.current ? videoRef.current.currentTime : 0);
 
     const dist = (x1, y1, x2, y2) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
-    const HIT_THRESHOLD = 12; // % radius — must tap within 12% of fish centre
+    const HIT_THRESHOLD = 15; // Must tap within 15% of fish center
 
-    const posF1 = getInterpolatedPosition('f1', time);
-    const posF2 = getInterpolatedPosition('f2', time);
+    let hit = false;
 
-    const hitF1 = posF1.visible && dist(clickX, clickY, posF1.x, posF1.y) <= HIT_THRESHOLD;
-    const hitF2 = posF2.visible && dist(clickX, clickY, posF2.x, posF2.y) <= HIT_THRESHOLD;
+    if (feedType === 'recorded') {
+      const posF1 = getInterpolatedPosition('f1', time);
+      const posF2 = getInterpolatedPosition('f2', time);
+      const hitF1 = posF1.visible && dist(clickX, clickY, posF1.x, posF1.y) <= HIT_THRESHOLD;
+      const hitF2 = posF2.visible && dist(clickX, clickY, posF2.x, posF2.y) <= HIT_THRESHOLD;
+      hit = hitF1 || hitF2;
+    } else {
+      // Live YouTube feed - check against simulated/virtual sea animal targets
+      const posV1 = getVirtualFishPosition('v1', time);
+      const posV2 = getVirtualFishPosition('v2', time);
+      const posV3 = getVirtualFishPosition('v3', time);
+      const posV4 = getVirtualFishPosition('v4', time);
+      
+      const hitV1 = posV1.visible && dist(clickX, clickY, posV1.x, posV1.y) <= HIT_THRESHOLD;
+      const hitV2 = posV2.visible && dist(clickX, clickY, posV2.x, posV2.y) <= HIT_THRESHOLD;
+      const hitV3 = posV3.visible && dist(clickX, clickY, posV3.x, posV3.y) <= HIT_THRESHOLD;
+      const hitV4 = posV4.visible && dist(clickX, clickY, posV4.x, posV4.y) <= HIT_THRESHOLD;
+      hit = hitV1 || hitV2 || hitV3 || hitV4;
+    }
 
-    if (hitF1 || hitF2) {
+    if (hit) {
       // ✅ Fish detected!
       if (addShells) addShells(1);
       const next = fishCounter + 1;
@@ -196,7 +247,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {feedType === 'youtube' ? (
             <iframe
               id="yt-live-stream"
-              src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+              src="https://www.youtube.com/embed/5Hw0mJvWpTw?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=5Hw0mJvWpTw"
               title="Live Underwater Stream"
               className="streamBgImage"
               style={{
@@ -235,8 +286,8 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </>
           )}
 
-          {/* ── CLICK CATCHER (game loop only) ───────────────── */}
-          {isPlaying && feedType === 'recorded' && (
+          {/* ── CLICK CATCHER (active for both loops) ────────── */}
+          {isPlaying && (
             <div
               ref={containerRef}
               onClick={handleGameTap}
@@ -249,54 +300,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             />
           )}
 
-          {/* ── YOUTUBE VIEW-ONLY BANNER ──────────────────────── */}
-          {feedType === 'youtube' && isPlaying && (
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(6,32,49,0.97) 0%, rgba(3,17,28,0.98) 100%)',
-                border: '2px solid rgba(34,211,238,0.4)',
-                borderRadius: '20px', padding: '28px 32px',
-                maxWidth: '380px', width: '90%', textAlign: 'center',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px',
-                boxShadow: '0 0 30px rgba(34,211,238,0.15)',
-                fontFamily: 'Outfit, sans-serif'
-              }}>
-                <div style={{ fontSize: '2.5rem' }}>📺</div>
-                <div>
-                  <span style={{ fontSize: '0.65rem', color: '#22d3ee', fontWeight: '900',
-                    letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
-                    LIVE STREAM — VIEW ONLY
-                  </span>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: '800' }}>
-                    Watching the Boynton Beach Inlet Live!
-                  </h4>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
-                  The fish-tapping game works on the <strong style={{ color: '#39ff88' }}>Game Loop</strong> — switch below to play and earn shells!
-                </p>
-                <button
-                  onClick={() => setFeedType('recorded')}
-                  style={{
-                    background: 'linear-gradient(135deg, #064c72, #0e7490)',
-                    border: '2px solid #22d3ee',
-                    borderRadius: '20px', color: '#fff',
-                    padding: '10px 24px', fontSize: '0.88rem', fontWeight: '900',
-                    cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-                    boxShadow: '0 0 15px rgba(34,211,238,0.3)',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 25px rgba(34,211,238,0.55)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 15px rgba(34,211,238,0.3)'}
-                >
-                  🎮 Switch to Game Loop
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {/* ── FLOATING TAP RESULT TEXTS ─────────────────────── */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 90, pointerEvents: 'none' }}>
@@ -481,12 +485,21 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
             </button>
 
-            <button className="playerBarBtn" onClick={() => setIsMuted(!isMuted)}
+            {/* Mobile-only snapshot and share buttons */}
+            <button className="playerBarBtn mobileOnlyBtn" onClick={() => alert('Snapshot saved!')} aria-label="Snapshot">
+              <Camera size={18} />
+            </button>
+
+            <button className="playerBarBtn mobileOnlyBtn" onClick={() => alert('Link copied!')} aria-label="Share">
+              <Share2 size={18} />
+            </button>
+
+            <button className="playerBarBtn desktopOnlyBtn" onClick={() => setIsMuted(!isMuted)}
               aria-label={isMuted ? 'Unmute' : 'Mute'}>
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
 
-            <div className="playerBarLiveStatus">
+            <div className="playerBarLiveStatus desktopOnlyBtn">
               <span className="liveStatusDot" style={{
                 backgroundColor: feedType === 'youtube' ? '#39ff88' : '#22d3ee',
                 boxShadow: feedType === 'youtube' ? '0 0 8px #39ff88' : '0 0 8px #22d3ee'
@@ -494,16 +507,17 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <span>LIVE</span>
             </div>
 
-            <div className="playerProgressBarContainer">
+            <div className="playerProgressBarContainer desktopOnlyBtn">
               <div className="playerProgressBarFill" />
             </div>
 
-            <span className="greenHdBadge">HD</span>
+            <span className="greenHdBadge desktopOnlyBtn">HD</span>
 
             {/* Feed selector */}
             <select
               value={feedType}
               onChange={e => setFeedType(e.target.value)}
+              className="desktopOnlyBtn"
               style={{
                 background: 'rgba(6,32,49,0.9)',
                 border: '1.5px solid rgba(34,211,238,0.45)',
@@ -518,13 +532,13 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <option value="youtube">📺 Live (YouTube)</option>
             </select>
 
-            <button className="autoDropdownBtn">Auto <span className="dropdownArrow">▼</span></button>
+            <button className="autoDropdownBtn desktopOnlyBtn">Auto <span className="dropdownArrow">▼</span></button>
 
-            <button className="playerBarBtn" onClick={() => alert('Picture in Picture activated!')} aria-label="PiP">
+            <button className="playerBarBtn desktopOnlyBtn" onClick={() => alert('Picture in Picture activated!')} aria-label="PiP">
               <Tv size={18} />
             </button>
 
-            <div className="settingsDropdownContainer">
+            <div className="settingsDropdownContainer desktopOnlyBtn">
               <button className="playerBarBtn" onClick={() => setShowSettings(!showSettings)} aria-label="Settings">
                 <Settings size={18} />
               </button>
@@ -540,6 +554,22 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           </div>
 
         </div>
+      </div>
+
+      {/* Mobile-only feed switcher */}
+      <div className="mobileFeedSwitcher">
+        <button 
+          className={feedType === 'youtube' ? 'active' : ''} 
+          onClick={() => setFeedType('youtube')}
+        >
+          📺 Live Reef Cam
+        </button>
+        <button 
+          className={feedType === 'recorded' ? 'active' : ''} 
+          onClick={() => setFeedType('recorded')}
+        >
+          🎮 Game Loop
+        </button>
       </div>
 
       {/* Mobile-only info banner under the video */}
