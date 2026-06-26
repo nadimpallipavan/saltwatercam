@@ -263,7 +263,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
           <video
             ref={videoRef}
-            src="/underwater.mp4"
+            src="underwater.mp4"
             className="streamBgImage"
             autoPlay
             loop
