@@ -87,39 +87,6 @@ export default function Header({
         )}
       </div>
 
-      {/* Mobile Auth Button (visible only on mobile, next to hamburger menu toggle) */}
-      <div className="mobileAuthBtn">
-        {currentUser ? (
-          <button
-            className="mobileProfileBtn"
-            onClick={() => {
-              if (window.confirm(`Log out from ${currentUser.username}?`)) {
-                onLogout();
-              }
-            }}
-            title={`Logged in as ${currentUser.username}. Click to logout.`}
-          >
-            {currentUser.faceImage ? (
-              <img 
-                src={currentUser.faceImage} 
-                alt={currentUser.username} 
-                className="mobileAvatarImg"
-              />
-            ) : (
-              <span className="mobileAvatarInitials">{currentUser.avatar || currentUser.username[0].toUpperCase()}</span>
-            )}
-          </button>
-        ) : (
-          <button
-            className="mobileLoginBtn"
-            onClick={onOpenAuth}
-            title="Login / Create Profile"
-          >
-            <User size={16} />
-          </button>
-        )}
-      </div>
-
       {/* Mobile menu toggle */}
       <button 
         className="menuBtn" 
@@ -147,7 +114,7 @@ export default function Header({
             })}
           </nav>
 
-          {currentUser && (
+          {currentUser ? (
             <div className="mobileDrawerUserCard">
               <div className="mobileDrawerUserDetails">
                 {currentUser.faceImage ? (
@@ -169,6 +136,13 @@ export default function Header({
                 <LogOut size={14} style={{ marginRight: '6px' }} /> Log Out
               </button>
             </div>
+          ) : (
+            <button className="mobileDrawerLoginBtn" onClick={() => {
+              onOpenAuth();
+              setMobileMenuOpen(false);
+            }}>
+              <User size={16} style={{ marginRight: '8px' }} /> Login / Create Profile
+            </button>
           )}
         </div>
       )}

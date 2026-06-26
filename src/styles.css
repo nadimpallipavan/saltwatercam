@@ -2419,5 +2419,38 @@ button:focus-visible, a:focus-visible {
     font-size: 0.85rem !important;
   }
 
+}
 
+/* Mobile Drawer Login Button */
+.mobileDrawerLoginBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #075c8a 0%, #15a9c2 100%);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  padding: 12px;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: auto;
+  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.12);
+  transition: all 0.2s ease;
+}
+.mobileDrawerLoginBtn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(34, 211, 238, 0.2);
+}
+
+/* Pulsing/Running Video Icon for Live Indicator */
+.runningVideoIcon {
+  animation: pulseRunning 1.5s infinite ease-in-out;
+}
+@keyframes pulseRunning {
+  0% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 4px #39ff88); }
+  100% { transform: scale(1); opacity: 0.85; }
 }

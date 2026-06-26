@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
+import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv, Video } from 'lucide-react';
 
 // Format a Date to Eastern Time HH:MM:SS AM/PM
 const toEasternTime = (date) => {
@@ -98,6 +98,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef(null);
   const videoRef = useRef(null);
+  const lastTapRef = useRef(0);
   const [fishCounter, setFishCounter] = useState(0);
 
   // Floating tap-result text popups
@@ -190,6 +191,13 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
     if (!isPlaying || !containerRef.current) return;
 
+    // Rate-limit taps to prevent rapid double-triggering or touchstart+click double fire
+    const now = Date.now();
+    if (now - lastTapRef.current < 250) {
+      return;
+    }
+    lastTapRef.current = now;
+
     let clientX, clientY;
     if (e.touches && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
@@ -246,7 +254,10 @@ export default function LiveStream({ addShells, shells, currentUser }) {
   // Spawn a floating text label that fades upward and disappears
   const triggerFloaty = (x, y, text, color = '#39ff88') => {
     const id = Math.random().toString(36).slice(2, 9);
-    setFloatyTexts(prev => [...prev, { id, text, x, y, color }]);
+    // Add small random jitter offsets to prevent exact stacking/buffering visual alignment
+    const jitterX = (Math.random() - 0.5) * 8; 
+    const jitterY = (Math.random() - 0.5) * 4;
+    setFloatyTexts(prev => [...prev, { id, text, x: x + jitterX, y: y + jitterY, color }]);
     setTimeout(() => setFloatyTexts(prev => prev.filter(f => f.id !== id)), 1400);
   };
 
@@ -520,11 +531,12 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
 
-            <div className="playerBarLiveStatus desktopOnlyBtn">
+            <div className="playerBarLiveStatus">
               <span className="liveStatusDot" style={{
                 backgroundColor: '#39ff88',
                 boxShadow: '0 0 8px #39ff88'
               }} />
+              <Video size={14} className="runningVideoIcon" style={{ color: '#39ff88', marginRight: '4px' }} />
               <span>LIVE</span>
             </div>
 
