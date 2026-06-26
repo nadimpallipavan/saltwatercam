@@ -577,6 +577,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
       {/* Mobile-only info banner under the video */}
       <div className="mobileInfoBanner">
         <span className="hudSignalDot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', boxShadow: '0 0 8px #39ff88', marginRight: '6px' }} />
+        <Video size={12} className="runningVideoIcon" style={{ color: '#39ff88', marginRight: '6px' }} />
         <span>📍 Boynton Beach, FL &nbsp;|&nbsp; {liveDate} &nbsp;|&nbsp; {liveTime} ET</span>
       </div>
 
