@@ -91,8 +91,8 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  // 'recorded' = game loop with accurate fish detection | 'youtube' = view-only live stream
-  const [feedType, setFeedType] = useState('recorded');
+  // 'youtube' = live stream with simulated gameplay | 'recorded' = pre-recorded reef loop
+  const [feedType, setFeedType] = useState('youtube');
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
