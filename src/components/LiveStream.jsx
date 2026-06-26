@@ -245,6 +245,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
           {/* ── VIDEO / ELEMENT ────────────────────────────── */}
           <video
+            key={feedType}
             ref={videoRef}
             src={feedType === 'youtube' ? 'https://assets.mixkit.co/videos/preview/mixkit-school-of-colorful-fish-in-an-aquarium-41588-large.mp4' : 'https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm'}
             className="streamBgImage"
