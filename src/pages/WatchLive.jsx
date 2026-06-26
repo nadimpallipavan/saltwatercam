@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import LiveStream from '../components/LiveStream.jsx';
 import { siteContent } from '../data/siteContent.js';
-import { HelpCircle, CheckCircle2, XCircle, RotateCcw, Trophy, Wifi } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, RotateCcw, Trophy, Wifi, Calendar, Award, Clock, Mail, Sparkles } from 'lucide-react';
 
 const gameQuestions = [
   {
@@ -45,6 +45,18 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
   const [emailInput, setEmailInput] = useState('');
 
+  // Level calculation matching LiveStream.jsx
+  const getLevelInfo = (shellCount) => {
+    if (shellCount < 500)   return { level: 1, target: 500,   prevTarget: 0,     title: 'Tadpole Scout' };
+    if (shellCount < 1500)  return { level: 2, target: 1500,  prevTarget: 500,   title: 'Reef Explorer' };
+    if (shellCount < 3500)  return { level: 3, target: 3500,  prevTarget: 1500,  title: 'Marine Protector' };
+    if (shellCount < 7000)  return { level: 4, target: 7000,  prevTarget: 3500,  title: 'Ocean Guardian' };
+    if (shellCount < 12000) return { level: 5, target: 12000, prevTarget: 7000,  title: 'Elite Conservationist' };
+    return                        { level: 6, target: null,  prevTarget: 12000, title: 'Grand Master Protector' };
+  };
+
+  const levelInfo = getLevelInfo(shells);
+
   // ── Real-time NOAA water temperature (Station 8722670 – Lake Worth Pier, FL) ──
   const [waterTemp, setWaterTemp] = useState(null);   // °F
   const [tempStatus, setTempStatus] = useState('loading'); // 'loading' | 'ok' | 'error'
@@ -81,6 +93,36 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
   // Kids Reef Spotter Game states
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [championshipEmail, setChampionshipEmail] = useState('');
+  const [championshipSubscribed, setChampionshipSubscribed] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Get active month name (e.g. "June" or "July")
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const difference = endOfMonth - now;
+      if (difference <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
@@ -477,18 +519,18 @@ export default function WatchLive({ addShells, shells, currentUser }) {
                   </div>
                 </div>
 
-                {/* Progress bar towards Master Scientist Explorer Level */}
+                {/* Progress bar towards Next Level */}
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6', marginBottom: '4px', fontWeight: '800' }}>
-                    <span>Next Rank Level (Master Scout)</span>
-                    <span>{Math.min(500, shells)} / 500 shells</span>
+                    <span>Next Rank Level ({levelInfo.target ? levelInfo.title : 'Grand Master'})</span>
+                    <span>{levelInfo.target ? `${shells} / ${levelInfo.target} shells` : `${shells} shells`}</span>
                   </div>
                   <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{
-                      width: `${Math.min(100, Math.floor((shells / 500) * 100))}%`,
+                      width: levelInfo.target ? `${Math.min(100, Math.floor(((shells - levelInfo.prevTarget) / (levelInfo.target - levelInfo.prevTarget)) * 100))}%` : '100%',
                       height: '100%',
-                      background: shells >= 500 ? '#39ff88' : 'linear-gradient(90deg, #064c72, #22d3ee)',
-                      boxShadow: shells >= 500 ? '0 0 8px #39ff88' : 'none',
+                      background: !levelInfo.target ? '#39ff88' : 'linear-gradient(90deg, #064c72, #22d3ee)',
+                      boxShadow: !levelInfo.target ? '0 0 8px #39ff88' : 'none',
                       transition: 'width 0.3s ease'
                     }} />
                   </div>
@@ -607,6 +649,250 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             </div>
           )}
         </div>
+
+        {/* Monthly Explorer Championship Card */}
+        <div style={{
+          padding: '24px',
+          background: 'rgba(6, 32, 49, 0.45)',
+          border: '1.5px solid rgba(34, 211, 238, 0.25)',
+          borderRadius: '16px',
+          textAlign: 'left',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '440px',
+          position: 'relative'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: '0', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.01em' }}>
+                <span>🏆</span> Championship
+              </h4>
+              <button 
+                onClick={() => setShowRulesModal(true)}
+                style={{
+                  background: 'rgba(34, 211, 238, 0.1)',
+                  border: '1px solid rgba(34, 211, 238, 0.3)',
+                  color: '#22d3ee',
+                  padding: '3px 10px',
+                  borderRadius: '12px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.1)'}
+              >
+                Prizes & Rules
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid rgba(57, 255, 136, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#39ff88', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {currentMonthName} Season Active
+              </div>
+              <div style={{ background: 'rgba(255, 168, 39, 0.1)', border: '1px solid rgba(255, 168, 39, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#ffa827', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Clock size={10} />
+                <span>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m left</span>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.76rem', color: '#b7cad6', lineHeight: '1.45' }}>
+              First explorers to reach the <strong>5,000 Shells Milestone 🐚</strong> and the highest overall rank this month win a real <strong>Explorer Adventure Kit</strong>!
+            </p>
+
+            {/* Target Progress visualization for the active user */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
+                <span style={{ color: '#b7cad6', fontWeight: '700' }}>Your Milestone Progress</span>
+                <span style={{ color: '#22d3ee', fontWeight: '800' }}>{Math.min(100, Math.floor((shells / 5000) * 100))}% ({shells}/5000)</span>
+              </div>
+              <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${Math.min(100, (shells / 5000) * 100)}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #064c72, #39ff88)',
+                  boxShadow: '0 0 4px rgba(57, 255, 136, 0.5)',
+                  transition: 'width 0.5s ease'
+                }} />
+              </div>
+            </div>
+
+            {/* Simulated Leaderboard list */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.7rem', color: '#b7cad6', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Top Spotters</span>
+                <span>Shells (Lvl)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                <span>🥇 1. SpotterSam</span>
+                <span style={{ color: '#39ff88' }}>4,820 🐚 (Lvl 4)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                <span>🥈 2. AquaKatie</span>
+                <span style={{ color: '#39ff88' }}>3,940 🐚 (Lvl 4)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                <span>🥉 3. ReefRunner</span>
+                <span style={{ color: '#b7cad6' }}>3,150 🐚 (Lvl 2)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#22d3ee', fontWeight: '900', borderTop: '1px dashed rgba(34, 211, 238, 0.15)', paddingTop: '6px' }}>
+                <span>🌟 You ({currentUser ? currentUser.username : 'Guest'})</span>
+                <span>{shells} 🐚 (Lvl {levelInfo.level})</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', marginTop: '10px' }}>
+            {!championshipSubscribed ? (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (championshipEmail) setChampionshipSubscribed(true);
+                }}
+                style={{ display: 'flex', gap: '6px' }}
+              >
+                <input 
+                  type="email"
+                  placeholder="Enter email to join..."
+                  value={championshipEmail}
+                  onChange={(e) => setChampionshipEmail(e.target.value)}
+                  required
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1.5px solid rgba(34, 211, 238, 0.2)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    fontFamily: 'Outfit, sans-serif',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                    border: 'none',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '0.75rem',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    fontFamily: 'Outfit, sans-serif'
+                  }}
+                >
+                  Join
+                </button>
+              </form>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#39ff88', fontSize: '0.72rem', fontWeight: '800' }}>
+                <CheckCircle2 size={14} /> Registered! We will email you at {championshipEmail}.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Prizes & Rules Modal */}
+        {showRulesModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(2, 14, 23, 0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}>
+            <div style={{
+              background: 'rgba(6, 32, 49, 0.95)',
+              border: '2px solid rgba(34, 211, 238, 0.4)',
+              borderRadius: '20px',
+              padding: '28px',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              animation: 'fadeIn 0.3s ease',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(34, 211, 238, 0.2)', paddingBottom: '12px', marginBottom: '18px' }}>
+                <h3 style={{ margin: 0, fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.4rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Trophy color="#f59e0b" /> Monthly Championship
+                </h3>
+                <button 
+                  onClick={() => setShowRulesModal(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#b7cad6',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    fontWeight: '800'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', color: '#b7cad6', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                <div>
+                  <h4 style={{ color: '#fff', margin: '0 0 6px 0', fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={16} color="#ffa827" /> Rewards & Prizes
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li>🎒 <strong>Ocean Explorer Kit</strong>: Shipped straight to your door! Includes professional kids binoculars, marine life reference guide, and saltwatercam gear.</li>
+                    <li>🐚 <strong>Champion Profile Badge</strong>: A shiny, persistent digital badge highlighting your monthly victory.</li>
+                    <li>👕 <strong>Conservation Tee</strong>: Free official organic cotton Saltwatercam T-shirt.</li>
+                  </ul>
+                </div>
+
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
+                <div>
+                  <h4 style={{ color: '#fff', margin: '0 0 6px 0', fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Award size={16} color="#22d3ee" /> How to Win
+                  </h4>
+                  <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li><strong>Target Milestone</strong>: The first explorer each month to hit the target shell goal (<strong>5,000 Shells</strong>) instantly wins.</li>
+                    <li><strong>Highest Level</strong>: The player who maintains the #1 spot on the leaderboard at the end of the month wins.</li>
+                    <li><strong>Rules</strong>: Only shell taps on real fish count towards the leaderboard. Tapping empty water awards no progress.</li>
+                  </ol>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowRulesModal(false)}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                  marginTop: '24px',
+                  boxShadow: '0 4px 15px rgba(34, 211, 238, 0.25)'
+                }}
+              >
+                Let's Go! 🐚
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
