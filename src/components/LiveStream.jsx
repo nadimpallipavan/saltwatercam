@@ -297,7 +297,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {hasInteracted && (
             <video
               ref={videoRef}
-              src="https://assets.mixkit.co/videos/preview/mixkit-school-of-colorful-fish-in-an-aquarium-41588-large.mp4"
+              src="underwater.mp4"
               className="streamBgImage"
               autoPlay
               loop
