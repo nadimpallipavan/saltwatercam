@@ -517,16 +517,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
             </button>
 
-            {/* Mobile-only snapshot and share buttons */}
-            <button className="playerBarBtn mobileOnlyBtn" onClick={() => alert('Snapshot saved!')} aria-label="Snapshot">
-              <Camera size={18} />
-            </button>
-
-            <button className="playerBarBtn mobileOnlyBtn" onClick={() => alert('Link copied!')} aria-label="Share">
-              <Share2 size={18} />
-            </button>
-
-            <button className="playerBarBtn desktopOnlyBtn" onClick={() => setIsMuted(!isMuted)}
+             <button className="playerBarBtn desktopOnlyBtn" onClick={() => setIsMuted(!isMuted)}
               aria-label={isMuted ? 'Unmute' : 'Mute'}>
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
@@ -540,7 +531,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <span>LIVE</span>
             </div>
 
-            <div className="playerProgressBarContainer desktopOnlyBtn">
+            <div className="playerProgressBarContainer">
               <div className="playerProgressBarFill" />
             </div>
 

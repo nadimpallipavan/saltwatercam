@@ -2116,7 +2116,9 @@ button:focus-visible, a:focus-visible {
     padding: 2px 6px !important;
   }
   .playerProgressBarContainer {
-    display: none; /* Hide progress bar on tiny viewports */
+    display: flex !important; /* Show progress bar on mobile viewports */
+    flex-grow: 1 !important;
+    margin: 0 10px !important;
   }
 }
 
