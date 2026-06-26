@@ -542,6 +542,12 @@ export default function LiveStream({ addShells, shells, currentUser }) {
         </div>
       </div>
 
+      {/* Mobile-only info banner under the video */}
+      <div className="mobileInfoBanner">
+        <span className="hudSignalDot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#39ff88', boxShadow: '0 0 8px #39ff88', marginRight: '6px' }} />
+        <span>📍 Boynton Beach, FL &nbsp;|&nbsp; {liveDate} &nbsp;|&nbsp; {liveTime} ET</span>
+      </div>
+
       <style>{`
         @keyframes floatUpFade {
           0%   { transform: translate(-50%, -50%) translateY(0);    opacity: 1; }

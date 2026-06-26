@@ -1960,6 +1960,10 @@ button:focus-visible, a:focus-visible {
   100% { opacity: 1; }
 }
 
+.mobileInfoBanner {
+  display: none;
+}
+
 /* Mobile Viewport Locking for Watch Page to keep live feed fully visible */
 @media (max-width: 860px) {
   .page-watch .header {
@@ -1980,12 +1984,32 @@ button:focus-visible, a:focus-visible {
     background: #000;
   }
   /* On mobile, hide the in-video HUD badges that clutter the live feed */
-  .gameHeaderBadge {
+  .gameHeaderBadge, .hudIndicator, .streamTopOverlay {
     display: none !important;
   }
   /* Hide the level progress bar inside the video on mobile */
   .levelProgressHud {
     display: none !important;
+  }
+  /* Show the simplified clock and location banner below the video on mobile */
+  .mobileInfoBanner {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--emerald-glow);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(6, 32, 49, 0.65);
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin: 12px auto 0;
+    width: 90%;
+    max-width: 380px;
+    border: 1px solid rgba(57, 255, 136, 0.2);
   }
 }
 
