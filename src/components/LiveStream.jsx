@@ -91,7 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  const feedType = 'recorded';
+  const feedType = 'youtube';
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -260,21 +260,18 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
-          <video
-            ref={videoRef}
-            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
+          {/* ── VIDEO / IFRAME ────────────────────────────── */}
+          <iframe
+            id="yt-live-stream"
+            src="https://www.youtube.com/embed/qi0mY6zVQnY?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=qi0mY6zVQnY"
+            title="Live Underwater Stream"
             className="streamBgImage"
-            autoPlay
-            loop
-            muted
-            playsInline
-            crossOrigin="anonymous"
             style={{
+              border: 'none', pointerEvents: 'none',
               position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', zIndex: 1,
-              objectFit: 'cover'
+              width: '100%', height: '100%', zIndex: 1
             }}
+            allow="autoplay; encrypted-media"
           />
 
           {/* Glowing green beam */}
