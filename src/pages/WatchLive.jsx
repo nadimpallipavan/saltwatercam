@@ -190,6 +190,89 @@ export default function WatchLive({ addShells, shells, currentUser }) {
         </div>
       </div>
  
+      {/* Live Ocean Telemetry Dashboard */}
+      <div style={{
+        maxWidth: '1220px',
+        margin: '0 auto',
+        width: '90%',
+        alignSelf: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 4px 0' }}>
+          <h4 style={{ textAlign: 'left', margin: 0, fontFamily: 'Outfit, sans-serif', color: '#fff', fontSize: '1.25rem', fontWeight: '800' }}>
+            Live Ocean Data
+          </h4>
+          <span style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
+            fontSize: '0.65rem', fontWeight: '900', color: '#39ff88',
+            background: 'rgba(57,255,136,0.08)', border: '1px solid rgba(57,255,136,0.25)',
+            padding: '2px 8px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '0.08em'
+          }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#39ff88',
+              animation: 'blinkGreen 1.5s infinite', display: 'inline-block' }} />
+            NOAA Live
+          </span>
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '20px'
+        }}>
+          {/* Water Temperature — REAL from NOAA */}
+          <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
+            <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Water Temp</span>
+            <div style={{ fontSize: '2.1rem', fontWeight: '900', color: '#fff', margin: '6px 0', fontFamily: 'Outfit, sans-serif' }}>
+              {tempStatus === 'loading' && <span style={{ fontSize: '1rem', color: '#b7cad6' }}>Loading…</span>}
+              {tempStatus === 'ok'      && <>{waterTemp} <span style={{ fontSize: '1rem', color: '#22d3ee', fontWeight: '800' }}>°F</span></>}
+              {tempStatus === 'error'   && <span style={{ fontSize: '1.1rem', color: '#b7cad6' }}>Unavailable</span>}
+            </div>
+            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: tempStatus === 'ok' ? `${Math.min(100, ((parseFloat(waterTemp) - 60) / 30) * 100)}%` : '0%', height: '100%', background: 'linear-gradient(90deg, #064c72, #22d3ee)', transition: 'width 1s ease' }} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#39ff88', display: 'block', marginTop: '6px' }}>
+              {tempStatus === 'ok' ? '✓ Live — NOAA Station 8722670 (Lake Worth Pier, FL)' : tempStatus === 'loading' ? 'Fetching from NOAA…' : 'NOAA data temporarily unavailable'}
+            </span>
+          </div>
+
+          {/* Visibility — sourced from camera when live */}
+          <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
+            <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visibility</span>
+            <div style={{ fontSize: '2.1rem', fontWeight: '900', color: '#fff', margin: '6px 0', fontFamily: 'Outfit, sans-serif' }}>
+              — <span style={{ fontSize: '1rem', color: '#b7cad6', fontWeight: '800' }}>FT</span>
+            </div>
+            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '0%', height: '100%', background: 'linear-gradient(90deg, #064c72, #39ff88)' }} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Live camera data — available when cam is online</span>
+          </div>
+
+          {/* Salinity — sourced from camera when live */}
+          <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
+            <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Salinity</span>
+            <div style={{ fontSize: '2.1rem', fontWeight: '900', color: '#fff', margin: '6px 0', fontFamily: 'Outfit, sans-serif' }}>
+              — <span style={{ fontSize: '0.9rem', color: '#b7cad6', fontWeight: '800' }}>PPT</span>
+            </div>
+            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '0%', height: '100%', background: 'linear-gradient(90deg, #064c72, #22d3ee)' }} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Sensor online when camera connects</span>
+          </div>
+
+          {/* Current Speed — sourced from camera when live */}
+          <div style={{ padding: '20px', background: 'rgba(6, 32, 49, 0.45)', border: '1px solid rgba(34, 211, 238, 0.15)', borderRadius: '12px', textAlign: 'left', backdropFilter: 'blur(6px)' }}>
+            <span style={{ fontSize: '0.78rem', color: '#b7cad6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Speed</span>
+            <div style={{ fontSize: '2.1rem', fontWeight: '900', color: '#fff', margin: '6px 0', fontFamily: 'Outfit, sans-serif' }}>
+              — <span style={{ fontSize: '0.9rem', color: '#b7cad6', fontWeight: '800' }}>KTS</span>
+            </div>
+            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '0%', height: '100%', background: 'linear-gradient(90deg, #064c72, #39ff88)' }} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#b7cad6', display: 'block', marginTop: '6px' }}>Sensor online when camera connects</span>
+          </div>
+        </div>
+      </div>
  
       {/* Sighting Timeline & Spotter Game side-by-side */}
       <div style={{
