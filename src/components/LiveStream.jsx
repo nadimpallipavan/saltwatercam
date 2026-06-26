@@ -284,6 +284,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             loop
             muted={isMuted}
             playsInline
+            webkit-playsinline="true"
+            controls={false}
+            disablePictureInPicture
           />
 
           {/* Glowing green beam */}
@@ -311,7 +314,12 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               style={{
                 position: 'absolute', top: 0, left: 0,
                 width: '100%', height: '100%',
-                zIndex: 8, cursor: 'crosshair'
+                zIndex: 8, cursor: 'crosshair',
+                touchAction: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
               title="Tap directly on the fish swimming in the video!"
             />
