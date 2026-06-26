@@ -276,6 +276,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <p style={{ color: '#b7cad6', margin: 0, fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}>Tap below to connect to the live stream</p>
               <button
                 onClick={() => {
+                  if (videoRef.current) {
+                    videoRef.current.play().catch(() => {});
+                  }
                   setHasInteracted(true);
                   setIsPlaying(true);
                 }}
@@ -294,23 +297,21 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           )}
 
           {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
-          {hasInteracted && (
-            <video
-              ref={videoRef}
-              src="underwater.mp4"
-              className="streamBgImage"
-              autoPlay
-              loop
-              muted
-              playsInline
-              crossOrigin="anonymous"
-              style={{
-                position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', zIndex: 1,
-                objectFit: 'cover'
-              }}
-            />
-          )}
+          <video
+            ref={videoRef}
+            src="underwater.mp4"
+            className="streamBgImage"
+            autoPlay
+            loop
+            muted
+            playsInline
+            crossOrigin="anonymous"
+            style={{
+              position: 'absolute', top: 0, left: 0,
+              width: '100%', height: '100%', zIndex: 1,
+              objectFit: 'cover'
+            }}
+          />
 
           {/* Glowing green beam */}
           <div className="greenBeam" />
