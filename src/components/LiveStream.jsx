@@ -254,7 +254,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           />
           <video
             ref={videoRef}
-            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+            src="/underwater.mp4"
             className="streamBgImage"
             autoPlay loop muted playsInline
             crossOrigin="anonymous"
