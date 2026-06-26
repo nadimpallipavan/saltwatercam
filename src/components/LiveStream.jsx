@@ -109,12 +109,12 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
   // Level progression
   const getLevelInfo = (shellCount) => {
-    if (shellCount < 500)   return { level: 1, target: 500,   prevTarget: 0,     title: 'Tadpole Scout' };
-    if (shellCount < 1500)  return { level: 2, target: 1500,  prevTarget: 500,   title: 'Reef Explorer' };
-    if (shellCount < 3500)  return { level: 3, target: 3500,  prevTarget: 1500,  title: 'Marine Protector' };
-    if (shellCount < 7000)  return { level: 4, target: 7000,  prevTarget: 3500,  title: 'Ocean Guardian' };
-    if (shellCount < 12000) return { level: 5, target: 12000, prevTarget: 7000,  title: 'Elite Conservationist' };
-    return                        { level: 6, target: null,  prevTarget: 12000, title: 'Grand Master Protector' };
+    if (shellCount < 500)   return { level: 1, target: 500,   prevTarget: 0,     title: 'Reef Buddy 🐠' };
+    if (shellCount < 1500)  return { level: 2, target: 1500,  prevTarget: 500,   title: 'Coral Explorer 🪸' };
+    if (shellCount < 3500)  return { level: 3, target: 3500,  prevTarget: 1500,  title: 'Sea Turtle Sidekick 🐢' };
+    if (shellCount < 7000)  return { level: 4, target: 7000,  prevTarget: 3500,  title: 'Dolphin Defender 🐬' };
+    if (shellCount < 12000) return { level: 5, target: 12000, prevTarget: 7000,  title: 'Ocean Superhero 🦸' };
+    return                        { level: 6, target: null,  prevTarget: 12000, title: 'Sea King & Queen 👑' };
   };
 
   const [currentLevel, setCurrentLevel] = useState(() => getLevelInfo(shells).level);
