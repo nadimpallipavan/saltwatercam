@@ -91,8 +91,7 @@ const getVirtualFishPosition = (id, time) => {
 };
 
 export default function LiveStream({ addShells, shells, currentUser }) {
-  // 'youtube' = live stream with simulated gameplay | 'recorded' = pre-recorded reef loop
-  const [feedType, setFeedType] = useState('youtube');
+  const feedType = 'youtube';
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -247,23 +246,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             style={{
               border: 'none', pointerEvents: 'none',
               position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', zIndex: 1,
-              display: feedType === 'youtube' ? 'block' : 'none'
+              width: '100%', height: '100%', zIndex: 1
             }}
             allow="autoplay; encrypted-media"
-          />
-          <video
-            ref={videoRef}
-            src="/underwater.mp4"
-            className="streamBgImage"
-            autoPlay loop muted playsInline
-            crossOrigin="anonymous"
-            style={{
-              border: 'none', pointerEvents: 'none',
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', objectFit: 'cover', zIndex: 1,
-              display: feedType === 'recorded' ? 'block' : 'none'
-            }}
           />
 
           {/* Glowing green beam */}
@@ -507,24 +492,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
             <span className="greenHdBadge desktopOnlyBtn">HD</span>
 
-            {/* Feed selector */}
-            <select
-              value={feedType}
-              onChange={e => setFeedType(e.target.value)}
-              className="desktopOnlyBtn"
-              style={{
-                background: 'rgba(6,32,49,0.9)',
-                border: '1.5px solid rgba(34,211,238,0.45)',
-                borderRadius: '16px', color: '#fff',
-                fontSize: '0.75rem', fontWeight: '800',
-                padding: '4px 10px', cursor: 'pointer',
-                fontFamily: 'Outfit, sans-serif', outline: 'none',
-                boxShadow: '0 0 10px rgba(34,211,238,0.15)', marginRight: '4px'
-              }}
-            >
-              <option value="recorded">🎮 Game Loop (AI Active)</option>
-              <option value="youtube">📺 Live (YouTube)</option>
-            </select>
+
 
             <button className="autoDropdownBtn desktopOnlyBtn">Auto <span className="dropdownArrow">▼</span></button>
 
@@ -550,21 +518,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
         </div>
       </div>
 
-      {/* Mobile-only feed switcher */}
-      <div className="mobileFeedSwitcher">
-        <button 
-          className={feedType === 'youtube' ? 'active' : ''} 
-          onClick={() => setFeedType('youtube')}
-        >
-          📺 Live Reef Cam
-        </button>
-        <button 
-          className={feedType === 'recorded' ? 'active' : ''} 
-          onClick={() => setFeedType('recorded')}
-        >
-          🎮 Game Loop
-        </button>
-      </div>
+
 
       {/* Mobile-only info banner under the video */}
       <div className="mobileInfoBanner">
