@@ -252,7 +252,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           ) : (
             <video
               ref={videoRef}
-              src="https://assets.mixkit.co/videos/preview/mixkit-school-of-colorful-fish-in-an-aquarium-41588-large.mp4"
+              src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Acuario_Porto_Moniz_2021.webm"
               className="streamBgImage"
               autoPlay loop muted playsInline
               crossOrigin="anonymous"
