@@ -1992,9 +1992,21 @@ button:focus-visible, a:focus-visible {
     box-shadow: none !important;
     background: #000;
   }
+  /* On mobile, show mobile login button next to hamburger */
+  .mobileAuthBtn {
+    display: flex !important;
+  }
   /* On mobile, hide the in-video HUD badges that clutter the live feed */
-  .gameHeaderBadge, .hudIndicator, .streamTopOverlay {
+  .gameHeaderBadge, .hudIndicator, .streamInfoLeft {
     display: none !important;
+  }
+  .streamTopOverlay {
+    display: flex !important;
+    justify-content: flex-end !important;
+    padding: 0 !important;
+    top: 12px !important;
+    left: auto !important;
+    right: 12px !important;
   }
   /* Hide the level progress bar inside the video on mobile */
   .levelProgressHud {
@@ -2007,7 +2019,6 @@ button:focus-visible, a:focus-visible {
   .desktopOnlyBtn {
     display: none !important;
   }
-  /* Show the simplified clock and location banner below the video on mobile */
   .mobileInfoBanner {
     display: flex !important;
     justify-content: center;

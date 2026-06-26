@@ -156,6 +156,68 @@ export default function Header({
         )}
       </div>
 
+      {/* Mobile Auth Button (visible only on mobile, next to hamburger menu toggle) */}
+      <div className="mobileAuthBtn" style={{ display: 'none', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+        {currentUser ? (
+          <button
+            onClick={() => {
+              if (window.confirm(`Log out from ${currentUser.username}?`)) {
+                onLogout();
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1.5px solid #22d3ee',
+              background: 'rgba(6, 32, 49, 0.65)',
+              color: '#fff',
+              cursor: 'pointer',
+              padding: 0
+            }}
+            title={`Logged in as ${currentUser.username}. Click to logout.`}
+          >
+            {currentUser.faceImage ? (
+              <img 
+                src={currentUser.faceImage} 
+                alt={currentUser.username} 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  objectFit: 'cover'
+                }}
+              />
+            ) : (
+              <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>{currentUser.avatar || currentUser.username[0].toUpperCase()}</span>
+            )}
+          </button>
+        ) : (
+          <button
+            onClick={onOpenAuth}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1.5px solid rgba(34, 211, 238, 0.35)',
+              background: 'rgba(34, 211, 238, 0.1)',
+              color: '#22d3ee',
+              cursor: 'pointer',
+              padding: 0
+            }}
+            title="Login / Create Profile"
+          >
+            <User size={16} />
+          </button>
+        )}
+      </div>
+
       {/* Mobile menu toggle */}
       <button 
         className="menuBtn" 
@@ -182,89 +244,6 @@ export default function Header({
                 </button>
               );
             })}
-
-            {/* Mobile Auth Indicator inside drawer */}
-            <div style={{
-              marginTop: '20px',
-              paddingTop: '20px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              alignItems: 'center'
-            }}>
-              {currentUser ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#fff' }}>
-                    {currentUser.faceImage ? (
-                      <img 
-                        src={currentUser.faceImage} 
-                        alt={currentUser.username} 
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '1.5px solid #22d3ee',
-                          boxShadow: '0 0 8px rgba(34, 211, 238, 0.4)'
-                        }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '1.4rem' }}>{currentUser.avatar}</span>
-                    )}
-                    <strong>{currentUser.username}</strong>
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#22d3ee', fontWeight: '800' }}>
-                    🐚 {shells} Shells in Wallet
-                  </div>
-                  <button
-                    onClick={() => {
-                      onLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      border: '1.5px solid rgba(239, 68, 68, 0.3)',
-                      padding: '10px',
-                      borderRadius: '10px',
-                      color: '#f87171',
-                      fontFamily: 'Outfit, sans-serif',
-                      fontWeight: '800',
-                      fontSize: '0.82rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    <LogOut size={14} /> Log Out
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    onOpenAuth();
-                    setMobileMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
-                    border: '1.5px solid rgba(34, 211, 238, 0.35)',
-                    padding: '10px',
-                    borderRadius: '10px',
-                    color: '#fff',
-                    fontFamily: 'Outfit, sans-serif',
-                    fontWeight: '800',
-                    fontSize: '0.85rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Login / Create Profile
-                </button>
-              )}
-            </div>
           </nav>
         </div>
       )}
