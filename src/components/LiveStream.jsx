@@ -263,7 +263,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {/* ── VIDEO / NATIVE CORS-ENABLED PLAYER ────────────────────────────── */}
           <video
             ref={videoRef}
-            src="underwater.mp4"
+            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
             className="streamBgImage"
             autoPlay
             loop
