@@ -62,7 +62,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       if (isLoginTab) {
         res = await authService.signIn(username, password);
       } else {
-        res = await authService.signUp(username, email, '', password, avatarObj.emoji, faceSnapshot);
+        res = await authService.signUp(username, email, '', password, avatarObj.emoji, null);
       }
 
       if (res.error) {
@@ -74,7 +74,6 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
         setUsername('');
         setEmail('');
         setPassword('');
-        setFaceSnapshot(null);
       }
     } catch (err) {
       setError(err.message || 'An error occurred during authentication.');
