@@ -129,6 +129,29 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     return () => clearInterval(tick);
   }, []);
 
+  const [fishPositions, setFishPositions] = useState({
+    v1: { x: -20, y: 35, visible: false },
+    v2: { x: 120, y: 60, visible: false },
+    v3: { x: -20, y: 25, visible: false },
+    v4: { x: 120, y: 75, visible: false }
+  });
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const update = () => {
+      const time = Date.now() / 1000;
+      setFishPositions({
+        v1: getVirtualFishPosition('v1', time),
+        v2: getVirtualFishPosition('v2', time),
+        v3: getVirtualFishPosition('v3', time),
+        v4: getVirtualFishPosition('v4', time)
+      });
+    };
+    update();
+    const interval = setInterval(update, 60);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
   useEffect(() => {
     const info = getLevelInfo(shells);
     if (info.level > currentLevel) {
@@ -264,6 +287,105 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <div className="bubble b5" />
             </>
           )}
+
+          {/* ── VISIBLE VIRTUAL FISH OVERLAYS (AI SCANNER VISUALIZATION) ── */}
+          {isPlaying && Object.entries(fishPositions).map(([id, pos]) => {
+            if (!pos || !pos.visible) return null;
+            let emoji = '🐟';
+            let label = 'Fish';
+            let color = '#22d3ee'; // cyan
+            if (id === 'v1') { emoji = '🐠'; label = 'Tang'; color = '#facc15'; } // yellow
+            if (id === 'v2') { emoji = '🐡'; label = 'Puffer'; color = '#f97316'; } // orange
+            if (id === 'v3') { emoji = '🐢'; label = 'Sea Turtle'; color = '#39ff88'; } // green
+            if (id === 'v4') { emoji = '🐟'; label = 'Snook'; color = '#38bdf8'; } // sky blue
+
+            const isFlipped = id === 'v2' || id === 'v4';
+
+            return (
+              <div
+                key={id}
+                style={{
+                  position: 'absolute',
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 6,
+                  pointerEvents: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  fontFamily: 'Outfit, sans-serif',
+                  transition: 'left 0.08s linear, top 0.08s linear'
+                }}
+              >
+                {/* Sonar Scanner Reticle */}
+                <div style={{
+                  position: 'relative',
+                  width: id === 'v3' ? '80px' : '64px',
+                  height: id === 'v3' ? '80px' : '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  border: `2px dashed ${color}`,
+                  boxShadow: `0 0 12px ${color}40`,
+                  animation: 'spinReticle 8s linear infinite',
+                  transition: 'border-color 0.3s'
+                }}>
+                  {/* Inner glowing core */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '75%',
+                    height: '75%',
+                    borderRadius: '50%',
+                    border: `1px solid ${color}30`,
+                    background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`
+                  }} />
+                </div>
+
+                {/* The actual fish element inside the reticle, un-rotated */}
+                <div style={{
+                  position: 'absolute',
+                  fontSize: id === 'v3' ? '2.4rem' : '1.8rem',
+                  transform: `scaleX(${isFlipped ? -1 : 1})`,
+                  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.6))',
+                  userSelect: 'none',
+                  animation: 'fishBob 1.5s ease-in-out infinite alternate'
+                }}>
+                  {emoji}
+                </div>
+
+                {/* YOLO AI Classification Label */}
+                <div style={{
+                  marginTop: '6px',
+                  background: 'rgba(3, 27, 46, 0.85)',
+                  border: `1.5px solid ${color}`,
+                  borderRadius: '4px',
+                  padding: '2px 6px',
+                  fontSize: '0.65rem',
+                  fontWeight: '900',
+                  color: '#fff',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  boxShadow: `0 2px 8px rgba(0,0,0,0.4), 0 0 4px ${color}50`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <span style={{
+                    display: 'inline-block',
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    boxShadow: `0 0 6px ${color}`
+                  }} />
+                  {label} <span style={{ color, opacity: 0.85 }}>98%</span>
+                </div>
+              </div>
+            );
+          })}
 
           {/* ── CLICK CATCHER (active for both loops) ────────── */}
           {isPlaying && (
@@ -543,6 +665,14 @@ export default function LiveStream({ addShells, shells, currentUser }) {
         @keyframes bounceUp {
           0%   { transform: translateY(0); }
           100% { transform: translateY(-10px); }
+        }
+        @keyframes spinReticle {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes fishBob {
+          0% { translateY(0); }
+          100% { translateY(-4px); }
         }
       `}</style>
     </section>
