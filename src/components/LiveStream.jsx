@@ -1,6 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Maximize, Volume2, VolumeX, Settings, Share2, Play, Pause, Camera, Tv } from 'lucide-react';
 
+// Format a Date to Eastern Time HH:MM:SS AM/PM
+const toEasternTime = (date) => {
+  return date.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: true
+  });
+};
+
+const toEasternDate = (date) => {
+  return date.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short', day: 'numeric', year: 'numeric'
+  });
+};
+
 // Fish coordinate keyframes synced to the WebM reef video loop
 // Each keyframe: { t: seconds, x: % from left, y: % from top, visible: bool }
 const keyframes = {
@@ -68,6 +84,18 @@ export default function LiveStream({ addShells, shells, currentUser }) {
 
   const [currentLevel, setCurrentLevel] = useState(() => getLevelInfo(shells).level);
   const [showLevelUpAlert, setShowLevelUpAlert] = useState(null);
+
+  // Live real-time clock (Eastern Time — Boynton Beach, FL)
+  const [liveTime, setLiveTime] = useState(() => toEasternTime(new Date()));
+  const [liveDate, setLiveDate] = useState(() => toEasternDate(new Date()));
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const now = new Date();
+      setLiveTime(toEasternTime(now));
+      setLiveDate(toEasternDate(now));
+    }, 1000);
+    return () => clearInterval(tick);
+  }, []);
 
   useEffect(() => {
     const info = getLevelInfo(shells);
@@ -156,11 +184,11 @@ export default function LiveStream({ addShells, shells, currentUser }) {
           {/* HUD scanning line */}
           {isPlaying && <div className="scanningLine" />}
 
-          {/* HUD telemetry bar */}
+          {/* HUD: live time — real-time, no fake data */}
           {isPlaying && (
             <div className="hudIndicator">
               <span className="hudSignalDot" />
-              <span>Telemetry: 12.4m DEPTH | TEMP: 76.5°F | LIGHT: 82%</span>
+              <span>📍 Boynton Beach, FL &nbsp;|&nbsp; {liveDate} &nbsp;|&nbsp; 🕐 {liveTime} ET</span>
             </div>
           )}
 
@@ -403,9 +431,9 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* Level progress HUD */}
+          {/* Level progress HUD — hidden on mobile via .levelProgressHud CSS class */}
           {isPlaying && feedType === 'recorded' && (
-            <div style={{
+            <div className="levelProgressHud" style={{
               position: 'absolute', top: '75px', left: '50%',
               transform: 'translateX(-50%)',
               background: 'rgba(3,27,46,0.85)', backdropFilter: 'blur(8px)',

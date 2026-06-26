@@ -1414,9 +1414,12 @@ button:focus-visible, a:focus-visible {
   .nav, .watchBtn, .headerAuthWidget {
     display: none !important;
   }
+  /* Ensure hamburger always snaps to the far right */
   .menuBtn {
-    display: block;
-    margin-left: auto;
+    display: flex !important;
+    margin-left: auto !important;
+    align-items: center;
+    justify-content: center;
   }
   .hero {
     height: calc(100vh - 80px) !important;
@@ -1975,6 +1978,14 @@ button:focus-visible, a:focus-visible {
     border: none !important;
     box-shadow: none !important;
     background: #000;
+  }
+  /* On mobile, hide the in-video HUD badges that clutter the live feed */
+  .gameHeaderBadge {
+    display: none !important;
+  }
+  /* Hide the level progress bar inside the video on mobile */
+  .levelProgressHud {
+    display: none !important;
   }
 }
 
