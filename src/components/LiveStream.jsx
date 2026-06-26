@@ -181,13 +181,30 @@ export default function LiveStream({ addShells, shells, currentUser }) {
     video.muted = isMuted;
   }, [isMuted, feedType]);
 
-  // ─── ACCURATE FISH DETECTION USING NATIVE VIDEO KEYFRAMES ───────────────────
+  // ─── ACCURATE FISH DETECTION USING NATIVE VIDEO KEYFRAMES (Touch & Click Support) ───
   const handleGameTap = (e) => {
+    // If it's a touch event, prevent synthetic click from firing afterward
+    if (e.type === 'touchstart') {
+      e.preventDefault();
+    }
+
     if (!isPlaying || !containerRef.current) return;
 
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
     const rect = containerRef.current.getBoundingClientRect();
-    const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-    const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+    const clickX = ((clientX - rect.left) / rect.width) * 100;
+    const clickY = ((clientY - rect.top) / rect.height) * 100;
     
     const time = videoRef.current ? videoRef.current.currentTime : 0;
     const dist = (x1, y1, x2, y2) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
@@ -288,6 +305,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             <div
               ref={containerRef}
               onClick={handleGameTap}
+              onTouchStart={handleGameTap}
               style={{
                 position: 'absolute', top: 0, left: 0,
                 width: '100%', height: '100%',
@@ -295,11 +313,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               }}
               title="Tap directly on the fish swimming in the video!"
             />
-          )}
-
-
-
-          {/* ── FLOATING TAP RESULT TEXTS ─────────────────────── */}
+          )}          {/* ── FLOATING TAP RESULT TEXTS ─────────────────────── */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 90, pointerEvents: 'none' }}>
             {floatyTexts.map(f => (
               <div key={f.id} style={{
