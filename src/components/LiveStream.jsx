@@ -243,34 +243,19 @@ export default function LiveStream({ addShells, shells, currentUser }) {
             </div>
           )}
 
-          {/* ── VIDEO / IFRAME ────────────────────────────── */}
-          {feedType === 'youtube' ? (
-            <iframe
-              id="yt-live-stream"
-              src="https://www.youtube.com/embed/NBNsEjqWuGc?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&iv_load_policy=3&loop=1&playlist=NBNsEjqWuGc"
-              title="Live Underwater Stream"
-              className="streamBgImage"
-              style={{
-                border: 'none', pointerEvents: 'none',
-                position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', zIndex: 1
-              }}
-              allow="autoplay; encrypted-media"
-            />
-          ) : (
-            <video
-              ref={videoRef}
-              src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
-              className="streamBgImage"
-              autoPlay loop muted playsInline
-              crossOrigin="anonymous"
-              style={{
-                border: 'none', pointerEvents: 'none',
-                position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', objectFit: 'cover', zIndex: 1
-              }}
-            />
-          )}
+          {/* ── VIDEO / ELEMENT ────────────────────────────── */}
+          <video
+            ref={videoRef}
+            src={feedType === 'youtube' ? 'https://vjs.zencdn.net/v/oceans.mp4' : 'https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm'}
+            className="streamBgImage"
+            autoPlay loop muted playsInline
+            crossOrigin="anonymous"
+            style={{
+              border: 'none', pointerEvents: 'none',
+              position: 'absolute', top: 0, left: 0,
+              width: '100%', height: '100%', objectFit: 'cover', zIndex: 1
+            }}
+          />
 
           {/* Glowing green beam */}
           <div className="greenBeam" />
