@@ -93,7 +93,7 @@ const getVirtualFishPosition = (id, time) => {
 export default function LiveStream({ addShells, shells, currentUser }) {
   const feedType = 'recorded';
   const [isPlaying, setIsPlaying] = useState(true);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const containerRef = useRef(null);
@@ -206,8 +206,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
       if (addShells) addShells(1);
       const next = fishCounter + 1;
       setFishCounter(next);
-      const fishName = hitF1 ? 'Bannerfish' : 'Yellow Tang';
-      triggerFloaty(clickX, clickY, `🐟 ${fishName} Spotted! +1 🐚`, '#39ff88');
+      triggerFloaty(clickX, clickY, '🐟 Fish Detected! +1 🐚', '#39ff88');
 
       // Kids Club mission: spot 3 fish
       if (next >= 3) {
@@ -251,58 +250,24 @@ export default function LiveStream({ addShells, shells, currentUser }) {
               <span>📍 Boynton Beach, FL &nbsp;|&nbsp; {liveDate} &nbsp;|&nbsp; 🕐 {liveTime} ET</span>
             </div>
           )}
+          {/* ── VIDEO ────────────────────────────── */}
+          <video
+            ref={videoRef}
+            src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
+            crossOrigin="anonymous"
+            className="streamBgImage"
+            style={{
+              border: 'none',
+              position: 'absolute', top: 0, left: 0,
+              width: '100%', height: '100%', zIndex: 1,
+              objectFit: 'cover'
+            }}
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+          />
 
-          {/* ── START/INTERACTION OVERLAY ──────────────────── */}
-          {!hasInteracted && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(135deg, rgba(2, 12, 21, 0.95) 0%, rgba(3, 17, 28, 0.98) 100%)',
-              backdropFilter: 'blur(10px)',
-              zIndex: 99, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: '20px',
-              fontFamily: 'Outfit, sans-serif'
-            }}>
-              <div style={{ fontSize: '3rem', animation: 'bounceUp 1.5s infinite alternate' }}>🌊</div>
-              <h3 style={{ color: '#fff', margin: 0, fontWeight: '800', fontFamily: 'Outfit, sans-serif' }}>Boynton Beach Inlet Live</h3>
-              <p style={{ color: '#b7cad6', margin: 0, fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}>Tap below to connect to the live stream</p>
-              <button
-                onClick={() => {
-                  setHasInteracted(true);
-                  setIsPlaying(true);
-                }}
-                style={{
-                  background: 'linear-gradient(90deg, #064c72, #22d3ee)',
-                  border: 'none', borderRadius: '30px',
-                  padding: '12px 32px', color: '#fff',
-                  fontSize: '0.95rem', fontWeight: '800',
-                  cursor: 'pointer', boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)',
-                  fontFamily: 'Outfit, sans-serif'
-                }}
-              >
-                Connect Stream ⚡
-              </button>
-            </div>
-          )}
-
-          {/* ── VIDEO / IFRAME ────────────────────────────── */}
-          {hasInteracted && (
-            <video
-              ref={videoRef}
-              src="https://upload.wikimedia.org/wikipedia/commons/2/24/Tropical_Fish_Banner_Fish_on_Coral_Reef.webm"
-              crossOrigin="anonymous"
-              className="streamBgImage"
-              style={{
-                border: 'none',
-                position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%', zIndex: 1,
-                objectFit: 'cover'
-              }}
-              autoPlay
-              loop
-              muted={isMuted}
-              playsInline
-            />
-          )}
           {/* Glowing green beam */}
           <div className="greenBeam" />
 
