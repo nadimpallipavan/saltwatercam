@@ -232,7 +232,7 @@ export default function LiveStream({ addShells, shells, currentUser }) {
       if (addShells) addShells(1);
       const next = fishCounter + 1;
       setFishCounter(next);
-      triggerFloaty(clickX, clickY, hitF1 ? '🐠 Bannerfish Spotted! +1 🐚' : '💛 Yellow Tang Spotted! +1 🐚', '#39ff88');
+      triggerFloaty(clickX, clickY, '🐟 Fish Detected! +1 🐚', '#39ff88');
 
       // Log species spotted in local storage for Kids Club Log Book
       const speciesSpotted = JSON.parse(localStorage.getItem('swc_spotted_species') || '[]');
