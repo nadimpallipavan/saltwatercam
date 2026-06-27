@@ -208,6 +208,7 @@ export default function App() {
             userDonations={userDonations}
             currentUser={currentUser}
             onOpenAuth={() => setIsAuthModalOpen(true)}
+            setActiveTab={setPage}
           />
         );
       case 'marine-guide':
