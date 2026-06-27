@@ -103,7 +103,7 @@ export default function KidsClubPage({
 
   return (
     <div className="pageContainer kidsPage" style={{ maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff' }}>
-      <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '40px' }}>
+      <div className="sectionHeader" style={{ textAlign: 'center', marginBottom: '30px' }}>
         <p className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#22d3ee', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem', background: 'rgba(34, 211, 238, 0.1)', padding: '4px 12px', borderRadius: '30px', border: '1px solid rgba(34, 211, 238, 0.15)' }}>
           <Award size={14} /> Kids Ocean Adventure
         </p>
@@ -114,6 +114,80 @@ export default function KidsClubPage({
           Complete missions, earn XP, and unlock real-time achievement badges to become a certified Boynton Reef Protector!
         </p>
       </div>
+
+      {/* Talking Mascot Companion Sammy the Sea Turtle */}
+      <div style={{
+        maxWidth: '1220px',
+        margin: '0 auto 30px auto',
+        background: 'rgba(6, 32, 49, 0.55)',
+        border: '2.5px solid rgba(34, 211, 238, 0.35)',
+        borderRadius: '24px',
+        padding: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+        backdropFilter: 'blur(12px)',
+        textAlign: 'left',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{
+          fontSize: '3.5rem',
+          animation: 'bounceSlow 2.5s infinite ease-in-out',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(34, 211, 238, 0.12)',
+          width: '84px',
+          height: '84px',
+          borderRadius: '50%',
+          border: '2.5px solid #22d3ee',
+          boxShadow: '0 0 15px rgba(34, 211, 238, 0.3)'
+        }}>
+          🐢
+        </div>
+        <div style={{ flex: 1, minWidth: '260px' }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1.2px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '18px',
+            padding: '16px 20px',
+            color: '#fff',
+            fontSize: '0.94rem',
+            lineHeight: '1.55',
+            position: 'relative'
+          }}>
+            {/* Speech Bubble Arrow */}
+            <div style={{
+              position: 'absolute',
+              left: '-8px',
+              top: '32px',
+              width: '0',
+              height: '0',
+              borderTop: '8px solid transparent',
+              borderBottom: '8px solid transparent',
+              borderRight: '8px solid rgba(255, 255, 255, 0.04)',
+              display: 'var(--bubble-arrow-display, block)'
+            }} />
+            <strong style={{ color: '#22d3ee', display: 'block', fontSize: '1.1rem', marginBottom: '6px', fontFamily: 'Outfit, sans-serif' }}>
+              Sammy the Sea Turtle:
+            </strong>
+            "Hey Ocean Explorer! 🌊 Welcome to the Kids Club! I need your help to protect our beautiful reef. Complete the fun missions below, pass the quizzes, and earn enough shells to level up! Let's dive in!"
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes bounceSlow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        @media (max-width: 768px) {
+          :root {
+            --bubble-arrow-display: none;
+          }
+        }
+      `}</style>
 
       {/* Sub-view Toggle */}
       <div className="subViewToggleContainer" style={{
