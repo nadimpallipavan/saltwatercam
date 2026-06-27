@@ -25,6 +25,18 @@ export default function KidsClubPage({
   });
   const [unlockedBadges, setUnlockedBadges] = useState([]);
   const [activeSubTab, setActiveSubTab] = useState('missions'); // 'missions' or 'rewards'
+  const [spottedSpecies, setSpottedSpecies] = useState([]);
+
+  // Sync spotted species on page focus/mount
+  useEffect(() => {
+    const loadSpotted = () => {
+      const saved = JSON.parse(localStorage.getItem('swc_spotted_species') || '[]');
+      setSpottedSpecies(saved);
+    };
+    loadSpotted();
+    window.addEventListener('focus', loadSpotted);
+    return () => window.removeEventListener('focus', loadSpotted);
+  }, []);
   
   // Sync back to localStorage
   useEffect(() => {
@@ -272,10 +284,38 @@ export default function KidsClubPage({
             </p>
           </div>
 
-          {/* Badges Grid Card */}
-          <div style={{ padding: '24px', background: 'rgba(6, 32, 49, 0.45)', border: '1.5px solid rgba(34, 211, 238, 0.25)', borderRadius: '16px', backdropFilter: 'blur(12px)', textAlign: 'left', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.2rem', fontWeight: '800', margin: '0 0 18px 0', color: '#fff' }}>Unlocked Badges</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {/* Digital Trophy Cabinet */}
+          <div style={{
+            padding: '24px',
+            background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.6) 0%, rgba(6, 48, 73, 0.4) 100%)',
+            border: '2px solid rgba(34, 211, 238, 0.35)',
+            borderRadius: '20px',
+            backdropFilter: 'blur(12px)',
+            textAlign: 'left',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Glowing background highlights */}
+            <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(34, 211, 238, 0.15)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+            
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', fontWeight: '900', margin: '0 0 4px 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🏆</span> Trophy Cabinet
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '0.78rem', color: '#b7cad6', lineHeight: '1.4' }}>
+              Collect XP from quests to unlock these rare collector badges!
+            </p>
+            
+            {/* Cabinet Shelves Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              background: 'rgba(0, 0, 0, 0.25)',
+              padding: '16px',
+              borderRadius: '16px',
+              border: '1.5px solid rgba(255, 255, 255, 0.05)'
+            }}>
               {badgesList.map(badge => {
                 const isUnlocked = unlockedBadges.includes(badge.id);
                 const IconComponent = badge.icon;
@@ -284,32 +324,73 @@ export default function KidsClubPage({
                   <div 
                     key={badge.id}
                     style={{
-                      padding: '16px',
-                      background: isUnlocked ? 'rgba(6, 76, 114, 0.25)' : 'rgba(255,255,255,0.03)',
-                      border: isUnlocked ? `1.5px solid ${badge.color}` : '1px dashed rgba(255,255,255,0.1)',
-                      borderRadius: '12px',
+                      padding: '16px 12px',
+                      background: isUnlocked 
+                        ? 'linear-gradient(135deg, rgba(6, 76, 114, 0.3) 0%, rgba(34, 211, 238, 0.08) 100%)' 
+                        : 'rgba(255,255,255,0.02)',
+                      border: isUnlocked 
+                        ? `2px solid ${badge.color}` 
+                        : '1.5px dashed rgba(255,255,255,0.08)',
+                      borderRadius: '16px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
-                      transition: 'all 0.3s ease',
-                      boxShadow: isUnlocked ? `0 0 15px rgba(${isUnlocked ? '34, 211, 238' : '0'}, 0.15)` : 'none',
-                      opacity: isUnlocked ? 1 : 0.6
+                      position: 'relative',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: isUnlocked ? `0 8px 20px ${badge.color}20` : 'none',
+                      transform: isUnlocked ? 'translateY(-2px)' : 'none'
                     }}
                   >
-                    <IconComponent 
-                      size={28} 
-                      color={isUnlocked ? badge.color : '#b7cad6'} 
-                      style={{ 
-                        filter: isUnlocked ? `drop-shadow(0 0 8px ${badge.color})` : 'none',
-                        marginBottom: '8px'
-                      }} 
-                    />
-                    <strong style={{ fontSize: '0.82rem', color: '#fff', display: 'block', fontFamily: 'Outfit, sans-serif' }}>
+                    {!isUnlocked && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        fontSize: '0.8rem',
+                        color: 'rgba(255,255,255,0.2)'
+                      }}>
+                        🔒
+                      </div>
+                    )}
+                    
+                    <div style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '50%',
+                      background: isUnlocked ? `${badge.color}15` : 'rgba(255,255,255,0.02)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '10px',
+                      border: isUnlocked ? `1px solid ${badge.color}40` : '1px solid transparent',
+                      boxShadow: isUnlocked ? `inset 0 0 10px ${badge.color}30` : 'none'
+                    }}>
+                      <IconComponent 
+                        size={26} 
+                        color={isUnlocked ? badge.color : '#64748b'} 
+                        style={{ 
+                          filter: isUnlocked ? `drop-shadow(0 0 8px ${badge.color})` : 'none'
+                        }} 
+                      />
+                    </div>
+                    
+                    <strong style={{ fontSize: '0.8rem', color: isUnlocked ? '#fff' : '#64748b', display: 'block', fontFamily: 'Outfit, sans-serif', fontWeight: '800' }}>
                       {badge.name}
                     </strong>
-                    <span style={{ fontSize: '0.7rem', color: '#b7cad6', marginTop: '4px' }}>
-                      {isUnlocked ? 'UNLOCKED' : `${badge.xpReq} XP Req`}
+                    
+                    <span style={{ 
+                      fontSize: '0.65rem', 
+                      color: isUnlocked ? badge.color : '#b7cad6', 
+                      fontWeight: '800', 
+                      marginTop: '6px',
+                      background: isUnlocked ? `${badge.color}15` : 'rgba(255,255,255,0.05)',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em'
+                    }}>
+                      {isUnlocked ? 'Unlocked' : `Locked (${badge.xpReq} XP)`}
                     </span>
                   </div>
                 );
@@ -531,6 +612,107 @@ export default function KidsClubPage({
               </div>
             )}
           </TiltCard>
+        </div>
+      </div>
+
+      {/* Reef Spotter's Log Book */}
+      <div style={{
+        marginTop: '40px',
+        padding: '30px 24px',
+        background: 'rgba(6, 32, 49, 0.45)',
+        border: '1.5px solid rgba(34, 211, 238, 0.25)',
+        borderRadius: '20px',
+        backdropFilter: 'blur(12px)',
+        textAlign: 'left',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+      }}>
+        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: '900', color: '#fff', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>📸</span> Reef Spotter's Log Book
+        </h3>
+        <p style={{ margin: '0 0 24px 0', fontSize: '0.85rem', color: '#b7cad6', lineHeight: '1.4' }}>
+          Tapping creatures on the **Live Stream** or answering **Quiz Questions** unlocks entries in your notebook. Can you spot all 7?
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '20px'
+        }}>
+          {[
+            { name: 'Bannerfish', emoji: '🐠', color: '#06b6d4', desc: 'Swims left to right. Famous for its long white dorsal fin!' },
+            { name: 'Yellow Tang', emoji: '💛', color: '#eab308', desc: 'A vibrant yellow fish that helps keep the coral reef clean!' },
+            { name: 'Green Sea Turtle', emoji: '🐢', color: '#10b981', desc: 'A gentle reptile that nests on local Boynton beaches.' },
+            { name: 'Common Snook', emoji: '🐟', color: '#6366f1', desc: 'Has a distinct black lateral line. Loves dock pilings!' },
+            { name: 'Goliath Grouper', emoji: '🐡', color: '#a855f7', desc: 'A giant predator that can weigh up to 800 pounds.' },
+            { name: 'Southern Stingray', emoji: '🌊', color: '#38bdf8', desc: 'Glides on the sandy floor and buries itself to hide.' },
+            { name: 'Green Attractor Light', emoji: '🟢', color: '#22c55e', desc: 'Green LED light under the dock that draws in tiny plankton.' }
+          ].map(item => {
+            const isSpotted = spottedSpecies.includes(item.name);
+            return (
+              <div 
+                key={item.name}
+                style={{
+                  padding: '20px 16px',
+                  background: isSpotted 
+                    ? 'linear-gradient(135deg, rgba(6, 76, 114, 0.25) 0%, rgba(34, 211, 238, 0.05) 100%)' 
+                    : 'rgba(255,255,255,0.02)',
+                  border: isSpotted 
+                    ? `1.5px solid ${item.color}` 
+                    : '1.5px dashed rgba(255,255,255,0.06)',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  opacity: isSpotted ? 1 : 0.6,
+                  boxShadow: isSpotted ? `0 6px 15px ${item.color}15` : 'none'
+                }}
+              >
+                <div style={{
+                  fontSize: '2.8rem',
+                  marginBottom: '10px',
+                  filter: isSpotted ? 'none' : 'grayscale(100%) brightness(40%)'
+                }}>
+                  {isSpotted ? item.emoji : '❓'}
+                </div>
+                
+                <strong style={{ 
+                  fontSize: '0.9rem', 
+                  color: isSpotted ? '#fff' : '#64748b', 
+                  fontFamily: 'Outfit, sans-serif',
+                  fontWeight: '800'
+                }}>
+                  {isSpotted ? item.name : 'Unknown Creature'}
+                </strong>
+
+                <p style={{
+                  margin: '8px 0 12px 0',
+                  fontSize: '0.72rem',
+                  color: isSpotted ? '#b7cad6' : '#475569',
+                  lineHeight: '1.45',
+                  height: '44px',
+                  overflow: 'hidden'
+                }}>
+                  {isSpotted ? item.desc : 'Hint: Watch the live stream carefully or play quizzes to discover this secret entry!'}
+                </p>
+
+                <span style={{
+                  fontSize: '0.62rem',
+                  fontWeight: '900',
+                  color: isSpotted ? '#39ff88' : '#64748b',
+                  background: isSpotted ? 'rgba(57, 255, 136, 0.08)' : 'rgba(255,255,255,0.04)',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  border: isSpotted ? '1px solid rgba(57,255,136,0.15)' : '1px solid transparent',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  {isSpotted ? '✓ Spotted!' : 'Locked'}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

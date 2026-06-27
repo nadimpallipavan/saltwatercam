@@ -139,6 +139,16 @@ export default function WatchLive({ addShells, shells, currentUser }) {
       if (addShells) {
         addShells(currentQuestion.points);
       }
+      // Log species spotted in local storage for Kids Club Log Book
+      const speciesNames = ['Green Sea Turtle', 'Common Snook', 'Goliath Grouper', 'Green Attractor Light', 'Southern Stingray'];
+      const speciesName = speciesNames[currentQuestionIdx];
+      if (speciesName) {
+        const speciesSpotted = JSON.parse(localStorage.getItem('swc_spotted_species') || '[]');
+        if (!speciesSpotted.includes(speciesName)) {
+          speciesSpotted.push(speciesName);
+          localStorage.setItem('swc_spotted_species', JSON.stringify(speciesSpotted));
+        }
+      }
     }
   };
 
