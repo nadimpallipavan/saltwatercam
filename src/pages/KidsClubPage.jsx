@@ -395,6 +395,118 @@ export default function KidsClubPage({
             )}
           </TiltCard>
 
+          {/* ── How to Play & Monthly Winner Rules ──────── */}
+          <div style={{
+            gridColumn: '1 / -1',
+            padding: '28px',
+            background: 'rgba(6, 32, 49, 0.45)',
+            border: '1.5px solid rgba(34, 211, 238, 0.2)',
+            borderRadius: '20px',
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            display: 'flex', flexDirection: 'column', gap: '24px',
+            textAlign: 'left'
+          }}>
+            {/* Section title */}
+            <div>
+              <h3 style={{ margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: '900', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                📖 How to Play &amp; Monthly Winner Rules
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                Everything you need to know to earn Shells, level up, and become the monthly champion!
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+
+              {/* Block 1 — Tap Game Rules */}
+              <div style={{ background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.18)', borderRadius: '14px', padding: '18px' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🐟 Tap Game Rules
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                  <li>Go to the <strong style={{ color: '#fff' }}>Watch Live</strong> page and look at the live reef stream.</li>
+                  <li>Tap or click directly <strong style={{ color: '#fff' }}>on a real fish</strong> swimming in the video to earn <strong style={{ color: '#22d3ee' }}>+1 Shell 🐚</strong>.</li>
+                  <li>Tapping <strong style={{ color: '#f43f5e' }}>empty water</strong> earns nothing — be accurate!</li>
+                  <li>You can tap as many fish as you spot — there is <strong style={{ color: '#fff' }}>no daily limit</strong>.</li>
+                  <li>Fish must be <strong style={{ color: '#fff' }}>real fish in the live feed</strong>. Pre-recorded clips are not counted.</li>
+                </ul>
+              </div>
+
+              {/* Block 2 — Shell Levels */}
+              <div style={{ background: 'rgba(57, 255, 136, 0.06)', border: '1px solid rgba(57, 255, 136, 0.18)', borderRadius: '14px', padding: '18px' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#39ff88', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⭐ Explorer Level Status
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {[
+                    { lvl: 'Lvl 1', title: 'Reef Buddy 🐠',            range: '0 – 499 🐚',   color: '#b7cad6' },
+                    { lvl: 'Lvl 2', title: 'Coral Explorer 🪸',        range: '500 – 1,499 🐚', color: '#22d3ee' },
+                    { lvl: 'Lvl 3', title: 'Sea Turtle Sidekick 🐢',   range: '1,500 – 3,499 🐚', color: '#39ff88' },
+                    { lvl: 'Lvl 4', title: 'Dolphin Defender 🐬',      range: '3,500 – 6,999 🐚', color: '#ffa827' },
+                    { lvl: 'Lvl 5', title: 'Ocean Superhero 🦸',       range: '7,000 – 11,999 🐚', color: '#f59e0b' },
+                    { lvl: 'Lvl 6', title: 'Sea King & Queen 👑',       range: '12,000+ 🐚',   color: '#ef4444' },
+                  ].map(row => (
+                    <div key={row.lvl} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', padding: '5px 10px' }}>
+                      <span style={{ color: row.color, fontWeight: '900', minWidth: '44px' }}>{row.lvl}</span>
+                      <span style={{ color: '#fff', fontWeight: '700', flex: 1, paddingLeft: '8px' }}>{row.title}</span>
+                      <span style={{ color: '#b7cad6', fontSize: '0.7rem' }}>{row.range}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Block 3 — Monthly Winner Rules */}
+              <div style={{ background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: '14px', padding: '18px' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#ffa827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🏆 Monthly Winner Qualification
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px 12px', borderLeft: '3px solid #39ff88' }}>
+                    <strong style={{ color: '#39ff88', display: 'block', marginBottom: '2px' }}>🎯 Milestone Winner</strong>
+                    The <strong style={{ color: '#fff' }}>first explorer</strong> each month to reach <strong style={{ color: '#22d3ee' }}>5,000 Shells</strong> wins instantly — no matter your leaderboard rank!
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px 12px', borderLeft: '3px solid #ffa827' }}>
+                    <strong style={{ color: '#ffa827', display: 'block', marginBottom: '2px' }}>👑 Leaderboard Winner</strong>
+                    The explorer ranked <strong style={{ color: '#fff' }}>#1 on the leaderboard</strong> at midnight on the last day of the month wins the prize.
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px 12px', borderLeft: '3px solid #22d3ee' }}>
+                    <strong style={{ color: '#22d3ee', display: 'block', marginBottom: '2px' }}>📋 Fair Play Rules</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <li>Only real fish taps on the live stream count.</li>
+                      <li>Cheating or exploits = instant disqualification.</li>
+                      <li>Winners must have a registered account (email required).</li>
+                      <li>Prizes shipped within 14 days of month end.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Block 4 — Monthly Prizes */}
+              <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: '14px', padding: '18px' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🎁 Monthly Prizes
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                  {[
+                    { emoji: '🎒', title: 'Explorer Adventure Kit', desc: 'Kids binoculars + marine life guide + SaltwaterCam sticker pack. Shipped to your door!' },
+                    { emoji: '🏅', title: 'Champion Profile Badge', desc: 'A shiny digital badge displayed on your profile for the whole month — so everyone sees your win!' },
+                    { emoji: '👕', title: 'Conservation T-Shirt', desc: 'Free official organic cotton SaltwaterCam T-shirt in your size.' },
+                    { emoji: '🌊', title: 'Hall of Fame Listing', desc: 'Your name + score added permanently to the SaltwaterCam Kids Club Hall of Fame.' },
+                  ].map(p => (
+                    <div key={p.title} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>{p.emoji}</span>
+                      <div>
+                        <strong style={{ color: '#fff', display: 'block', marginBottom: '2px', fontSize: '0.84rem' }}>{p.title}</strong>
+                        <span style={{ fontSize: '0.78rem' }}>{p.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
       ) : (
         <RewardsPage
