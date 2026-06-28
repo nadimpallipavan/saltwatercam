@@ -15,25 +15,38 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   const [score, setScore] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [hasAttemptedToday, setHasAttemptedToday] = useState(false);
+  const [todayScore, setTodayScore] = useState(0);
 
   const revealRef = useScrollReveal();
   const currentQuestion = shuffledQuiz[currentQuestionIdx];
 
   const initQuiz = () => {
-    const shuffled = [...siteContent.quiz]
-      .sort(() => Math.random() - 0.5)
-      .map(q => {
-        const optionsWithIndex = q.options.map((opt, idx) => ({ opt, originalIdx: idx }));
-        const shuffledOpts = [...optionsWithIndex].sort(() => Math.random() - 0.5);
-        const correctIndex = shuffledOpts.findIndex(item => item.originalIdx === q.answer - 1) + 1;
-        return {
-          ...q,
-          options: shuffledOpts.map(item => item.opt),
-          answer: correctIndex
-        };
-      })
-      .slice(0, 5); // Pick 5 tough questions per round
-    setShuffledQuiz(shuffled);
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+
+    const totalQuestions = siteContent.quiz.length;
+    const selected = [];
+    for (let i = 0; i < 5; i++) {
+      const idx = (dayOfYear + i * 3) % totalQuestions;
+      selected.push(siteContent.quiz[idx]);
+    }
+
+    const processed = selected.map(q => {
+      const optionsWithIndex = q.options.map((opt, idx) => ({ opt, originalIdx: idx }));
+      const shuffledOpts = [...optionsWithIndex].sort(() => Math.random() - 0.5);
+      const correctIndex = shuffledOpts.findIndex(item => item.originalIdx === q.answer - 1) + 1;
+      return {
+        ...q,
+        options: shuffledOpts.map(item => item.opt),
+        answer: correctIndex
+      };
+    });
+
+    setShuffledQuiz(processed);
     setCurrentQuestionIdx(0);
     setSelectedOption(null);
     setScore(0);
@@ -42,6 +55,12 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   };
 
   useEffect(() => {
+    const todayKey = new Date().toDateString();
+    const lastAttempt = localStorage.getItem('lastQuizAttemptDate');
+    if (lastAttempt === todayKey) {
+      setHasAttemptedToday(true);
+      setTodayScore(parseInt(localStorage.getItem('lastQuizAttemptScore') || '0', 10));
+    }
     initQuiz();
   }, []);
 
@@ -62,6 +81,11 @@ export default function WatchLive({ addShells, shells, currentUser }) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
       setIsFinished(true);
+      const todayKey = new Date().toDateString();
+      localStorage.setItem('lastQuizAttemptDate', todayKey);
+      localStorage.setItem('lastQuizAttemptScore', String(score));
+      setHasAttemptedToday(true);
+      setTodayScore(score);
     }
   };
 
@@ -223,7 +247,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
         maxWidth: '1220px', margin: '0 auto', width: '90%',
         alignSelf: 'center',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '24px',
         alignItems: 'stretch'
       }}>
@@ -344,7 +368,25 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
         {/* ── Trivia Quiz Card ─────────────────── */}
         <TiltCard className="quizCard" revealRef={revealRef}>
-          {!isFinished && currentQuestion ? (
+          {hasAttemptedToday ? (
+            <div style={{ textAlign: 'center', padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px' }}>
+              <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 10px rgba(57, 255, 136, 0.3))' }}>
+                🌟
+              </span>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: '900', color: '#fff', margin: 0 }}>
+                Today's Quiz Done!
+              </h3>
+              <p style={{ fontSize: '0.86rem', color: '#b7cad6', margin: 0, maxWidth: '280px', lineHeight: '1.5' }}>
+                You did a wonderful job today, Explorer! You got <strong>{todayScore} / 5</strong> correct answers.
+              </p>
+              <div style={{ padding: '8px 16px', background: 'rgba(57, 255, 136, 0.08)', border: '1px solid rgba(57, 255, 136, 0.25)', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800', color: '#39ff88' }}>
+                🐚 Earned +{todayScore * 10} Shells Today!
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#b7cad6', margin: '8px 0 0 0', fontStyle: 'italic' }}>
+                Come back tomorrow for a new set of questions! 🐙
+              </p>
+            </div>
+          ) : !isFinished && currentQuestion ? (
             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ marginBottom: '14px' }}>

@@ -273,7 +273,7 @@ export default function KidsClubPage({
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
               <div style={{ background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.18)', borderRadius: '14px', padding: '18px' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🐟 Tap Game Rules
