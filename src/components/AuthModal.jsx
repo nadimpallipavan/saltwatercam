@@ -96,15 +96,18 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       justifyContent: 'center',
       zIndex: 1000,
       padding: '20px',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
       animation: 'fadeIn 0.3s ease-out'
     }}>
       <div style={{
         background: 'linear-gradient(135deg, rgba(6, 32, 49, 0.9) 0%, rgba(3, 17, 28, 0.95) 100%)',
         border: '1.5px solid rgba(34, 211, 238, 0.25)',
         borderRadius: '24px',
-        padding: '32px',
+        padding: '32px 24px',
         width: '100%',
         maxWidth: '440px',
+        margin: 'auto',
         boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(34, 211, 238, 0.15)',
         position: 'relative',
         animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
@@ -254,11 +257,14 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
             </label>
             <div style={{ position: 'relative' }}>
               <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#b7cad6' }} />
-              <input
+               <input
                 type="text"
                 placeholder="e.g. ReefWatcher99"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '12px 16px 12px 42px',
@@ -297,6 +303,9 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
                     placeholder="e.g. explorer@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                     style={{
                       width: '100%',
                       padding: '12px 16px 12px 42px',
@@ -337,6 +346,9 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
                 placeholder="••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '12px 16px 12px 42px',

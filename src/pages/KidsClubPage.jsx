@@ -220,6 +220,9 @@ export default function KidsClubPage({
                       placeholder="Enter email to join..."
                       value={championshipEmail}
                       onChange={(e) => setChampionshipEmail(e.target.value)}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck="false"
                       required
                       style={{
                         flex: 1,
