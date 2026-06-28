@@ -9,6 +9,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
 
   // Quiz states
+  const [shuffledQuiz, setShuffledQuiz] = useState([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
@@ -16,21 +17,48 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   const [isFinished, setIsFinished] = useState(false);
 
   const revealRef = useScrollReveal();
-  const currentQuestion = siteContent.quiz[currentQuestionIdx];
+  const currentQuestion = shuffledQuiz[currentQuestionIdx];
+
+  const initQuiz = () => {
+    const shuffled = [...siteContent.quiz]
+      .sort(() => Math.random() - 0.5)
+      .map(q => {
+        const optionsWithIndex = q.options.map((opt, idx) => ({ opt, originalIdx: idx }));
+        const shuffledOpts = [...optionsWithIndex].sort(() => Math.random() - 0.5);
+        const correctIndex = shuffledOpts.findIndex(item => item.originalIdx === q.answer - 1) + 1;
+        return {
+          ...q,
+          options: shuffledOpts.map(item => item.opt),
+          answer: correctIndex
+        };
+      })
+      .slice(0, 5); // Pick 5 tough questions per round
+    setShuffledQuiz(shuffled);
+    setCurrentQuestionIdx(0);
+    setSelectedOption(null);
+    setScore(0);
+    setIsAnswered(false);
+    setIsFinished(false);
+  };
+
+  useEffect(() => {
+    initQuiz();
+  }, []);
 
   const handleOptionClick = (optionIndex) => {
-    if (isAnswered) return;
+    if (isAnswered || !currentQuestion) return;
     setSelectedOption(optionIndex);
     setIsAnswered(true);
     if (optionIndex === currentQuestion.answer - 1) {
       setScore(score + 1);
+      addShells(10); // Reward 10 Shells per correct answer!
     }
   };
 
   const handleNextClick = () => {
     setSelectedOption(null);
     setIsAnswered(false);
-    if (currentQuestionIdx + 1 < siteContent.quiz.length) {
+    if (currentQuestionIdx + 1 < shuffledQuiz.length) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
       setIsFinished(true);
@@ -38,11 +66,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
   };
 
   const resetQuiz = () => {
-    setCurrentQuestionIdx(0);
-    setSelectedOption(null);
-    setScore(0);
-    setIsAnswered(false);
-    setIsFinished(false);
+    initQuiz();
   };
 
   // Level calculation matching LiveStream.jsx
@@ -115,7 +139,7 @@ export default function WatchLive({ addShells, shells, currentUser }) {
             <span>🎮</span> Reef Explorer Game
           </h4>
           <p style={{ margin: '0', fontSize: '0.9rem', color: '#b7cad6', lineHeight: '1.5' }}>
-            Watch the live reef stream! Tap directly on the real fish swimming in the video to earn <strong>1 Shell</strong> (+1 🐚). Tapping empty seawater earns nothing. Earn shells to Level Up your explorer rank — and compete in the monthly Championship on the Kids Club page!
+            Watch the live reef stream! Tap directly on the real fish swimming in the video to earn <strong>1 Shell</strong> (+1 🐚). Tapping empty seawater earns nothing. Earn shells to Level Up your explorer rank — and compete in the monthly Championship on the Ocean Academy page!
           </p>
         </div>
       </div>
@@ -320,16 +344,16 @@ export default function WatchLive({ addShells, shells, currentUser }) {
 
         {/* ── Trivia Quiz Card ─────────────────── */}
         <TiltCard className="quizCard" revealRef={revealRef}>
-          {!isFinished ? (
+          {!isFinished && currentQuestion ? (
             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ marginBottom: '14px' }}>
                   <span style={{ fontSize: '0.82rem', color: '#b7cad6', fontWeight: '700' }}>
-                    Trivia Challenge (Question {currentQuestionIdx + 1} of {siteContent.quiz.length})
+                    Trivia Challenge (Question {currentQuestionIdx + 1} of {shuffledQuiz.length})
                   </span>
                   <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginTop: '6px' }}>
                     <div style={{
-                      width: `${((currentQuestionIdx + 1) / siteContent.quiz.length) * 100}%`,
+                      width: `${((currentQuestionIdx + 1) / shuffledQuiz.length) * 100}%`,
                       height: '100%', background: '#22d3ee', borderRadius: '3px'
                     }} />
                   </div>
@@ -386,25 +410,32 @@ export default function WatchLive({ addShells, shells, currentUser }) {
                     cursor: 'pointer', fontFamily: 'Outfit, sans-serif'
                   }}
                 >
-                  {currentQuestionIdx + 1 < siteContent.quiz.length ? 'Next Question →' : 'See Results 🎉'}
+                  {currentQuestionIdx + 1 < shuffledQuiz.length ? 'Next Question →' : 'See Results 🎉'}
                 </button>
               )}
+              
+              <div style={{ fontSize: '0.72rem', color: '#39ff88', fontWeight: '800', textAlign: 'center', marginTop: '6px' }}>
+                💡 Earn 10 Shells 🐚 for each correct answer!
+              </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px' }}>
               <div style={{ fontSize: '3rem', marginBottom: '4px' }}>
-                {score === siteContent.quiz.length ? '🏆' : score >= siteContent.quiz.length / 2 ? '🌟' : '🐢'}
+                {score === shuffledQuiz.length ? '🏆' : score >= shuffledQuiz.length / 2 ? '🌟' : '🐢'}
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#fff', margin: 0 }}>
                 Quiz Complete!
               </h3>
               <p style={{ fontSize: '1rem', color: '#22d3ee', fontWeight: '800', margin: 0 }}>
-                {score} / {siteContent.quiz.length} correct
+                {score} / {shuffledQuiz.length} correct
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#39ff88', fontWeight: '900', margin: 0 }}>
+                Earned +{score * 10} Shells 🐚!
               </p>
               <p style={{ fontSize: '0.82rem', color: '#b7cad6', margin: '0 0 12px 0', maxWidth: '300px', lineHeight: '1.4' }}>
-                {score === siteContent.quiz.length
+                {score === shuffledQuiz.length
                   ? 'Perfect score! You are a true reef expert!'
-                  : score >= siteContent.quiz.length / 2
+                  : score >= shuffledQuiz.length / 2
                   ? 'Great job, keep exploring!'
                   : 'Keep practicing — every explorer starts somewhere!'}
               </p>

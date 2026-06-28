@@ -14,7 +14,7 @@ export const siteContent = {
     { id: 'home', label: 'Home' },
     { id: 'watch', label: 'Watch Live' },
     { id: 'marine-guide', label: 'Marine Guide' },
-    { id: 'kids-club', label: 'Kids Club' },
+    { id: 'kids-club', label: 'Ocean Academy 🎓' },
     { id: 'community', label: 'Community' },
     { id: 'about', label: 'About' }
   ],
@@ -96,43 +96,127 @@ export const siteContent = {
     { time: '11:10 AM', species: 'Southern Stingray', note: 'Gliding and foraging in the sand.' }
   ],
 
-  // Kids Club Quiz Data
+  // Ocean Academy Quiz Data (Challenging Marine Biology Trivia)
   quiz: [
     {
       id: 1,
-      question: "Why is the underwater light under our Lantana dock green?",
+      question: "What biological adaptation allows the Atlantic Tarpon to survive in low-oxygen coastal lagoons?",
       options: [
-        "It is the owner's favorite color.",
-        "Green light travels best through coastal water and attracts fish.",
-        "It acts as a traffic light for boats.",
-        "It warns sharks to stay away."
+        "They can absorb oxygen directly through their scales.",
+        "They have a specialized swim bladder that allows them to gulp and breathe air.",
+        "They hibernate in deep sand until the tide rises.",
+        "They use electro-reception to find oxygen pockets."
       ],
-      answer: 1,
-      explanation: "Green light has a wavelength that cuts through coastal water exceptionally well. It attracts plankton, which draws small baitfish, which eventually brings in big predators like Snook and Tarpon!"
+      answer: 2,
+      explanation: "Tarpon can gulp air at the surface and absorb it through their swim bladder, which acts like a primitive lung!"
     },
     {
       id: 2,
-      question: "Which fish spotted on our camera is known as the 'Silver King'?",
+      question: "Common Snook are 'protandric hermaphrodites'. What does this mean?",
       options: [
-        "Common Snook",
-        "Atlantic Tarpon",
-        "Goliath Grouper",
-        "Southern Stingray"
+        "They can change their color instantly to match dock pilings.",
+        "They start life as males and transition into females as they grow larger.",
+        "They do not require a partner to lay fertilized eggs.",
+        "They migrate between fresh and saltwater every single day."
       ],
-      answer: 1,
-      explanation: "The Atlantic Tarpon is nicknamed the 'Silver King' due to its large, reflective silver scales and majestic appearance."
+      answer: 2,
+      explanation: "Snook start life as males. When they grow larger (usually around 24 inches), many undergo a transition to become females!"
     },
     {
       id: 3,
-      question: "Can Green Sea Turtles retract their heads into their shells?",
+      question: "How do Southern Stingrays locate crabs and clams buried deep in the sand?",
       options: [
-        "Yes, they do it when sleeping.",
-        "No, unlike land turtles, they cannot pull their heads or flippers inside their shell.",
-        "Only when they are young.",
-        "Only when they see a shark."
+        "By using high-frequency sonar echolocation.",
+        "Through electro-receptors in their snout that detect prey's electrical fields.",
+        "By smelling underwater sound waves.",
+        "They rely on sea turtles to dig them up."
+      ],
+      answer: 2,
+      explanation: "Stingrays have tiny sensory pores on their snouts (Ampullae of Lorenzini) that detect weak electrical fields emitted by buried prey."
+    },
+    {
+      id: 4,
+      question: "Why can't Green Sea Turtles retract their heads and flippers inside their shells like land turtles?",
+      options: [
+        "Their shells are streamlined for swimming, and the flippers are fused to the shell skeleton.",
+        "They only retract their heads when they are very young.",
+        "Their neck muscles are too weak to pull their head back.",
+        "They choose not to retract them because they are not afraid of predators."
       ],
       answer: 1,
-      explanation: "Sea turtles have shells that are streamlined for swimming, meaning they cannot pull their limbs or head inside like land turtles do."
+      explanation: "Sea turtles' shells are lightweight and streamlined for swimming. Their flippers and neck bones are fused to their shell skeleton, making retraction impossible."
+    },
+    {
+      id: 5,
+      question: "What critical role do Goliath Groupers play in the local Florida reef ecosystem?",
+      options: [
+        "They clean the algae off the dock pilings.",
+        "They act as apex predators, keeping crab and invasive lionfish populations in check.",
+        "They build sandy nesting mounds for sea turtles.",
+        "They guide migrating schools of mullet through the inlets."
+      ],
+      answer: 2,
+      explanation: "Goliath Groupers are key predators. They help maintain reef health by eating crabs (protecting seagrass) and feeding on invasive species like Lionfish."
+    },
+    {
+      id: 6,
+      question: "Which wavelength (color) of light is absorbed first by water, disappearing in the top 30 feet of the ocean?",
+      options: [
+        "Blue light",
+        "Green light",
+        "Red light",
+        "Violet light"
+      ],
+      answer: 3,
+      explanation: "Red light has the longest wavelength and lowest energy in the visible spectrum, meaning it is absorbed first. Below 30 feet, red objects look black or grey!"
+    },
+    {
+      id: 7,
+      question: "What is the primary function of the 'lateral line' visible along the side of a Snook's body?",
+      options: [
+        "It helps the fish absorb sunlight for energy.",
+        "It is a sensory organ that detects vibrations and water pressure changes.",
+        "It acts as a camouflage stripe to mimic seagrass.",
+        "It releases oil to make the fish swim faster."
+      ],
+      answer: 2,
+      explanation: "The lateral line is a canal of sensory cells that acts like 'distant touch', letting the fish detect movement and vibrations of nearby prey or predators even in pitch black water."
+    },
+    {
+      id: 8,
+      question: "Why do sea turtles migrate thousands of miles back to the exact same beach where they were born to lay eggs?",
+      options: [
+        "They follow older turtles who guide them.",
+        "They use Earth's magnetic field to navigate (geomagnetic imprinting).",
+        "They recognize the smell of the sand from when they were babies.",
+        "They prefer the warmer water temperatures of their home beach."
+      ],
+      answer: 2,
+      explanation: "Sea turtles use geomagnetic navigation. They sense the unique magnetic signature of their birth beach and navigate back to it decades later."
+    },
+    {
+      id: 9,
+      question: "What makes the Boynton Beach Inlet particularly dangerous for boats but excellent for fish biodiversity?",
+      options: [
+        "It is completely closed off during high tide.",
+        "It has extremely strong tidal currents that wash nutrients and baitfish back and forth.",
+        "The water is fresh water, which ocean fish do not like.",
+        "The bottom is covered in giant sea turtle nests."
+      ],
+      answer: 2,
+      explanation: "The narrow inlet has powerful currents that flush nutrients out to the ocean and pull baitfish in, creating a rich feeding highway for predatory marine life."
+    },
+    {
+      id: 10,
+      question: "What is the main chemical component of a sea turtle's hard shell (carapace)?",
+      options: [
+        "Chitin",
+        "Keratin (the same protein found in human fingernails)",
+        "Calcium carbonate",
+        "Cartilage"
+      ],
+      answer: 2,
+      explanation: "The outer layer of a sea turtle's shell consists of scutes made of keratin, which overlays the bony structure beneath."
     }
   ],
 

@@ -346,7 +346,7 @@ export default function KidsClubPage({
                     { emoji: '🎒', title: 'Explorer Adventure Kit', desc: 'Kids binoculars + marine life guide + SaltwaterCam sticker pack. Shipped to your door!' },
                     { emoji: '🏅', title: 'Champion Profile Badge', desc: 'A shiny digital badge displayed on your profile for the whole month — so everyone sees your win!' },
                     { emoji: '👕', title: 'Conservation T-Shirt', desc: 'Free official organic cotton SaltwaterCam T-shirt in your size.' },
-                    { emoji: '🌊', title: 'Hall of Fame Listing', desc: 'Your name + score added permanently to the SaltwaterCam Kids Club Hall of Fame.' },
+                    { emoji: '🌊', title: 'Hall of Fame Listing', desc: 'Your name + score added permanently to the SaltwaterCam Ocean Academy Hall of Fame.' },
                   ].map(p => (
                     <div key={p.title} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>{p.emoji}</span>

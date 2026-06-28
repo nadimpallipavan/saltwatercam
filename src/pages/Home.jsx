@@ -48,7 +48,7 @@ export default function Home({ setPage }) {
           <div className="cardIcon"><BookOpen size={24} /></div>
           <h3>Built for All Ages</h3>
           <p>Simple navigation, interactive trivia, and large high-contrast elements make exploration fun and educational for kids and families alike.</p>
-          <span className="cardAction">Enter kids club <ArrowRight size={14} /></span>
+          <span className="cardAction">Enter Ocean Academy <ArrowRight size={14} /></span>
         </TiltCard>
       </section>
 

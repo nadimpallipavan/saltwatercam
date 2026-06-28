@@ -101,7 +101,7 @@ export default function App() {
         desc: 'Tune into our live 24/7 underwater camera feed at Lantana dock. See Snook, Tarpon, and Green Sea Turtles in high definition day and night.'
       },
       'kids-club': {
-        title: 'Kids Club & Ocean Rewards | SaltWaterCam',
+        title: 'Ocean Academy & Rewards | SaltWaterCam',
         desc: 'Fun educational ocean games, interactive quizzes, and marine conservation missions for kids. Earn shell rewards and redeem them for wallpapers and badges.'
       },
       'marine-guide': {
