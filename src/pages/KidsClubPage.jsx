@@ -167,7 +167,8 @@ export default function KidsClubPage({
       </div>
 
       {activeSubTab === 'missions' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px', alignItems: 'stretch' }}>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '30px', alignItems: 'stretch' }}>
 
           {/* ── Championship Card ───────────────── */}
           <TiltCard className="quizCard" revealRef={revealRef}>
@@ -388,34 +389,32 @@ export default function KidsClubPage({
                   <RotateCcw size={16} /> Try Again
                 </button>
               </div>
-            )}
-          </TiltCard>
+            )}          </TiltCard>
+        </div>
 
-          {/* ── How to Play & Monthly Winner Rules ──────── */}
-          <div style={{
-            gridColumn: '1 / -1',
-            padding: '28px',
-            background: 'rgba(6, 32, 49, 0.45)',
-            border: '1.5px solid rgba(34, 211, 238, 0.2)',
-            borderRadius: '20px',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-            display: 'flex', flexDirection: 'column', gap: '24px',
-            textAlign: 'left'
-          }}>
-            {/* Section title */}
-            <div>
-              <h3 style={{ margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: '900', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                📖 How to Play &amp; Monthly Winner Rules
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
-                Everything you need to know to earn Shells, level up, and become the monthly champion!
-              </p>
-            </div>
+        {/* ── How to Play & Monthly Winner Rules ──────── */}
+        <div style={{
+          marginTop: '30px',
+          padding: '28px',
+          background: 'rgba(6, 32, 49, 0.45)',
+          border: '1.5px solid rgba(34, 211, 238, 0.2)',
+          borderRadius: '20px',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          display: 'flex', flexDirection: 'column', gap: '24px',
+          textAlign: 'left'
+        }}>
+          {/* Section title */}
+          <div>
+            <h3 style={{ margin: '0 0 4px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: '900', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              📖 How to Play &amp; Monthly Winner Rules
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: '#b7cad6', lineHeight: '1.5' }}>
+              Everything you need to know to earn Shells, level up, and become the monthly champion!
+            </p>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
-
-              {/* Block 1 — Tap Game Rules */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
               <div style={{ background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.18)', borderRadius: '14px', padding: '18px' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontSize: '1rem', fontWeight: '800', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🐟 Tap Game Rules
@@ -503,7 +502,7 @@ export default function KidsClubPage({
 
             </div>
           </div>
-        </div>
+        </>
       ) : (
         <RewardsPage
           isNested={true}
