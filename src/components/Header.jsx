@@ -1,44 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, LogOut, User } from 'lucide-react';
 import { siteContent } from '../data/siteContent.js';
 
-export default function Header({ 
-  page, 
-  setPage, 
-  isAudioPlaying, 
-  onToggleAudio, 
-  currentUser, 
-  shells, 
-  onOpenAuth, 
-  onLogout 
+export default function Header({
+  page,
+  setPage,
+  isAudioPlaying,
+  onToggleAudio,
+  currentUser,
+  shells,
+  onOpenAuth,
+  onLogout
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Transparent → frosted glass on scroll
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 72);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll(); // run once on mount
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleNavClick = (tabId) => {
     setPage(tabId);
     setMobileMenuOpen(false);
   };
 
+  // On non-home pages always show solid header
+  const isHome = page === 'home';
+  const transparent = isHome && !scrolled && !mobileMenuOpen;
+
   return (
-    <header className="header">
-      {/* Brand logo image from mockup */}
+    <header className={`header headerV2 ${transparent ? 'headerTransparent' : 'headerScrolled'}`}>
+      {/* Brand logo */}
       <button className="brand" onClick={() => handleNavClick('home')} aria-label="Go home">
-        <img 
-          src="logo-text.png?v=5" 
-          alt={`${siteContent.brand} Logo`} 
-          className="brandLogoImg" 
+        <img
+          src="logo-text.png?v=5"
+          alt={`${siteContent.brand} Logo`}
+          className="brandLogoImg"
         />
       </button>
 
       {/* Desktop Navigation */}
-      <nav className="nav">
+      <nav className="nav" aria-label="Main navigation">
         {siteContent.tabs.map((tab) => {
           const isActive = page === tab.id;
           return (
-            <button 
-              key={tab.id} 
+            <button
+              key={tab.id}
               onClick={() => handleNavClick(tab.id)}
               className={isActive ? 'active' : ''}
+              aria-current={isActive ? 'page' : undefined}
             >
               {tab.label}
             </button>
@@ -46,17 +60,14 @@ export default function Header({
         })}
       </nav>
 
-      {/* Header Auth & Stats Widget */}
+      {/* Auth widget */}
       <div className="headerAuthWidget">
         {currentUser ? (
           <div className="headerUserContainer">
-            {/* Shell Wallet Counter */}
             <div className="shellWallet" title="Shell Wallet">
               <span className="shellIcon">🐚</span>
               <span>{shells}</span>
             </div>
-
-            {/* Profile Avatar Button */}
             <button
               className="profileBtn"
               onClick={() => {
@@ -67,17 +78,11 @@ export default function Header({
               title="Click to logout"
             >
               {currentUser.faceImage ? (
-                <img 
-                  src={currentUser.faceImage} 
-                  alt={currentUser.username} 
-                  className="profileAvatarImg"
-                />
+                <img src={currentUser.faceImage} alt={currentUser.username} className="profileAvatarImg" />
               ) : (
                 <span className="profileAvatarEmoji">{currentUser.avatar}</span>
               )}
-              <span className="headerUsername">
-                {currentUser.username}
-              </span>
+              <span className="headerUsername">{currentUser.username}</span>
             </button>
           </div>
         ) : (
@@ -87,24 +92,25 @@ export default function Header({
         )}
       </div>
 
-      {/* Mobile menu toggle */}
-      <button 
-        className="menuBtn" 
+      {/* Mobile toggle */}
+      <button
+        className="menuBtn"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label="Toggle menu"
+        aria-expanded={mobileMenuOpen}
       >
         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="mobileDrawer">
-          <nav className="mobileNav">
+          <nav className="mobileNav" aria-label="Mobile navigation">
             {siteContent.tabs.map((tab) => {
               const isActive = page === tab.id;
               return (
-                <button 
-                  key={tab.id} 
+                <button
+                  key={tab.id}
                   onClick={() => handleNavClick(tab.id)}
                   className={isActive ? 'active' : ''}
                 >
