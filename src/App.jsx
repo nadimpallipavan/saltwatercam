@@ -10,7 +10,6 @@ import AIFeaturesPage from './pages/AIFeaturesPage.jsx';
 import RewardsPage from './pages/RewardsPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
-import WaterParticlesCanvas from './components/WaterParticlesCanvas.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import useAmbientAudio from './hooks/useAmbientAudio.js';
 import { authService } from './supabaseClient.js';
@@ -226,7 +225,6 @@ export default function App() {
 
   return (
     <div className={`app page-${page}`}>
-      <WaterParticlesCanvas />
       <Header 
         page={page} 
         setPage={setPage} 
