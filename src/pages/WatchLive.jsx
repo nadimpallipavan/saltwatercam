@@ -1,9 +1,49 @@
 import { useState, useEffect } from 'react';
 import LiveStream from '../components/LiveStream.jsx';
-import { Wifi } from 'lucide-react';
+import { Wifi, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
+import { siteContent } from '../data/siteContent.js';
+import TiltCard from '../components/TiltCard.jsx';
+import useScrollReveal from '../hooks/useScrollReveal.js';
 
 export default function WatchLive({ addShells, shells, currentUser }) {
   const [exchangeSuccess, setExchangeSuccess] = useState(null);
+
+  // Quiz states
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [score, setScore] = useState(0);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const revealRef = useScrollReveal();
+  const currentQuestion = siteContent.quiz[currentQuestionIdx];
+
+  const handleOptionClick = (optionIndex) => {
+    if (isAnswered) return;
+    setSelectedOption(optionIndex);
+    setIsAnswered(true);
+    if (optionIndex === currentQuestion.answer - 1) {
+      setScore(score + 1);
+    }
+  };
+
+  const handleNextClick = () => {
+    setSelectedOption(null);
+    setIsAnswered(false);
+    if (currentQuestionIdx + 1 < siteContent.quiz.length) {
+      setCurrentQuestionIdx(currentQuestionIdx + 1);
+    } else {
+      setIsFinished(true);
+    }
+  };
+
+  const resetQuiz = () => {
+    setCurrentQuestionIdx(0);
+    setSelectedOption(null);
+    setScore(0);
+    setIsAnswered(false);
+    setIsFinished(false);
+  };
 
   // Level calculation matching LiveStream.jsx
   const getLevelInfo = (shellCount) => {
@@ -154,137 +194,237 @@ export default function WatchLive({ addShells, shells, currentUser }) {
         </div>
       </div>
 
-      {/* Shell Bank & Club Card */}
+      {/* Shell Bank & Trivia Quiz Card Grid */}
       <div style={{
         maxWidth: '1220px', margin: '0 auto', width: '90%',
         alignSelf: 'center',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '24px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: '24px',
+        alignItems: 'stretch'
       }}>
-        <div style={{
-          padding: '24px',
-          background: 'rgba(6, 32, 49, 0.45)',
-          border: '1.5px solid rgba(34, 211, 238, 0.25)',
-          borderRadius: '16px',
-          textAlign: 'left',
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '380px'
-        }}>
-          {!exchangeSuccess ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
-              <div>
-                <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.01em' }}>
-                  <span>🏦</span> Kids Shell Bank &amp; Club
-                </h4>
+        {/* Shell Bank & Club Card */}
+        <TiltCard className="quizCard" revealRef={revealRef}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', justifyContent: 'space-between', textAlign: 'left' }}>
+            {!exchangeSuccess ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.01em' }}>
+                    <span>🏦</span> Kids Shell Bank &amp; Club
+                  </h4>
 
-                {/* Balance Summary Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Shells Balance</span>
-                    <strong style={{ fontSize: '1.3rem', color: '#22d3ee', fontFamily: 'Outfit, sans-serif' }}>🐚 {shells}</strong>
+                  {/* Balance Summary Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Shells Balance</span>
+                      <strong style={{ fontSize: '1.3rem', color: '#22d3ee', fontFamily: 'Outfit, sans-serif' }}>🐚 {shells}</strong>
+                    </div>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Explorer Status</span>
+                      <strong style={{ fontSize: '1.05rem', color: '#39ff88', fontFamily: 'Outfit, sans-serif' }}>
+                        {shells >= 500 ? '👑 Master Scout' : '🐠 Active Scout'}
+                      </strong>
+                    </div>
                   </div>
-                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <span style={{ fontSize: '0.68rem', color: '#b7cad6', fontWeight: '700', textTransform: 'uppercase', display: 'block' }}>Explorer Status</span>
-                    <strong style={{ fontSize: '1.05rem', color: '#39ff88', fontFamily: 'Outfit, sans-serif' }}>
-                      {shells >= 500 ? '👑 Master Scout' : '🐠 Active Scout'}
-                    </strong>
+
+                  {/* Progress bar towards Next Level */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6', marginBottom: '4px', fontWeight: '800' }}>
+                      <span>Next Rank: {levelInfo.target ? levelInfo.title : 'Grand Master'}</span>
+                      <span>{levelInfo.target ? `${shells} / ${levelInfo.target} 🐚` : `${shells} 🐚`}</span>
+                    </div>
+                    <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        width: levelInfo.target ? `${Math.min(100, Math.floor(((shells - levelInfo.prevTarget) / (levelInfo.target - levelInfo.prevTarget)) * 100))}%` : '100%',
+                        height: '100%',
+                        background: !levelInfo.target ? '#39ff88' : 'linear-gradient(90deg, #064c72, #22d3ee)',
+                        boxShadow: !levelInfo.target ? '0 0 8px #39ff88' : 'none',
+                        transition: 'width 0.3s ease'
+                      }} />
+                    </div>
                   </div>
                 </div>
 
-                {/* Progress bar towards Next Level */}
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#b7cad6', marginBottom: '4px', fontWeight: '800' }}>
-                    <span>Next Rank: {levelInfo.target ? levelInfo.title : 'Grand Master'}</span>
-                    <span>{levelInfo.target ? `${shells} / ${levelInfo.target} 🐚` : `${shells} 🐚`}</span>
-                  </div>
-                  <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                {/* Action buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    onClick={() => {
+                      if (shells < 200) return;
+                      addShells(-200);
+                      setExchangeSuccess({ type: 'badge', amount: 200 });
+                    }}
+                    disabled={shells < 200}
+                    style={{
+                      background: shells >= 200 ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'rgba(255, 255, 255, 0.05)',
+                      border: '1.5px solid rgba(34, 211, 238, 0.25)',
+                      color: shells >= 200 ? '#fff' : '#b7cad6',
+                      padding: '10px', borderRadius: '10px',
+                      fontSize: '0.78rem', fontWeight: '800',
+                      cursor: shells >= 200 ? 'pointer' : 'default',
+                      fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s',
+                      opacity: shells >= 200 ? 1 : 0.6
+                    }}
+                  >
+                    {shells >= 200 ? '🏆 Unlock Master Explorer Badge (200 Shells)' : '🔒 Need 200 Shells for Explorer Badge'}
+                  </button>
+
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 0' }} />
+
+                  <button
+                    onClick={() => {
+                      if (shells < 100) return;
+                      addShells(-100);
+                      setExchangeSuccess({ type: 'donation', amount: 100 });
+                    }}
+                    disabled={shells < 100}
+                    style={{
+                      background: 'rgba(57, 255, 136, 0.08)',
+                      border: '1.5px solid rgba(57, 255, 136, 0.25)',
+                      color: shells >= 100 ? '#39ff88' : '#b7cad6',
+                      padding: '10px', borderRadius: '10px',
+                      fontSize: '0.75rem', fontWeight: '800',
+                      cursor: shells >= 100 ? 'pointer' : 'default',
+                      fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s',
+                      opacity: shells >= 100 ? 1 : 0.5
+                    }}
+                  >
+                    {shells >= 100 ? '🐠 Donate 100 Shells to Plant a Coral Reef' : '🔒 Need 100 Shells to Donate'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', height: '100%' }}>
+                <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 10px rgba(57, 255, 136, 0.3))' }}>
+                  {exchangeSuccess.type === 'badge' ? '🏆' : '🪸'}
+                </span>
+                <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem', fontWeight: '800', color: '#fff', margin: 0 }}>
+                  {exchangeSuccess.type === 'badge' ? 'Explorer Badge Unlocked!' : 'Thank you, Conservationist!'}
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#b7cad6', lineHeight: '1.4' }}>
+                  {exchangeSuccess.type === 'badge' ? (
+                    <>Congratulations! You traded <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to unlock the special <strong style={{ color: '#22d3ee' }}>Master Explorer Badge</strong>!</>
+                  ) : (
+                    <>Fantastic! You donated <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to help plant a virtual coral reef structure!</>
+                  )}
+                </p>
+                <button
+                  onClick={() => setExchangeSuccess(null)}
+                  style={{ background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)', border: '1.5px solid rgba(34, 211, 238, 0.35)', color: '#fff', padding: '8px 20px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', cursor: 'pointer', fontFamily: 'Outfit, sans-serif', marginTop: '8px' }}
+                >
+                  Back to Bank 🏦
+                </button>
+              </div>
+            )}
+          </div>
+        </TiltCard>
+
+        {/* ── Trivia Quiz Card ─────────────────── */}
+        <TiltCard className="quizCard" revealRef={revealRef}>
+          {!isFinished ? (
+            <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#b7cad6', fontWeight: '700' }}>
+                    Trivia Challenge (Question {currentQuestionIdx + 1} of {siteContent.quiz.length})
+                  </span>
+                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginTop: '6px' }}>
                     <div style={{
-                      width: levelInfo.target ? `${Math.min(100, Math.floor(((shells - levelInfo.prevTarget) / (levelInfo.target - levelInfo.prevTarget)) * 100))}%` : '100%',
-                      height: '100%',
-                      background: !levelInfo.target ? '#39ff88' : 'linear-gradient(90deg, #064c72, #22d3ee)',
-                      boxShadow: !levelInfo.target ? '0 0 8px #39ff88' : 'none',
-                      transition: 'width 0.3s ease'
+                      width: `${((currentQuestionIdx + 1) / siteContent.quiz.length) * 100}%`,
+                      height: '100%', background: '#22d3ee', borderRadius: '3px'
                     }} />
                   </div>
                 </div>
+
+                <h3 className="quizQuestion" style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff', lineHeight: '1.4', margin: '0 0 16px 0' }}>
+                  {currentQuestion.question}
+                </h3>
+
+                <div className="quizOptions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {currentQuestion.options.map((opt, i) => {
+                    const isCorrect = i === currentQuestion.answer - 1;
+                    const isSelected = selectedOption === i;
+                    let bg = 'rgba(255,255,255,0.04)';
+                    let border = '1px solid rgba(255,255,255,0.1)';
+                    let color = '#fff';
+                    if (isAnswered) {
+                      if (isCorrect) { bg = 'rgba(57,255,136,0.1)'; border = '1.5px solid #39ff88'; color = '#39ff88'; }
+                      else if (isSelected) { bg = 'rgba(239,68,68,0.1)'; border = '1.5px solid #ef4444'; color = '#ef4444'; }
+                    }
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleOptionClick(i)}
+                        disabled={isAnswered}
+                        style={{
+                          background: bg, border, color,
+                          padding: '12px 16px', borderRadius: '10px',
+                          fontSize: '0.88rem', fontWeight: '700',
+                          cursor: isAnswered ? 'default' : 'pointer',
+                          textAlign: 'left', fontFamily: 'Outfit, sans-serif',
+                          transition: 'all 0.2s ease',
+                          width: '100%'
+                        }}
+                      >
+                        {isAnswered && isCorrect && <CheckCircle2 size={14} style={{ marginRight: '8px', display: 'inline' }} />}
+                        {isAnswered && isSelected && !isCorrect && <XCircle size={14} style={{ marginRight: '8px', display: 'inline' }} />}
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Action buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {isAnswered && (
                 <button
-                  onClick={() => {
-                    if (shells < 200) return;
-                    addShells(-200);
-                    setExchangeSuccess({ type: 'badge', amount: 200 });
-                  }}
-                  disabled={shells < 200}
+                  onClick={handleNextClick}
                   style={{
-                    background: shells >= 200 ? 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)' : 'rgba(255, 255, 255, 0.05)',
-                    border: '1.5px solid rgba(34, 211, 238, 0.25)',
-                    color: shells >= 200 ? '#fff' : '#b7cad6',
-                    padding: '10px', borderRadius: '10px',
-                    fontSize: '0.78rem', fontWeight: '800',
-                    cursor: shells >= 200 ? 'pointer' : 'default',
-                    fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s',
-                    opacity: shells >= 200 ? 1 : 0.6
+                    marginTop: '14px', width: '100%',
+                    background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                    border: 'none', color: '#fff',
+                    padding: '12px', borderRadius: '10px',
+                    fontSize: '0.9rem', fontWeight: '800',
+                    cursor: 'pointer', fontFamily: 'Outfit, sans-serif'
                   }}
                 >
-                  {shells >= 200 ? '🏆 Unlock Master Explorer Badge (200 Shells)' : '🔒 Need 200 Shells for Explorer Badge'}
+                  {currentQuestionIdx + 1 < siteContent.quiz.length ? 'Next Question →' : 'See Results 🎉'}
                 </button>
-
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 0' }} />
-
-                <button
-                  onClick={() => {
-                    if (shells < 100) return;
-                    addShells(-100);
-                    setExchangeSuccess({ type: 'donation', amount: 100 });
-                  }}
-                  disabled={shells < 100}
-                  style={{
-                    background: 'rgba(57, 255, 136, 0.08)',
-                    border: '1.5px solid rgba(57, 255, 136, 0.25)',
-                    color: shells >= 100 ? '#39ff88' : '#b7cad6',
-                    padding: '10px', borderRadius: '10px',
-                    fontSize: '0.75rem', fontWeight: '800',
-                    cursor: shells >= 100 ? 'pointer' : 'default',
-                    fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s',
-                    opacity: shells >= 100 ? 1 : 0.5
-                  }}
-                >
-                  {shells >= 100 ? '🐠 Donate 100 Shells to Plant a Coral Reef' : '🔒 Need 100 Shells to Donate'}
-                </button>
-              </div>
+              )}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', height: '100%' }}>
-              <span style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 10px rgba(57, 255, 136, 0.3))' }}>
-                {exchangeSuccess.type === 'badge' ? '🏆' : '🪸'}
-              </span>
-              <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem', fontWeight: '800', color: '#fff', margin: 0 }}>
-                {exchangeSuccess.type === 'badge' ? 'Explorer Badge Unlocked!' : 'Thank you, Conservationist!'}
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#b7cad6', lineHeight: '1.4' }}>
-                {exchangeSuccess.type === 'badge' ? (
-                  <>Congratulations! You traded <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to unlock the special <strong style={{ color: '#22d3ee' }}>Master Explorer Badge</strong>!</>
-                ) : (
-                  <>Fantastic! You donated <strong style={{ color: '#fff' }}>{exchangeSuccess.amount} shells</strong> to help plant a virtual coral reef structure!</>
-                )}
+            <div style={{ textAlign: 'center', padding: '20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '4px' }}>
+                {score === siteContent.quiz.length ? '🏆' : score >= siteContent.quiz.length / 2 ? '🌟' : '🐢'}
+              </div>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#fff', margin: 0 }}>
+                Quiz Complete!
+              </h3>
+              <p style={{ fontSize: '1rem', color: '#22d3ee', fontWeight: '800', margin: 0 }}>
+                {score} / {siteContent.quiz.length} correct
+              </p>
+              <p style={{ fontSize: '0.82rem', color: '#b7cad6', margin: '0 0 12px 0', maxWidth: '300px', lineHeight: '1.4' }}>
+                {score === siteContent.quiz.length
+                  ? 'Perfect score! You are a true reef expert!'
+                  : score >= siteContent.quiz.length / 2
+                  ? 'Great job, keep exploring!'
+                  : 'Keep practicing — every explorer starts somewhere!'}
               </p>
               <button
-                onClick={() => setExchangeSuccess(null)}
-                style={{ background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)', border: '1.5px solid rgba(34, 211, 238, 0.35)', color: '#fff', padding: '8px 20px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '800', cursor: 'pointer', fontFamily: 'Outfit, sans-serif', marginTop: '8px' }}
+                onClick={resetQuiz}
+                style={{
+                  background: 'rgba(34, 211, 238, 0.1)',
+                  border: '1.5px solid #22d3ee',
+                  color: '#22d3ee', padding: '10px 24px',
+                  borderRadius: '30px', fontSize: '0.88rem',
+                  fontWeight: '800', cursor: 'pointer',
+                  fontFamily: 'Outfit, sans-serif',
+                  display: 'inline-flex', alignItems: 'center', gap: '8px'
+                }}
               >
-                Back to Bank 🏦
+                <RotateCcw size={16} /> Try Again
               </button>
             </div>
           )}
-        </div>
+        </TiltCard>
       </div>
     </div>
   );

@@ -20,15 +20,7 @@ export default function KidsClubPage({
   const [championshipEmail, setChampionshipEmail] = useState('');
   const [championshipSubscribed, setChampionshipSubscribed] = useState(false);
 
-  // Quiz states
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [score, setScore] = useState(0);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-
   const revealRef = useScrollReveal();
-  const currentQuestion = siteContent.quiz[currentQuestionIdx];
 
   // Championship countdown timer
   const getTimeLeft = () => {
@@ -46,34 +38,6 @@ export default function KidsClubPage({
     return () => clearInterval(timer);
   }, []);
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
-
-  // Quiz handlers
-  const handleOptionClick = (optionIndex) => {
-    if (isAnswered) return;
-    setSelectedOption(optionIndex);
-    setIsAnswered(true);
-    if (optionIndex === currentQuestion.answer - 1) {
-      setScore(score + 1);
-    }
-  };
-
-  const handleNextClick = () => {
-    setSelectedOption(null);
-    setIsAnswered(false);
-    if (currentQuestionIdx + 1 < siteContent.quiz.length) {
-      setCurrentQuestionIdx(currentQuestionIdx + 1);
-    } else {
-      setIsFinished(true);
-    }
-  };
-
-  const resetQuiz = () => {
-    setCurrentQuestionIdx(0);
-    setSelectedOption(null);
-    setScore(0);
-    setIsAnswered(false);
-    setIsFinished(false);
-  };
 
   return (
     <div className="pageContainer kidsPage" style={{ maxWidth: '1220px', margin: '0 auto', padding: '40px 20px', color: '#fff', fontFamily: 'Outfit, sans-serif' }}>
@@ -168,10 +132,9 @@ export default function KidsClubPage({
 
       {activeSubTab === 'missions' ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '30px', alignItems: 'stretch' }}>
-
-          {/* ── Championship Card ───────────────── */}
-          <TiltCard className="quizCard" revealRef={revealRef}>
+          {/* ── Championship Card (Centered for balance) ───────────────── */}
+          <div style={{ maxWidth: '600px', margin: '0 auto 40px auto', width: '100%' }}>
+            <TiltCard className="quizCard" revealRef={revealRef}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Header */}
@@ -286,110 +249,6 @@ export default function KidsClubPage({
               </div>
             </div>
           </TiltCard>
-
-          {/* ── Trivia Quiz Card ─────────────────── */}
-          <TiltCard className="quizCard" revealRef={revealRef}>
-            {!isFinished ? (
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ marginBottom: '14px' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#b7cad6', fontWeight: '700' }}>
-                    Trivia Challenge (Question {currentQuestionIdx + 1} of {siteContent.quiz.length})
-                  </span>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginTop: '6px' }}>
-                    <div style={{
-                      width: `${((currentQuestionIdx + 1) / siteContent.quiz.length) * 100}%`,
-                      height: '100%', background: '#22d3ee', borderRadius: '3px'
-                    }} />
-                  </div>
-                </div>
-
-                <h3 className="quizQuestion" style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff', lineHeight: '1.4', margin: '0 0 16px 0' }}>
-                  {currentQuestion.question}
-                </h3>
-
-                <div className="quizOptions" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {currentQuestion.options.map((opt, i) => {
-                    const isCorrect = i === currentQuestion.answer - 1;
-                    const isSelected = selectedOption === i;
-                    let bg = 'rgba(255,255,255,0.04)';
-                    let border = '1px solid rgba(255,255,255,0.1)';
-                    let color = '#fff';
-                    if (isAnswered) {
-                      if (isCorrect) { bg = 'rgba(57,255,136,0.1)'; border = '1.5px solid #39ff88'; color = '#39ff88'; }
-                      else if (isSelected) { bg = 'rgba(239,68,68,0.1)'; border = '1.5px solid #ef4444'; color = '#ef4444'; }
-                    }
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => handleOptionClick(i)}
-                        disabled={isAnswered}
-                        style={{
-                          background: bg, border, color,
-                          padding: '12px 16px', borderRadius: '10px',
-                          fontSize: '0.88rem', fontWeight: '700',
-                          cursor: isAnswered ? 'default' : 'pointer',
-                          textAlign: 'left', fontFamily: 'Outfit, sans-serif',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {isAnswered && isCorrect && <CheckCircle2 size={14} style={{ marginRight: '8px', display: 'inline' }} />}
-                        {isAnswered && isSelected && !isCorrect && <XCircle size={14} style={{ marginRight: '8px', display: 'inline' }} />}
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {isAnswered && (
-                  <button
-                    onClick={handleNextClick}
-                    style={{
-                      marginTop: '18px', width: '100%',
-                      background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
-                      border: 'none', color: '#fff',
-                      padding: '12px', borderRadius: '10px',
-                      fontSize: '0.9rem', fontWeight: '800',
-                      cursor: 'pointer', fontFamily: 'Outfit, sans-serif'
-                    }}
-                  >
-                    {currentQuestionIdx + 1 < siteContent.quiz.length ? 'Next Question →' : 'See Results 🎉'}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>
-                  {score === siteContent.quiz.length ? '🏆' : score >= siteContent.quiz.length / 2 ? '🌟' : '🐢'}
-                </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#fff', margin: '0 0 8px 0' }}>
-                  Quiz Complete!
-                </h3>
-                <p style={{ fontSize: '1rem', color: '#22d3ee', fontWeight: '800', margin: '0 0 6px 0' }}>
-                  {score} / {siteContent.quiz.length} correct
-                </p>
-                <p style={{ fontSize: '0.82rem', color: '#b7cad6', margin: '0 0 20px 0' }}>
-                  {score === siteContent.quiz.length
-                    ? 'Perfect score! You are a true reef expert!'
-                    : score >= siteContent.quiz.length / 2
-                    ? 'Great job, keep exploring!'
-                    : 'Keep practicing — every explorer starts somewhere!'}
-                </p>
-                <button
-                  onClick={resetQuiz}
-                  style={{
-                    background: 'rgba(34, 211, 238, 0.1)',
-                    border: '1.5px solid #22d3ee',
-                    color: '#22d3ee', padding: '10px 24px',
-                    borderRadius: '30px', fontSize: '0.88rem',
-                    fontWeight: '800', cursor: 'pointer',
-                    fontFamily: 'Outfit, sans-serif',
-                    display: 'inline-flex', alignItems: 'center', gap: '8px'
-                  }}
-                >
-                  <RotateCcw size={16} /> Try Again
-                </button>
-              </div>
-            )}          </TiltCard>
         </div>
 
         {/* ── How to Play & Monthly Winner Rules ──────── */}
