@@ -167,128 +167,124 @@ export default function KidsClubPage({
       </div>
 
       {activeSubTab === 'missions' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px', alignItems: 'stretch' }}>
 
           {/* ── Championship Card ───────────────── */}
-          <div style={{
-            padding: '24px',
-            background: 'rgba(6, 32, 49, 0.45)',
-            border: '1.5px solid rgba(34, 211, 238, 0.25)',
-            borderRadius: '16px',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-            display: 'flex', flexDirection: 'column', gap: '14px'
-          }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🏆 Championship
-              </h3>
-              <button
-                onClick={() => setShowRulesModal(true)}
-                style={{
-                  background: 'rgba(34, 211, 238, 0.1)',
-                  border: '1px solid rgba(34, 211, 238, 0.3)',
-                  color: '#22d3ee', padding: '3px 10px',
-                  borderRadius: '12px', fontSize: '0.7rem',
-                  fontWeight: '800', cursor: 'pointer',
-                  fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.2)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.1)'}
-              >Prizes &amp; Rules</button>
-            </div>
-
-            {/* Season badges */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid rgba(57, 255, 136, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#39ff88', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                {currentMonthName} Season Active
-              </div>
-              <div style={{ background: 'rgba(255, 168, 39, 0.1)', border: '1px solid rgba(255, 168, 39, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#ffa827', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Clock size={10} />
-                <span>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m left</span>
-              </div>
-            </div>
-
-            <p style={{ margin: 0, fontSize: '0.76rem', color: '#b7cad6', lineHeight: '1.45' }}>
-              First explorers to reach the <strong>5,000 Shells Milestone 🐚</strong> and the highest overall rank this month win a real <strong>Explorer Adventure Kit</strong>!
-            </p>
-
-            {/* Milestone Progress */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
-                <span style={{ color: '#b7cad6', fontWeight: '700' }}>Your Milestone Progress</span>
-                <span style={{ color: '#22d3ee', fontWeight: '800' }}>{Math.min(100, Math.floor((shells / 5000) * 100))}% ({shells}/5000)</span>
-              </div>
-              <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(100, (shells / 5000) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #064c72, #39ff88)', boxShadow: '0 0 4px rgba(57, 255, 136, 0.5)', transition: 'width 0.5s ease' }} />
-              </div>
-            </div>
-
-            {/* Leaderboard */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '0.7rem', color: '#b7cad6', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Top Spotters</span>
-                <span>Shells (Lvl)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
-                <span>🥇 1. SpotterSam</span>
-                <span style={{ color: '#39ff88' }}>4,820 🐚 (Lvl 4)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
-                <span>🥈 2. AquaKatie</span>
-                <span style={{ color: '#39ff88' }}>3,940 🐚 (Lvl 4)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
-                <span>🥉 3. ReefRunner</span>
-                <span style={{ color: '#b7cad6' }}>3,150 🐚 (Lvl 2)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#22d3ee', fontWeight: '900', borderTop: '1px dashed rgba(34, 211, 238, 0.15)', paddingTop: '6px' }}>
-                <span>🌟 You ({currentUser ? currentUser.username : 'Explorer'})</span>
-                <span>{shells} 🐚 (Lvl 1)</span>
-              </div>
-            </div>
-
-            {/* Join form */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
-              {!championshipSubscribed ? (
-                <form
-                  onSubmit={(e) => { e.preventDefault(); if (championshipEmail) setChampionshipSubscribed(true); }}
-                  style={{ display: 'flex', gap: '6px' }}
-                >
-                  <input
-                    type="email"
-                    placeholder="Enter email to join..."
-                    value={championshipEmail}
-                    onChange={(e) => setChampionshipEmail(e.target.value)}
-                    required
-                    style={{
-                      flex: 1,
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1.5px solid rgba(34, 211, 238, 0.2)',
-                      borderRadius: '8px', padding: '6px 10px',
-                      color: '#fff', fontSize: '0.75rem',
-                      fontFamily: 'Outfit, sans-serif', outline: 'none'
-                    }}
-                  />
+          <TiltCard className="quizCard" revealRef={revealRef}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.25rem', color: '#fff', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🏆 Championship
+                  </h3>
                   <button
-                    type="submit"
+                    onClick={() => setShowRulesModal(true)}
                     style={{
-                      background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
-                      border: 'none', color: '#fff',
-                      borderRadius: '8px', padding: '6px 14px',
-                      fontSize: '0.75rem', fontWeight: '800',
-                      cursor: 'pointer', fontFamily: 'Outfit, sans-serif'
+                      background: 'rgba(34, 211, 238, 0.1)',
+                      border: '1px solid rgba(34, 211, 238, 0.3)',
+                      color: '#22d3ee', padding: '3px 10px',
+                      borderRadius: '12px', fontSize: '0.7rem',
+                      fontWeight: '800', cursor: 'pointer',
+                      fontFamily: 'Outfit, sans-serif', transition: 'all 0.2s'
                     }}
-                  >Join</button>
-                </form>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#39ff88', fontSize: '0.72rem', fontWeight: '800' }}>
-                  <CheckCircle2 size={14} /> Registered! We'll email you at {championshipEmail}.
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(34, 211, 238, 0.1)'}
+                  >Prizes &amp; Rules</button>
                 </div>
-              )}
+
+                {/* Season badges */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <div style={{ background: 'rgba(57, 255, 136, 0.1)', border: '1px solid rgba(57, 255, 136, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#39ff88', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {currentMonthName} Season Active
+                  </div>
+                  <div style={{ background: 'rgba(255, 168, 39, 0.1)', border: '1px solid rgba(255, 168, 39, 0.25)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.62rem', color: '#ffa827', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={10} />
+                    <span>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m left</span>
+                  </div>
+                </div>
+
+                <p style={{ margin: 0, fontSize: '0.78rem', color: '#b7cad6', lineHeight: '1.5' }}>
+                  First explorers to reach the <strong>5,000 Shells Milestone 🐚</strong> and the highest overall rank this month win a real <strong>Explorer Adventure Kit</strong>!
+                </p>
+
+                {/* Milestone Progress */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px' }}>
+                    <span style={{ color: '#b7cad6', fontWeight: '700' }}>Your Milestone Progress</span>
+                    <span style={{ color: '#22d3ee', fontWeight: '800' }}>{Math.min(100, Math.floor((shells / 5000) * 100))}% ({shells}/5000)</span>
+                  </div>
+                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.min(100, (shells / 5000) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #064c72, #39ff88)', boxShadow: '0 0 4px rgba(57, 255, 136, 0.5)', transition: 'width 0.5s ease' }} />
+                  </div>
+                </div>
+
+                {/* Leaderboard */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#b7cad6', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Top Spotters</span>
+                    <span>Shells (Lvl)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                    <span>🥇 1. SpotterSam</span>
+                    <span style={{ color: '#39ff88' }}>4,820 🐚 (Lvl 4)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                    <span>🥈 2. AquaKatie</span>
+                    <span style={{ color: '#39ff88' }}>3,940 🐚 (Lvl 4)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#fff', fontWeight: '600' }}>
+                    <span>🥉 3. ReefRunner</span>
+                    <span style={{ color: '#b7cad6' }}>3,150 🐚 (Lvl 2)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#22d3ee', fontWeight: '900', borderTop: '1px dashed rgba(34, 211, 238, 0.15)', paddingTop: '6px' }}>
+                    <span>🌟 You ({currentUser ? currentUser.username : 'Explorer'})</span>
+                    <span>{shells} 🐚 (Lvl 1)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Join form */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '14px', marginTop: 'auto' }}>
+                {!championshipSubscribed ? (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); if (championshipEmail) setChampionshipSubscribed(true); }}
+                    style={{ display: 'flex', gap: '6px' }}
+                  >
+                    <input
+                      type="email"
+                      placeholder="Enter email to join..."
+                      value={championshipEmail}
+                      onChange={(e) => setChampionshipEmail(e.target.value)}
+                      required
+                      style={{
+                        flex: 1,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1.5px solid rgba(34, 211, 238, 0.2)',
+                        borderRadius: '8px', padding: '6px 10px',
+                        color: '#fff', fontSize: '0.75rem',
+                        fontFamily: 'Outfit, sans-serif', outline: 'none'
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        background: 'linear-gradient(135deg, #064c72 0%, #22d3ee 100%)',
+                        border: 'none', color: '#fff',
+                        borderRadius: '8px', padding: '6px 14px',
+                        fontSize: '0.75rem', fontWeight: '800',
+                        cursor: 'pointer', fontFamily: 'Outfit, sans-serif'
+                      }}
+                    >Join</button>
+                  </form>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#39ff88', fontSize: '0.72rem', fontWeight: '800' }}>
+                    <CheckCircle2 size={14} /> Registered! We'll email you at {championshipEmail}.
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </TiltCard>
 
           {/* ── Trivia Quiz Card ─────────────────── */}
           <TiltCard className="quizCard" revealRef={revealRef}>
@@ -417,7 +413,7 @@ export default function KidsClubPage({
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
 
               {/* Block 1 — Tap Game Rules */}
               <div style={{ background: 'rgba(34, 211, 238, 0.06)', border: '1px solid rgba(34, 211, 238, 0.18)', borderRadius: '14px', padding: '18px' }}>
